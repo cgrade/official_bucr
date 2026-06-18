@@ -1,0 +1,73 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Stress test - push to breaking point
+    - duration: 60
+      arrivalRate: 100
+      name: "Stress test phase 1"
+    - duration: 60
+      arrivalRate: 200
+      name: "Stress test phase 2"
+    - duration: 60
+      arrivalRate: 300
+      name: "Stress test phase 3 - peak"
+    - duration: 30
+      arrivalRate: 100
+      name: "Recovery"
+  
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Public API Stress"
+    weight: 60
+    flow:
+      - get:
+          url: "/api/vendors"
+      - get:
+          url: "/api/vendors?page=1&limit=20"
+      - get:
+          url: "/api/vendors/zuma-grill"
+      - get:
+          url: "/api/reviews?vendorId=zuma-grill"
+
+  - name: "Auth Stress"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "john@example.com"
+            password: "User@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "token"
+      - get:
+          url: "/api/users/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      - get:
+          url: "/api/users/credits"
+          headers:
+            Authorization: "Bearer {{ token }}"
+
+  - name: "Vendor API Stress"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/vendor/login"
+          json:
+            email: "vendor@zumagrill.com"
+            password: "Vendor@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "vendorToken"
+      - get:
+          url: "/api/vendor/reservations"
+          headers:
+            Authorization: "Bearer {{ vendorToken }}"
+      - get:
+          url: "/api/vendor/orders?today=true"
+          headers:
+            Authorization: "Bearer {{ vendorToken }}"

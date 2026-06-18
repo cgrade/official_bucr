@@ -1,0 +1,378 @@
+/**
+ * BUCR Shared Global Styles
+ * =========================
+ * Import this in each app's globals.css or layout
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   CSS VARIABLES - Light/Dark Mode
+   ============================================================================ */
+
+@layer base {
+  :root {
+    /* Background & Foreground */
+    --background: 220 20% 97%;
+    --foreground: 228 52% 24%;
+    
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 228 52% 24%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 52% 24%;
+    
+    /* Primary - Deep Midnight */
+    --primary: 240 27% 14%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Dark Navy */
+    --secondary: 218 49% 16%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Tertiary - Warm Gold */
+    --tertiary: 35 79% 71%;
+    --tertiary-foreground: 240 27% 14%;
+    
+    /* Muted */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border & Input */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 35 79% 71%;
+    
+    /* Radius */
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 27% 7%;
+    --foreground: 35 20% 90%;
+    --card: 240 27% 10%;
+    --card-foreground: 35 20% 90%;
+    --popover: 240 27% 10%;
+    --popover-foreground: 35 20% 90%;
+    --primary: 240 27% 14%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 218 49% 16%;
+    --secondary-foreground: 0 0% 100%;
+    --tertiary: 35 79% 71%;
+    --tertiary-foreground: 35 20% 90%;
+    --muted: 240 30% 12%;
+    --muted-foreground: 220 15% 60%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 25% 18%;
+    --input: 240 25% 18%;
+    --ring: 35 79% 71%;
+  }
+}
+
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
+
+@layer base {
+  * {
+    @apply border-slate-200 dark:border-slate-800;
+  }
+  
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+  }
+}
+
+/* ============================================================================
+   COMPONENT CLASSES
+   ============================================================================ */
+
+@layer components {
+  /* Glass morphism card - Premium feel */
+  .glass-card {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50;
+  }
+  
+  /* Solid card - Standard */
+  .solid-card {
+    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg;
+  }
+
+  /* Gradient text - Brand highlight */
+  .gradient-text {
+    @apply bg-gradient-to-r from-tertiary-500 via-tertiary-400 to-tertiary-600 bg-clip-text text-transparent;
+  }
+
+  /* -------------------------------------------------------------------------
+     BUTTONS
+     ------------------------------------------------------------------------- */
+  
+  /* Primary gradient button - Main CTAs */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white
+           bg-gradient-to-r from-tertiary-500 to-tertiary-600 
+           hover:from-tertiary-600 hover:to-tertiary-700
+           shadow-lg shadow-tertiary-500/25 hover:shadow-tertiary-500/40
+           transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  /* Alias for consistency */
+  .btn-gradient {
+    @apply btn-primary;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium
+           bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200
+           hover:bg-slate-200 dark:hover:bg-slate-700
+           transition-all duration-200;
+  }
+
+  /* Outline button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium
+           border-2 border-slate-200 dark:border-slate-700 
+           text-slate-700 dark:text-slate-200
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition-all duration-200;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium
+           text-slate-600 dark:text-slate-400
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition-all duration-200;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white
+           bg-error-500 hover:bg-error-600
+           shadow-lg shadow-error-500/25
+           transition-all duration-200;
+  }
+
+  /* Icon button */
+  .btn-icon {
+    @apply inline-flex items-center justify-center p-2 rounded-xl
+           text-slate-500 hover:text-slate-700 dark:hover:text-slate-200
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition-all duration-200;
+  }
+
+  /* -------------------------------------------------------------------------
+     INPUTS
+     ------------------------------------------------------------------------- */
+  
+  .input-default {
+    @apply w-full px-4 py-2.5 rounded-xl text-sm
+           bg-white dark:bg-slate-800 
+           border border-slate-200 dark:border-slate-700
+           placeholder:text-slate-400 dark:placeholder:text-slate-500
+           focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+           transition-all duration-200;
+  }
+
+  .input-error {
+    @apply border-error-500 focus:border-error-500 focus:ring-error-500/20;
+  }
+
+  /* -------------------------------------------------------------------------
+     BADGES
+     ------------------------------------------------------------------------- */
+  
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border;
+  }
+  
+  .badge-success {
+    @apply bg-success-50 text-success-700 border-success-200 dark:bg-success-500/10 dark:text-success-400 dark:border-success-500/30;
+  }
+  
+  .badge-warning {
+    @apply bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/10 dark:text-warning-400 dark:border-warning-500/30;
+  }
+  
+  .badge-error {
+    @apply bg-error-50 text-error-700 border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/30;
+  }
+  
+  .badge-info {
+    @apply bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-500/10 dark:text-primary-400 dark:border-primary-500/30;
+  }
+  
+  .badge-neutral {
+    @apply bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700;
+  }
+
+  /* -------------------------------------------------------------------------
+     SIDEBAR NAVIGATION
+     ------------------------------------------------------------------------- */
+  
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200;
+  }
+  
+  .sidebar-link-active {
+    @apply bg-gradient-to-r from-tertiary-500/10 to-tertiary-400/10 text-tertiary-700 dark:text-tertiary-400 border-l-2 border-tertiary-500;
+  }
+  
+  .sidebar-link-inactive {
+    @apply text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100;
+  }
+
+  /* -------------------------------------------------------------------------
+     STAT CARDS
+     ------------------------------------------------------------------------- */
+  
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl;
+  }
+  
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 transition-opacity duration-300;
+  }
+  
+  .stat-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* -------------------------------------------------------------------------
+     LOADING STATES
+     ------------------------------------------------------------------------- */
+  
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  .skeleton {
+    @apply bg-slate-200 dark:bg-slate-700 rounded animate-pulse;
+  }
+
+  /* -------------------------------------------------------------------------
+     SCROLLBAR
+     ------------------------------------------------------------------------- */
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* -------------------------------------------------------------------------
+     PULSE DOT (Live indicators)
+     ------------------------------------------------------------------------- */
+  
+  .pulse-dot {
+    @apply relative;
+  }
+  
+  .pulse-dot::after {
+    content: '';
+    @apply absolute inset-0 rounded-full bg-current animate-ping opacity-75;
+  }
+}
+
+/* ============================================================================
+   KEYFRAME ANIMATIONS
+   ============================================================================ */
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #efc07b;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 192, 123, 0.5);
+  }
+  50% {
+    border-color: #d4a35e;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 30px rgba(212, 163, 94, 0.5);
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Gradient backgrounds */
+  .bg-page-gradient {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(26, 26, 46, 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(239, 192, 123, 0.06) 0px, transparent 50%);
+  }
+
+  .dark .bg-page-gradient {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(26, 26, 46, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(239, 192, 123, 0.08) 0px, transparent 50%);
+  }
+}

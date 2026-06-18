@@ -1,0 +1,19 @@
+{
+  "name": "@bucr/theme",
+  "version": "1.0.0",
+  "description": "Unified theme system for BUCR applications",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./tailwind": "./tailwind.preset.js",
+    "./globals.css": "./globals.css"
+  },
+  "files": [
+    "index.ts",
+    "tailwind.preset.js",
+    "globals.css"
+  ],
+  "keywords": ["bucr", "theme", "tailwind", "design-system"],
+  "license": "MIT"
+}

@@ -1,0 +1,40 @@
+import React from 'react';
+
+interface BucrLogoProps {
+  width?: number;
+  height?: number;
+  className?: string;
+}
+
+export function BucrLogo({ width = 400, height = 100, className }: BucrLogoProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 400 100"
+      width={width}
+      height={height}
+      className={className}
+    >
+      {/* Stylized B in gold */}
+      <path
+        d="M 50 20 Q 30 50 50 80 L 100 80 Q 120 80 120 60 Q 120 40 100 40 L 60 40 Q 80 40 80 20 Q 80 0 100 0 L 150 0 Q 170 0 170 20 Q 170 40 150 40 L 100 40 Q 120 40 120 60 Q 120 80 100 80 L 150 80 Q 170 80 170 100 Q 170 120 150 120 L 50 120 Q 30 120 30 100 Q 30 80 50 80"
+        fill="none"
+        stroke="#efc07b"
+        strokeWidth="5"
+      />
+      {/* Simplified curve for the stylized B */}
+      <path
+        d="M 30 10 C 10 30 10 70 30 90"
+        fill="none"
+        stroke="#efc07b"
+        strokeWidth="5"
+      />
+      {/* u in navy */}
+      <text x="140" y="80" fontFamily="serif" fontSize="80" fill="#1a1a2e">u</text>
+      {/* c in navy */}
+      <text x="200" y="80" fontFamily="serif" fontSize="80" fill="#1a1a2e">c</text>
+      {/* r in navy */}
+      <text x="260" y="80" fontFamily="serif" fontSize="80" fill="#1a1a2e">r</text>
+    </svg>
+  );
+}

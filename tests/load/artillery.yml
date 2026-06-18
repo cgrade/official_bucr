@@ -1,0 +1,203 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm up"
+    # Ramp up load
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp up load"
+    # Sustained load
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained load"
+    # Spike test
+    - duration: 30
+      arrivalRate: 100
+      name: "Spike test"
+    # Cool down
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+  
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  
+  variables:
+    testUserEmail: "loadtest@example.com"
+    testUserPassword: "LoadTest123!"
+
+  plugins:
+    expect: {}
+
+scenarios:
+  # Health check scenario
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/vendors"
+          expect:
+            - statusCode: 200
+
+  # User registration flow
+  - name: "User Registration"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            email: "user_{{ $randomNumber(100000, 999999) }}@loadtest.com"
+            password: "LoadTest123!"
+            name: "Load Test User"
+            phone: "+234801{{ $randomNumber(1000000, 9999999) }}"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 201
+
+  # User login flow
+  - name: "User Login"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "john@example.com"
+            password: "User@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/profile"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+  # Browse vendors flow
+  - name: "Browse Vendors"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/vendors"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendors?city=Lagos"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendors?cuisine=Nigerian"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendors/zuma-grill"
+          expect:
+            - statusCode: 200
+
+  # Authenticated user flow
+  - name: "Authenticated User Journey"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "john@example.com"
+            password: "User@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/profile"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/credits"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/favorites"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/reservations"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+  # Vendor portal flow
+  - name: "Vendor Portal"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/vendor/login"
+          json:
+            email: "vendor@zumagrill.com"
+            password: "Vendor@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "vendorToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendor/profile"
+          headers:
+            Authorization: "Bearer {{ vendorToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendor/reservations"
+          headers:
+            Authorization: "Bearer {{ vendorToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendor/orders"
+          headers:
+            Authorization: "Bearer {{ vendorToken }}"
+          expect:
+            - statusCode: 200
+
+  # Admin dashboard flow
+  - name: "Admin Dashboard"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/auth/admin/login"
+          json:
+            email: "admin@bucr.ng"
+            password: "Admin@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "adminToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/admin/dashboard"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/admin/analytics"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: 200
