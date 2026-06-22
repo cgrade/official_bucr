@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
               name: true,
               phone: true,
               email: true,
+              avatar: true,
             },
           },
           branch: {

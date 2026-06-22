@@ -242,18 +242,32 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-[rgba(255,255,255,0.02)]/50 hover:bg-[rgba(255,255,255,0.06)] transition-colors group"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(201,168,76,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(201,168,76,0.25)] transition-colors group"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] dark: dark: font-mono text-sm font-bold text-slate-600 text-[rgba(245,240,232,0.7)]">
-                        {formatTime(reservation.time || reservation.reservationTime)}
-                      </div>
-                      
+                      {/* Diner avatar (image if available, else initials) */}
+                      {(() => {
+                        const name = reservation.user?.name || reservation.user?.fullName || 'Guest';
+                        const avatar = reservation.user?.avatar;
+                        const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+                        return avatar ? (
+                          <img
+                            src={avatar.startsWith('http') ? avatar : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${avatar}`}
+                            alt={name}
+                            className="h-12 w-12 flex-shrink-0 rounded-full object-cover border border-[rgba(201,168,76,0.3)]"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#0f2547] border border-[rgba(201,168,76,0.3)] text-sm font-bold text-[#c9a84c]">
+                            {initials}
+                          </div>
+                        );
+                      })()}
+
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[#f5f0e8] truncate">
                           {reservation.user?.name || reservation.user?.fullName || 'Guest'}
                         </p>
-                        <p className="text-sm text-[#7a8fa6]">
-                          {reservation.partySize} guests • {reservation.reference}
+                        <p className="text-sm text-[#7a8fa6] truncate">
+                          {formatTime(reservation.time || reservation.reservationTime)} · {reservation.partySize} {reservation.partySize === 1 ? 'guest' : 'guests'} · {reservation.reference}
                         </p>
                       </div>
                       
