@@ -1,0 +1,58 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 20
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 20
+      name: "Sustained realistic load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  plugins:
+    expect: {}
+scenarios:
+  - name: "Browse Vendors"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/vendors"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/vendors/zuma-grill"
+          expect:
+            - statusCode: 200
+  - name: "User Journey (correct token path)"
+    weight: 35
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "john@example.com"
+            password: "User@123456"
+          capture:
+            - json: "$.data.tokens.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/profile"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/users/credits"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+  - name: "Health"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: 200

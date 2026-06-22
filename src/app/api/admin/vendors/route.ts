@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/auth/password';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
 import {
@@ -20,7 +20,7 @@ const createVendorSchema = z.object({
   description: z.string().optional(),
   businessType: z.enum(['restaurant', 'bar', 'cafe', 'lounge', 'hotel', 'club', 'bakery', 'food_truck', 'catering', 'other']).optional(),
   cuisineTypes: z.array(z.string()).optional(),
-  subscriptionTier: z.enum(['basic', 'pro', 'premium']).optional(),
+  subscriptionTier: z.enum(['basic', 'pro', 'elite']).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       where: { email: ownerEmail },
     });
 
-    const passwordHash = await bcrypt.hash(ownerPassword, 12);
+    const passwordHash = await hashPassword(ownerPassword);
     const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     // Create owner and vendor in transaction

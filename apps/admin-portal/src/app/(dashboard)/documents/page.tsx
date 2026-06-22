@@ -131,8 +131,8 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Document Review</h1>
-          <p className="text-slate-500 dark:text-slate-400">Review and verify vendor documents</p>
+          <h1 className="text-2xl font-bold text-[#f5f0e8]">Document Review</h1>
+          <p className="text-slate-500 text-[#7a8fa6]">Review and verify vendor documents</p>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function DocumentsPage() {
             'p-4 rounded-xl border transition-all text-left',
             statusFilter === 'pending'
               ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-amber-300'
+              : 'bg-[rgba(255,255,255,0.03)] border-[rgba(201,168,76,0.18)] hover:border-amber-300'
           )}
         >
           <div className="flex items-center gap-3">
@@ -152,7 +152,7 @@ export default function DocumentsPage() {
               <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
+              <p className="text-2xl font-bold text-[#f5f0e8]">
                 {documents.filter(d => d.status === 'pending').length || '—'}
               </p>
               <p className="text-sm text-slate-500">Pending Review</p>
@@ -166,7 +166,7 @@ export default function DocumentsPage() {
             'p-4 rounded-xl border transition-all text-left',
             statusFilter === 'approved'
               ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-green-300'
+              : 'bg-[rgba(255,255,255,0.03)] border-[rgba(201,168,76,0.18)] hover:border-green-300'
           )}
         >
           <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export default function DocumentsPage() {
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">—</p>
+              <p className="text-2xl font-bold text-[#f5f0e8]">—</p>
               <p className="text-sm text-slate-500">Approved</p>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function DocumentsPage() {
             'p-4 rounded-xl border transition-all text-left',
             statusFilter === 'rejected'
               ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-red-300'
+              : 'bg-[rgba(255,255,255,0.03)] border-[rgba(201,168,76,0.18)] hover:border-red-300'
           )}
         >
           <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ export default function DocumentsPage() {
               <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">—</p>
+              <p className="text-2xl font-bold text-[#f5f0e8]">—</p>
               <p className="text-sm text-slate-500">Rejected</p>
             </div>
           </div>
@@ -202,9 +202,9 @@ export default function DocumentsPage() {
       </div>
 
       {/* Documents Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-[rgba(255,255,255,0.03)] rounded-xl border border-[rgba(201,168,76,0.18)] overflow-hidden">
         {/* Search Bar */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="p-4 border-b border-[rgba(201,168,76,0.18)]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
@@ -212,7 +212,7 @@ export default function DocumentsPage() {
               placeholder="Search by vendor name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.02)] text-[#f5f0e8] focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -225,41 +225,41 @@ export default function DocumentsPage() {
           </div>
         ) : documents.length === 0 ? (
           <div className="p-8 text-center">
-            <FileText className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500 dark:text-slate-400">No documents found</p>
+            <FileText className="h-12 w-12 text-slate-300 text-[#f5f0e8] mx-auto mb-3" />
+            <p className="text-slate-500 text-[#7a8fa6]">No documents found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800">
+              <thead className="bg-[rgba(255,255,255,0.02)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
                     Vendor
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
                     Document Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
                     Submitted
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-[rgba(255,255,255,0.04)]">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-lg bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
                           <Building2 className="h-5 w-5 text-slate-500" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900 dark:text-white">
+                          <p className="font-medium text-[#f5f0e8]">
                             {doc.vendor?.businessName || 'Unknown Vendor'}
                           </p>
                           <p className="text-sm text-slate-500">{doc.vendor?.email}</p>
@@ -269,7 +269,7 @@ export default function DocumentsPage() {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-slate-400" />
-                        <span className="text-slate-900 dark:text-white">
+                        <span className="text-[#f5f0e8]">
                           {documentTypeLabels[doc.type] || doc.type}
                         </span>
                         {doc.isRequired && (
@@ -297,7 +297,7 @@ export default function DocumentsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openPreviewModal(doc)}
-                          className="p-2 text-slate-500 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
+                          className="p-2 text-[#7a8fa6] hover:text-[#c9a84c] hover:bg-[rgba(201,168,76,0.08)] rounded-lg transition-colors"
                           title="Preview"
                         >
                           <Eye className="h-4 w-4" />
@@ -306,7 +306,7 @@ export default function DocumentsPage() {
                           href={getDocumentUrl(doc.fileUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 text-slate-500 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
+                          className="p-2 text-[#7a8fa6] hover:text-[#c9a84c] hover:bg-[rgba(201,168,76,0.08)] rounded-lg transition-colors"
                           title="Open in new tab"
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -341,7 +341,7 @@ export default function DocumentsPage() {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div className="p-4 border-t border-[rgba(201,168,76,0.18)] flex items-center justify-between">
             <p className="text-sm text-slate-500">
               Page {pagination.page} of {pagination.totalPages}
             </p>
@@ -349,14 +349,14 @@ export default function DocumentsPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                className="px-3 py-1 text-sm rounded-lg border border-[rgba(201,168,76,0.18)] disabled:opacity-50"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                 disabled={page === pagination.totalPages}
-                className="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                className="px-3 py-1 text-sm rounded-lg border border-[rgba(201,168,76,0.18)] disabled:opacity-50"
               >
                 Next
               </button>
@@ -368,17 +368,17 @@ export default function DocumentsPage() {
       {/* Reject Modal */}
       {showRejectModal && selectedDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[#f5f0e8]">
                 Reject Document
               </h3>
             </div>
             
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
+            <p className="text-slate-600 text-[#7a8fa6] mb-4">
               Please provide a reason for rejecting this {documentTypeLabels[selectedDoc.type]} 
               from <strong>{selectedDoc.vendor?.businessName}</strong>.
             </p>
@@ -387,7 +387,7 @@ export default function DocumentsPage() {
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Enter rejection reason..."
-              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white resize-none"
+              className="w-full p-3 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.02)] text-[#f5f0e8] resize-none"
               rows={3}
             />
 
@@ -398,7 +398,7 @@ export default function DocumentsPage() {
                   setRejectReason('');
                   setSelectedDoc(null);
                 }}
-                className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="flex-1 px-4 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] text-slate-700 text-[rgba(245,240,232,0.7)] hover:bg-[rgba(255,255,255,0.04)]"
               >
                 Cancel
               </button>
@@ -417,10 +417,10 @@ export default function DocumentsPage() {
       {/* Preview Modal */}
       {showPreviewModal && selectedDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-[rgba(201,168,76,0.18)] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-[#f5f0e8]">
                   {documentTypeLabels[selectedDoc.type]}
                 </h3>
                 <p className="text-sm text-slate-500">
@@ -432,13 +432,13 @@ export default function DocumentsPage() {
                   setShowPreviewModal(false);
                   setSelectedDoc(null);
                 }}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-[rgba(255,255,255,0.06)] rounded-lg"
               >
                 <XCircle className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-4 bg-slate-100 dark:bg-slate-800">
+            <div className="flex-1 overflow-auto p-4 bg-[rgba(255,255,255,0.05)]">
               {selectedDoc.fileUrl.toLowerCase().endsWith('.pdf') ? (
                 <iframe
                   src={getDocumentUrl(selectedDoc.fileUrl)}
@@ -455,7 +455,7 @@ export default function DocumentsPage() {
             </div>
 
             {selectedDoc.status === 'pending' && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+              <div className="p-4 border-t border-[rgba(201,168,76,0.18)] flex gap-3">
                 <button
                   onClick={() => {
                     setShowPreviewModal(false);

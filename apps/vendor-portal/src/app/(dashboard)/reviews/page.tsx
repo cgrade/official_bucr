@@ -117,23 +117,23 @@ export default function ReviewsPage() {
     return Array.from({ length: 5 }).map((_, i) => (
       <Star
         key={i}
-        className={`h-4 w-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-600'}`}
+        className={`h-4 w-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-[rgba(122,143,166,0.4)] text-[#f5f0e8]'}`}
       />
     ));
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0a1d3a]">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 bg-[#0f2547] border-b border-[rgba(201,168,76,0.18)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30">
-              <Star className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)]">
+              <Star className="h-6 w-6 text-[#c9a84c]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reviews</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage customer feedback & ratings</p>
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">Reviews</h1>
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage customer feedback & ratings</p>
             </div>
           </div>
           
@@ -157,11 +157,11 @@ export default function ReviewsPage() {
             className="glass-card rounded-2xl p-6 lg:col-span-1"
           >
             <div className="text-center">
-              <div className="text-5xl font-bold text-slate-900 dark:text-white mb-2">{stats.average}</div>
+              <div className="text-5xl font-bold text-[#f5f0e8] mb-2">{stats.average}</div>
               <div className="flex items-center justify-center gap-1 mb-2">
                 {renderStars(Math.round(stats.average))}
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Based on {stats.total} reviews</p>
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">Based on {stats.total} reviews</p>
             </div>
 
             {/* Rating Breakdown */}
@@ -171,15 +171,15 @@ export default function ReviewsPage() {
                 const percentage = stats.total ? (Number(count) / stats.total) * 100 : 0;
                 return (
                   <div key={star} className="flex items-center gap-3">
-                    <span className="text-sm text-slate-500 dark:text-slate-400 w-4">{star}</span>
+                    <span className="text-sm text-slate-500 text-[#7a8fa6] w-4">{star}</span>
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    <div className="flex-1 h-2 rounded-full bg-[rgba(255,255,255,0.04)] overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                        className="h-full bg-[#c9a84c] rounded-full"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 w-8">{count}</span>
+                    <span className="text-sm text-slate-500 text-[#7a8fa6] w-8">{count}</span>
                   </div>
                 );
               })}
@@ -193,27 +193,27 @@ export default function ReviewsPage() {
             transition={{ delay: 0.1 }}
             className="glass-card rounded-2xl p-6 lg:col-span-2"
           >
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Review Insights</h3>
+            <h3 className="text-lg font-semibold text-[#f5f0e8] mb-4">Review Insights</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                 <MessageSquare className="h-6 w-6 text-primary-500 mb-2" />
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Reviews</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{stats.total}</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Total Reviews</p>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                 <TrendingUp className="h-6 w-6 text-emerald-500 mb-2" />
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.fiveStar + stats.fourStar}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">5-4 Star</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{stats.fiveStar + stats.fourStar}</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">5-4 Star</p>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                 <Reply className="h-6 w-6 text-tertiary-500 mb-2" />
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{reviews.filter((r: any) => r.response).length}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Responded</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{reviews.filter((r: any) => r.response).length}</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Responded</p>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                 <ThumbsUp className="h-6 w-6 text-amber-500 mb-2" />
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total > 0 ? Math.round(((stats.fiveStar + stats.fourStar) / stats.total) * 100) : 0}%</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Positive</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{stats.total > 0 ? Math.round(((stats.fiveStar + stats.fourStar) / stats.total) * 100) : 0}%</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Positive</p>
               </div>
             </div>
           </motion.div>
@@ -226,8 +226,8 @@ export default function ReviewsPage() {
           transition={{ delay: 0.2 }}
           className="glass-card rounded-2xl"
         >
-          <div className="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Reviews</h2>
+          <div className="px-6 py-5 border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
+            <h2 className="text-lg font-semibold text-[#f5f0e8]">Recent Reviews</h2>
           </div>
 
           {isLoading ? (
@@ -236,14 +236,14 @@ export default function ReviewsPage() {
             </div>
           ) : reviews.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
                 <Star className="h-8 w-8 text-slate-400" />
               </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews yet</p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Reviews will appear after verified visits</p>
+              <p className="text-slate-500 text-[#7a8fa6] font-medium">No reviews yet</p>
+              <p className="text-sm text-[rgba(122,143,166,0.7)] mt-1">Reviews will appear after verified visits</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-200/50 dark:divide-slate-800/50">
+            <div className="divide-y divide-[rgba(201,168,76,0.12)]">
               {reviews.map((review: any, index: number) => (
                 <motion.div
                   key={review.id}
@@ -253,18 +253,27 @@ export default function ReviewsPage() {
                   className="p-6"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 text-sm font-bold text-slate-600 dark:text-slate-300">
-                      {review.user?.name?.charAt(0) || 'G'}
-                    </div>
+                    {review.user?.avatar ? (
+                      <img
+                        src={review.user.avatar.startsWith('http') ? review.user.avatar : `${process.env.NEXT_PUBLIC_API_URL || ''}${review.user.avatar}`}
+                        alt={review.user?.name || 'Guest'}
+                        className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)] text-[13px] font-bold text-[#c9a84c]">
+                        {review.user?.name?.charAt(0)?.toUpperCase() || 'G'}
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-semibold text-slate-900 dark:text-white">{review.user?.name || 'Guest'}</p>
+                          <p className="font-semibold text-[#f5f0e8]">{review.user?.name || 'Guest'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex items-center gap-0.5">
                               {renderStars(review.rating)}
                             </div>
-                            <span className="text-sm text-slate-500 dark:text-slate-400">
+                            <span className="text-sm text-slate-500 text-[#7a8fa6]">
                               {formatDate(review.createdAt)}
                             </span>
                           </div>
@@ -274,13 +283,13 @@ export default function ReviewsPage() {
                         </Button>
                       </div>
 
-                      <p className="mt-3 text-slate-600 dark:text-slate-300">{review.comment}</p>
+                      <p className="mt-3 text-slate-600 text-[rgba(245,240,232,0.7)]">{review.comment}</p>
 
                       {/* Response */}
                       {review.response && (
                         <div className="mt-4 p-4 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20">
                           <p className="text-sm font-medium text-primary-700 dark:text-primary-400 mb-1">Your Response</p>
-                          <p className="text-sm text-slate-600 dark:text-slate-300">{review.response}</p>
+                          <p className="text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">{review.response}</p>
                         </div>
                       )}
 
@@ -308,7 +317,7 @@ export default function ReviewsPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-4 mt-4">
-                        <button className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                        <button className="flex items-center gap-1.5 text-sm text-slate-500 text-[#7a8fa6] hover:text-slate-700 hover:text-[#f5f0e8]">
                           <ThumbsUp className="h-4 w-4" />
                           Helpful ({review.helpful})
                         </button>
@@ -338,7 +347,7 @@ export default function ReviewsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.75)] backdrop-blur-sm p-4"
             onClick={() => setReportingId(null)}
           >
             <motion.div
@@ -349,18 +358,18 @@ export default function ReviewsPage() {
               className="w-full max-w-md glass-card rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Report Review</h3>
-                <button onClick={() => setReportingId(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <h3 className="text-lg font-semibold text-[#f5f0e8]">Report Review</h3>
+                <button onClick={() => setReportingId(null)} className="p-2 hover:bg-[rgba(255,255,255,0.06)] rounded-lg">
                   <X className="h-5 w-5 text-slate-500" />
                 </button>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              <p className="text-sm text-slate-500 text-[#7a8fa6] mb-4">
                 Please provide a reason for reporting this review.
               </p>
               <textarea
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                 rows={3}
                 placeholder="Reason for reporting..."
               />

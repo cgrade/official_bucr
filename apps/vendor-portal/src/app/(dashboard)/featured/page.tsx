@@ -1,4 +1,5 @@
 'use client';
+import FeatureGate from '@/components/ui/FeatureGate';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
-export default function FeaturedPage() {
+function FeaturedPageInner() {
   const queryClient = useQueryClient();
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [selectedExperience, setSelectedExperience] = useState<string>('');
@@ -104,36 +105,36 @@ export default function FeaturedPage() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'restaurant':
-        return 'from-blue-500 to-indigo-500';
+        return 'bg-[rgba(201,168,76,0.1)]';
       case 'experience':
-        return 'from-purple-500 to-pink-500';
+        return 'bg-[rgba(201,168,76,0.1)]';
       case 'offer':
-        return 'from-orange-500 to-red-500';
+        return 'from-[#c9a84c]';
       default:
-        return 'from-gray-500 to-gray-600';
+        return 'bg-[rgba(201,168,76,0.1)]';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-[#0a1d3a]">
+      <header className="sticky top-0 z-10 bg-[#0f2547] border-b border-[rgba(201,168,76,0.18)]">
         <div className="px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(201,168,76,0.1)]">
               <Star className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 Featured Spots
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">
                 Get more visibility with featured placements
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl">
-            <Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            <span className="font-semibold text-amber-700 dark:text-amber-300">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#c9a84c] dark:/30 dark:to-[#c9a84c]/15 rounded-xl">
+            <Coins className="h-5 w-5 text-[#a07830] dark:text-[#e8d49a]" />
+            <span className="font-semibold text-[#a07830] dark:text-[#e8d49a]">
               {walletBalance.toLocaleString()} credits
             </span>
           </div>
@@ -144,7 +145,7 @@ export default function FeaturedPage() {
         {/* Active Featured Spots */}
         {activeSpots.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
               Active Featured Spots
             </h2>
@@ -152,14 +153,14 @@ export default function FeaturedPage() {
               {activeSpots.map((spot: any) => (
                 <div
                   key={spot.id}
-                  className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-green-200 dark:border-green-800 shadow-sm"
+                  className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-5 border border-green-200 dark:border-green-800 shadow-sm"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${getTypeColor(spot.type)} text-white`}>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)]`}>
                       {getPackageIcon(spot.type)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">
+                      <h3 className="font-semibold text-[#f5f0e8]">
                         {spot.package?.name}
                       </h3>
                       <span className="text-xs text-green-600 dark:text-green-400 font-medium uppercase">
@@ -167,7 +168,7 @@ export default function FeaturedPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-slate-500 text-[#7a8fa6] mb-2">
                     <Calendar className="h-4 w-4" />
                     <span>Ends {formatDistanceToNow(new Date(spot.endDate), { addSuffix: true })}</span>
                   </div>
@@ -182,36 +183,36 @@ export default function FeaturedPage() {
 
         {/* Available Packages */}
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
+          <h2 className="text-lg font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-[#c9a84c]" />
             Available Packages
           </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {availablePackages.map((pkg: any) => (
               <div
                 key={pkg.id}
-                className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-shadow"
+                className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 border border-[rgba(201,168,76,0.18)] shadow-sm hover:shadow-lg transition-shadow"
               >
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${getTypeColor(pkg.type)} text-white mb-4`}>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgba(201,168,76,0.1)] mb-4`}>
                   {getPackageIcon(pkg.type)}
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                <h3 className="text-lg font-semibold text-[#f5f0e8] mb-1">
                   {pkg.name}
                 </h3>
-                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 uppercase mb-3">
+                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(255,255,255,0.05)] text-slate-600 text-[rgba(245,240,232,0.7)] uppercase mb-3">
                   {pkg.type}
                 </span>
                 {pkg.description && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                  <p className="text-sm text-slate-500 text-[#7a8fa6] mb-4">
                     {pkg.description}
                   </p>
                 )}
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
-                    <Coins className="h-4 w-4 text-amber-500" />
+                  <div className="flex items-center gap-1 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
+                    <Coins className="h-4 w-4 text-[#c9a84c]" />
                     <span className="font-semibold">{pkg.creditsCost}</span> credits
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-1 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
                     <Clock className="h-4 w-4 text-blue-500" />
                     <span className="font-semibold">{pkg.durationDays}</span> days
                   </div>
@@ -219,7 +220,7 @@ export default function FeaturedPage() {
                 <button
                   onClick={() => openPurchaseModal(pkg)}
                   disabled={walletBalance < pkg.creditsCost}
-                  className="w-full py-2.5 px-4 rounded-xl font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 px-4 rounded-xl font-medium text-white bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {walletBalance < pkg.creditsCost ? 'Insufficient Credits' : 'Purchase'}
                 </button>
@@ -227,7 +228,7 @@ export default function FeaturedPage() {
             ))}
           </div>
           {availablePackages.length === 0 && (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            <div className="text-center py-12 text-slate-500 text-[#7a8fa6]">
               <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No featured packages available at the moment</p>
             </div>
@@ -237,33 +238,33 @@ export default function FeaturedPage() {
         {/* Past Featured Spots */}
         {pastSpots.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
               <Clock className="h-5 w-5 text-slate-400" />
               Past Featured Spots
             </h2>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl border border-[rgba(201,168,76,0.18)] overflow-hidden">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-700/50">
+                <thead className="bg-[rgba(255,255,255,0.02)]/50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Package</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Period</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Credits</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Package</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Period</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Credits</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {pastSpots.map((spot: any) => (
                     <tr key={spot.id}>
-                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-white font-medium">
+                      <td className="px-4 py-3 text-sm text-[#f5f0e8] font-medium">
                         {spot.package?.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 capitalize">
+                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6] capitalize">
                         {spot.type}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6]">
                         {format(new Date(spot.startDate), 'MMM d')} - {format(new Date(spot.endDate), 'MMM d, yyyy')}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6]">
                         {spot.creditsPaid}
                       </td>
                     </tr>
@@ -278,22 +279,22 @@ export default function FeaturedPage() {
       {/* Purchase Modal */}
       {showPurchaseModal && selectedPackage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <h3 className="text-xl font-semibold text-[#f5f0e8] mb-4">
               Purchase Featured Spot
             </h3>
             
-            <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+            <div className="mb-4 p-4 bg-[rgba(255,255,255,0.02)]/50 rounded-xl">
               <div className="flex items-center gap-3 mb-2">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${getTypeColor(selectedPackage.type)} text-white`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)]`}>
                   {getPackageIcon(selectedPackage.type)}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-slate-900 dark:text-white">{selectedPackage.name}</h4>
+                  <h4 className="font-semibold text-[#f5f0e8]">{selectedPackage.name}</h4>
                   <span className="text-xs text-slate-500 uppercase">{selectedPackage.type}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-4 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
                 <span><strong>{selectedPackage.creditsCost}</strong> credits</span>
                 <span><strong>{selectedPackage.durationDays}</strong> days</span>
               </div>
@@ -302,13 +303,13 @@ export default function FeaturedPage() {
             {/* Experience Selection */}
             {selectedPackage.type === 'experience' && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)] mb-2">
                   Select Experience to Feature
                 </label>
                 <select
                   value={selectedExperience}
                   onChange={(e) => setSelectedExperience(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
                 >
                   <option value="">Choose an experience...</option>
                   {experiences.map((exp: any) => (
@@ -321,13 +322,13 @@ export default function FeaturedPage() {
             {/* Offer Selection */}
             {selectedPackage.type === 'offer' && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)] mb-2">
                   Select Offer to Feature
                 </label>
                 <select
                   value={selectedOffer}
                   onChange={(e) => setSelectedOffer(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
                 >
                   <option value="">Choose an offer...</option>
                   {offers.map((offer: any) => (
@@ -337,9 +338,9 @@ export default function FeaturedPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-6 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-              <span className="text-sm text-amber-700 dark:text-amber-300">Your balance:</span>
-              <span className="font-semibold text-amber-700 dark:text-amber-300">
+            <div className="flex items-center justify-between mb-6 p-3 bg-[#c9a84c]/5 dark:bg-amber-900/20 rounded-xl">
+              <span className="text-sm text-[#a07830] dark:text-[#e8d49a]">Your balance:</span>
+              <span className="font-semibold text-[#a07830] dark:text-[#e8d49a]">
                 {walletBalance.toLocaleString()} credits
               </span>
             </div>
@@ -347,7 +348,7 @@ export default function FeaturedPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPurchaseModal(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-slate-700 text-[rgba(245,240,232,0.7)] bg-[rgba(255,255,255,0.05)] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] transition-colors"
               >
                 Cancel
               </button>
@@ -358,7 +359,7 @@ export default function FeaturedPage() {
                   (selectedPackage.type === 'experience' && !selectedExperience) ||
                   (selectedPackage.type === 'offer' && !selectedOffer)
                 }
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-white bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {purchaseMutation.isPending ? (
                   <>
@@ -376,3 +377,5 @@ export default function FeaturedPage() {
     </div>
   );
 }
+
+export default function FeaturedPage() { return <FeatureGate feature="featured"><FeaturedPageInner /></FeatureGate>; }

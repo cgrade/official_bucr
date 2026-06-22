@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { config } from '@/lib/config';
+import { ECONOMICS } from '@/lib/config/economics';
 import { PaymentChannel, PaymentStatus, PaymentPurpose } from '@prisma/client';
 import crypto from 'crypto';
 
@@ -378,9 +379,10 @@ export async function processCompletedPayment(paymentId: string): Promise<void> 
   switch (payment.purpose) {
     case 'credit_purchase': {
       const { purchaseCredits, purchaseVendorCredits } = await import('./credit.service');
-      const credits = Math.floor(payment.amountKobo / (config.credits.purchasePriceNgn * 100));
-      
-      // Handle both user and vendor credit purchases
+      const credits = calculateCreditsFromAmount(payment.amountKobo);
+      const now = new Date();
+      const billingMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
       if (payment.userId) {
         await purchaseCredits({
           userId: payment.userId,
@@ -395,6 +397,24 @@ export async function processCompletedPayment(paymentId: string): Promise<void> 
           description: `Purchased ${credits} credits (ref: ${payment.reference}, ₦${payment.amountKobo / 100})`,
         });
       }
+
+      // Record credit-spread revenue (spread = paid - face value)
+      const faceValueKobo = credits * ECONOMICS.CREDIT_VALUE_NGN * 100;
+      const spreadNgn = Math.round((payment.amountKobo - faceValueKobo) / 100);
+      if (spreadNgn > 0) {
+        await db.platformRevenue.create({
+          data: {
+            type: 'credit_spread',
+            amountNgn: spreadNgn,
+            amountCredits: credits,
+            sourceType: 'payment',
+            sourceId: payment.id,
+            userId: payment.userId ?? undefined,
+            vendorId: payment.vendorId ?? undefined,
+            billingMonth,
+          },
+        }).catch(() => {});
+      }
       break;
     }
 
@@ -405,10 +425,22 @@ export async function processCompletedPayment(paymentId: string): Promise<void> 
       if (metadata?.tier) {
         await activateSubscription({
           vendorId: payment.vendorId,
-          tier: metadata.tier as 'basic' | 'pro' | 'premium',
+          tier: metadata.tier as 'basic' | 'pro' | 'elite',
           paymentId: payment.id,
           amountPaidKobo: payment.amountKobo,
         });
+        const now = new Date();
+        // Record subscription revenue
+        await db.platformRevenue.create({
+          data: {
+            type: 'subscription',
+            amountNgn: Math.round(payment.amountKobo / 100),
+            sourceType: 'payment',
+            sourceId: payment.id,
+            vendorId: payment.vendorId,
+            billingMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+          },
+        }).catch(() => {});
       }
       break;
     }
@@ -428,14 +460,20 @@ export async function processCompletedPayment(paymentId: string): Promise<void> 
 // UTILITY FUNCTIONS
 // ============================================================================
 
+// purchasePriceKobo is rounded to the nearest whole kobo to avoid floating-point drift
+// e.g. 10 * 1.06 * 100 = 1060.0000000000002 without rounding
+const PURCHASE_PRICE_KOBO_PER_CREDIT = Math.round(
+  ECONOMICS.CREDIT_VALUE_NGN * (1 + ECONOMICS.CREDIT_SPREAD) * 100
+);
+
 export function calculateCreditsFromAmount(amountKobo: number): number {
-  return Math.floor(amountKobo / (config.credits.purchasePriceNgn * 100));
+  return Math.floor(amountKobo / PURCHASE_PRICE_KOBO_PER_CREDIT);
 }
 
 export function calculateAmountForCredits(credits: number): number {
-  return credits * config.credits.purchasePriceNgn * 100; // In kobo
+  return credits * PURCHASE_PRICE_KOBO_PER_CREDIT; // exact — no rounding needed
 }
 
-export function getSubscriptionPrice(tier: 'basic' | 'pro' | 'premium'): number {
-  return config.subscriptions[tier].priceNgn * 100; // In kobo
+export function getSubscriptionPrice(tier: 'basic' | 'pro' | 'elite'): number {
+  return ECONOMICS.SUBSCRIPTION[tier] * 100; // kobo
 }

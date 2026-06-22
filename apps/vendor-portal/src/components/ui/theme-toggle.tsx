@@ -18,7 +18,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="flex items-center gap-1 rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+      <div className="flex items-center gap-1 rounded-xl bg-slate-100 bg-[rgba(255,255,255,0.04)] p-1">
         <div className="h-8 w-8 rounded-lg" />
         <div className="h-8 w-8 rounded-lg" />
         <div className="h-8 w-8 rounded-lg" />
@@ -27,14 +27,14 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-xl bg-slate-100 dark:bg-slate-800/50 p-1">
+    <div className="flex items-center gap-1 rounded-xl bg-slate-100 bg-[rgba(255,255,255,0.04)]/50 p-1">
       <button
         type="button"
         onClick={() => handleSetTheme('light')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'light'
-            ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-amber-500 shadow-md'
+            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="Light mode"
         aria-label="Switch to light mode"
@@ -46,8 +46,8 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('dark')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'dark'
-            ? 'bg-white dark:bg-slate-700 text-primary-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-primary-500 shadow-md'
+            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="Dark mode"
         aria-label="Switch to dark mode"
@@ -59,8 +59,8 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('system')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'system'
-            ? 'bg-white dark:bg-slate-700 text-tertiary-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-tertiary-500 shadow-md'
+            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="System theme"
         aria-label="Use system theme"

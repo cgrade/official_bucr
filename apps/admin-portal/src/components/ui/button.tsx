@@ -1,31 +1,39 @@
+/**
+ * Button — 3-colour flat system: navy / gold / white
+ * No gradients. No mixed intermediate shades.
+ */
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a84c] focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40',
   {
     variants: {
       variant: {
-        default: 'bg-gradient-to-r from-primary-500 to-tertiary-500 text-white hover:from-primary-600 hover:to-tertiary-600 shadow-lg shadow-primary-500/25',
-        destructive: 'bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600',
-        outline: 'border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700',
-        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
-        ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800',
-        link: 'text-primary-600 underline-offset-4 hover:underline',
+        // Primary: flat gold, navy text
+        default:     'bg-[#c9a84c] text-[#0f2547] font-semibold hover:bg-[#f5f0e8] border border-[#c9a84c] hover:border-[#f5f0e8]',
+        // Destructive: flat red
+        destructive: 'bg-red-600 text-white hover:bg-red-700 border border-red-600',
+        // Outlined: gold border, gold text → solid gold on hover
+        outline:     'border border-[#c9a84c] bg-transparent text-[#c9a84c] hover:bg-[#c9a84c] hover:text-[#0f2547]',
+        // Ghost: transparent, cream text
+        ghost:       'bg-transparent text-[rgba(245,240,232,0.6)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#f5f0e8]',
+        // Secondary: slightly lighter navy
+        secondary:   'bg-[rgba(255,255,255,0.06)] text-[#f5f0e8] border border-[rgba(201,168,76,0.2)] hover:bg-[rgba(255,255,255,0.1)]',
+        link:        'bg-transparent text-[#c9a84c] underline-offset-4 hover:underline hover:text-[#f5f0e8]',
+        success:     'bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600',
       },
       size: {
         default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-lg px-3',
-        lg: 'h-11 rounded-xl px-8',
-        icon: 'h-10 w-10',
+        sm:      'h-8 px-3 text-[12px]',
+        lg:      'h-11 px-8',
+        xl:      'h-12 px-10 text-base',
+        icon:    'h-10 w-10',
       },
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
+    defaultVariants: { variant: 'default', size: 'default' },
   }
 );
 
@@ -33,17 +41,29 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, children, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={disabled || loading}
         {...props}
-      />
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            {children}
+          </span>
+        ) : children}
+      </Comp>
     );
   }
 );

@@ -121,7 +121,7 @@ export const vendorsApi = {
     ownerPassword: string;
     description?: string;
     cuisineTypes?: string[];
-    subscriptionTier?: 'basic' | 'pro' | 'premium';
+    subscriptionTier?: 'basic' | 'pro' | 'elite';
   }) => {
     const { data } = await api.post<ApiResponse<any>>('/admin/vendors', payload);
     return data;
@@ -327,6 +327,30 @@ export const featuredApi = {
   deleteSpot: async (id: string) => {
     const { data } = await api.delete<ApiResponse<null>>(`/admin/featured/spots/${id}`);
     return data;
+  },
+};
+
+// Map overview data
+export const mapApi = {
+  getVendorMapData: async () => {
+    const { data } = await api.get<ApiResponse<any>>('/admin/vendors/map-data');
+    return data;
+  },
+};
+
+// Platform revenue — wraps the direct-fetch pattern in revenue/page.tsx
+// Uses the axios instance for consistent auth token refresh and error handling
+export const revenueApi = {
+  getByPeriod: async (params?: { month?: string; type?: string; page?: number; limit?: number }) => {
+    const { data } = await api.get<ApiResponse<any>>('/admin/platform-revenue', { params });
+    return data;
+  },
+  getCsv: async (params?: { month?: string; type?: string }) => {
+    const response = await api.get('/admin/platform-revenue', {
+      params: { ...params, format: 'csv' },
+      responseType: 'text',
+    });
+    return response.data as string;
   },
 };
 

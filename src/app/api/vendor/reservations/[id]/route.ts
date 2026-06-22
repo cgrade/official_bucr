@@ -36,9 +36,7 @@ export async function GET(
     const reservation = await db.reservation.findFirst({
       where: {
         id: params.id,
-        branch: {
-          vendorId: vendor.id,
-        },
+        vendorId: vendor.id, // direct FK — reservations may have no branch (branchId nullable)
       },
       include: {
         user: {
@@ -69,7 +67,7 @@ export async function GET(
     });
 
     if (!reservation) {
-      return notFoundResponse('Reservation not found');
+      return notFoundResponse('Reservation');
     }
 
     return successResponse({

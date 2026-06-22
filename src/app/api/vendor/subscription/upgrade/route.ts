@@ -14,7 +14,7 @@ import {
 } from '@/services/payment.service';
 
 const upgradeSchema = z.object({
-  planId: z.enum(['basic', 'pro', 'premium']),
+  planId: z.enum(['basic', 'pro', 'elite']),
   callbackUrl: z.string().url().optional(),
 });
 

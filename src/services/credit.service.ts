@@ -1,6 +1,9 @@
 import { db } from '@/lib/db';
-import { config } from '@/lib/config';
+import { ECONOMICS } from '@/lib/config/economics';
 import { addMonths } from '@/lib/utils/helpers';
+import { sendCreditExpiryReminder } from './email.service';
+import { notifyCreditExpiring } from './notification.service';
+import { isNotificationEnabled } from '@/lib/notifications/preferences';
 import type { CreditTransactionType } from '@/types';
 import type { VendorCreditType } from '@prisma/client';
 
@@ -18,7 +21,6 @@ export interface CreditTransactionParams {
 export async function createCreditTransaction(params: CreditTransactionParams) {
   const { userId, type, amount, referenceType, referenceId, description, paystackReference, amountPaidKobo } = params;
 
-  // Get current balance
   const user = await db.user.findUnique({
     where: { id: userId },
     select: { creditsBalance: true },
@@ -34,13 +36,11 @@ export async function createCreditTransaction(params: CreditTransactionParams) {
     throw new Error('Insufficient credits');
   }
 
-  // Calculate expiry date for purchased credits
   let expiresAt: Date | undefined;
   if (type === 'purchase' && amount > 0) {
-    expiresAt = addMonths(new Date(), config.credits.expiryMonths);
+    expiresAt = addMonths(new Date(), ECONOMICS.CREDIT_EXPIRY_MONTHS);
   }
 
-  // Create transaction and update balance in a transaction
   const [transaction] = await db.$transaction([
     db.creditTransaction.create({
       data: {
@@ -99,15 +99,24 @@ export interface VendorCreditTransactionParams {
 export async function createVendorCreditTransaction(params: VendorCreditTransactionParams) {
   const { vendorId, type, amount, referenceType, referenceId, description } = params;
 
-  // Get or create wallet
-  let wallet = await db.vendorWallet.findUnique({
-    where: { vendorId },
-  });
+  // Guard: withdrawal is legally gated
+  if (type === 'withdrawal' && !ECONOMICS.VENDOR_WITHDRAWAL_ENABLED) {
+    // AuditLog the attempted withdrawal — we do this outside a transaction so it always persists
+    await db.auditLog.create({
+      data: {
+        vendorId,
+        action: 'update',
+        resource: 'vendor_wallet',
+        metadata: { attemptedType: 'withdrawal', amount, reason: 'VENDOR_WITHDRAWAL_ENABLED=false' },
+      } as any,
+    }).catch(() => {/* fire-and-forget */});
+    throw Object.assign(new Error('Vendor cash withdrawals are currently disabled pending regulatory approval.'), { code: 'WITHDRAWAL_DISABLED' });
+  }
+
+  let wallet = await db.vendorWallet.findUnique({ where: { vendorId } });
 
   if (!wallet) {
-    wallet = await db.vendorWallet.create({
-      data: { vendorId },
-    });
+    wallet = await db.vendorWallet.create({ data: { vendorId } });
   }
 
   const newBalance = wallet.balance + amount;
@@ -116,15 +125,13 @@ export async function createVendorCreditTransaction(params: VendorCreditTransact
     throw new Error('Insufficient credits');
   }
 
-  // Update totals based on transaction type
-  const updateData: any = { balance: newBalance };
+  const updateData: Record<string, unknown> = { balance: newBalance };
   if (amount > 0) {
     updateData.totalEarned = { increment: amount };
   } else if (amount < 0) {
     updateData.totalSpent = { increment: Math.abs(amount) };
   }
 
-  // Create transaction and update wallet in a transaction
   const [transaction] = await db.$transaction([
     db.vendorCreditTransaction.create({
       data: {
@@ -303,55 +310,59 @@ export async function getExpiringCredits(userId: string, daysAhead: number = 30)
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + daysAhead);
 
-  const expiringTransactions = await db.creditTransaction.findMany({
+  return db.creditTransaction.findMany({
     where: {
       userId,
       type: 'purchase',
-      expiresAt: {
-        gte: now,
-        lte: futureDate,
-      },
+      expiresAt: { gte: now, lte: futureDate },
       expiredAt: null,
     },
     orderBy: { expiresAt: 'asc' },
   });
-
-  return expiringTransactions;
 }
 
-export function calculateCreditsForPartySize(partySize: number): number {
-  const { tiers } = config.reservations;
-  
-  if (partySize >= tiers.standard.minGuests && partySize <= tiers.standard.maxGuests) {
-    return tiers.standard.credits;
+// ============================================================================
+// DEPOSIT TIER CALCULATION
+// ============================================================================
+
+/**
+ * Flat deposit per reservation — party size does NOT affect the amount.
+ * Resolution order: vendor custom override → venue-type default → global default.
+ */
+export function calculateReservationDeposit(
+  venueType?: string | null,
+  customDepositCredits?: number | null
+): number {
+  if (customDepositCredits && customDepositCredits > 0) return customDepositCredits;
+  if (venueType && ECONOMICS.DEPOSIT_BY_VENUE_TYPE[venueType] != null) {
+    return ECONOMICS.DEPOSIT_BY_VENUE_TYPE[venueType];
   }
-  if (partySize >= tiers.group.minGuests && partySize <= tiers.group.maxGuests) {
-    return tiers.group.credits;
-  }
-  if (partySize >= tiers.largeParty.minGuests) {
-    return tiers.largeParty.credits;
-  }
-  
-  return tiers.standard.credits;
+  return ECONOMICS.DEPOSIT_DEFAULT;
+}
+
+/**
+ * @deprecated Deposits are now flat per reservation. Kept as a thin shim so any
+ * remaining callers resolve to the default flat deposit. Use calculateReservationDeposit.
+ */
+export function calculateCreditsForPartySize(_partySize?: number): number {
+  return ECONOMICS.DEPOSIT_DEFAULT;
 }
 
 export function calculateShowupBonus(depositedCredits: number): number {
-  return Math.floor(depositedCredits * (config.credits.showupBonusPercent / 100));
+  return Math.floor(depositedCredits * ECONOMICS.SHOWUP_BONUS_PCT);
 }
 
 export function calculateCancellationRefund(
   depositedCredits: number,
   hoursUntilReservation: number
 ): number {
-  const { cancellation } = config.reservations;
-  
-  if (hoursUntilReservation >= cancellation.fullRefundHours) {
+  if (hoursUntilReservation >= ECONOMICS.CANCEL_FULL_REFUND_HOURS) {
     return depositedCredits; // 100% refund
   }
-  if (hoursUntilReservation >= cancellation.partialRefundHours) {
-    return Math.floor(depositedCredits * (cancellation.partialRefundPercent / 100)); // 50% refund
+  if (hoursUntilReservation >= ECONOMICS.CANCEL_PARTIAL_REFUND_HOURS) {
+    return Math.floor(depositedCredits * ECONOMICS.CANCEL_PARTIAL_REFUND_PCT);
   }
-  return 0; // No refund
+  return 0; // no refund
 }
 
 // ============================================================================
@@ -364,8 +375,7 @@ export async function processExpiredCredits(): Promise<{
   users: string[];
 }> {
   const now = new Date();
-  
-  // Find all purchase transactions that have expired but not yet processed
+
   const expiredTransactions = await db.creditTransaction.findMany({
     where: {
       type: 'purchase',
@@ -385,29 +395,21 @@ export async function processExpiredCredits(): Promise<{
   const processedUsers = new Set<string>();
   let totalExpiredCredits = 0;
 
-  // Process each expired transaction
   for (const transaction of expiredTransactions) {
     const remainingCredits = transaction.remainingAmount ?? transaction.amount;
-    
-    // Mark transaction as expired and deduct remaining credits from user balance
+
     await db.$transaction(async (tx) => {
-      // Update the transaction as expired
       await tx.creditTransaction.update({
         where: { id: transaction.id },
-        data: { 
-          expiredAt: now,
-          status: 'expired',
-        },
+        data: { expiredAt: now, status: 'expired' },
       });
 
-      // Deduct remaining credits from user balance (breakage revenue)
       if (remainingCredits > 0) {
         await tx.user.update({
           where: { id: transaction.userId },
           data: { creditsBalance: { decrement: remainingCredits } },
         });
 
-        // Create an expire transaction for audit trail
         await tx.creditTransaction.create({
           data: {
             userId: transaction.userId,
@@ -418,6 +420,19 @@ export async function processExpiredCredits(): Promise<{
             referenceType: 'credit_expiry',
             referenceId: transaction.id,
             description: `${remainingCredits} credits expired`,
+          },
+        });
+
+        // Record breakage revenue — inside the same transaction so it rolls back on failure
+        await tx.platformRevenue.create({
+          data: {
+            type: 'breakage',
+            amountNgn: remainingCredits * ECONOMICS.CREDIT_VALUE_NGN,
+            amountCredits: remainingCredits,
+            sourceType: 'credit_expiry',
+            sourceId: transaction.id,
+            userId: transaction.userId,
+            billingMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
           },
         });
       }
@@ -440,16 +455,12 @@ export async function sendExpiryReminders(): Promise<{
 }> {
   const now = new Date();
   const reminderDate = new Date();
-  reminderDate.setDate(reminderDate.getDate() + config.credits.expiryReminderDays);
+  reminderDate.setDate(reminderDate.getDate() + ECONOMICS.EXPIRY_REMINDER_DAYS);
 
-  // Find users with credits expiring within the reminder window
   const expiringTransactions = await db.creditTransaction.findMany({
     where: {
       type: 'purchase',
-      expiresAt: {
-        gte: now,
-        lte: reminderDate,
-      },
+      expiresAt: { gte: now, lte: reminderDate },
       expiredAt: null,
     },
     include: {
@@ -457,9 +468,8 @@ export async function sendExpiryReminders(): Promise<{
     },
   });
 
-  // Group by user
   const userCredits = new Map<string, { user: typeof expiringTransactions[0]['user']; total: number }>();
-  
+
   for (const tx of expiringTransactions) {
     const existing = userCredits.get(tx.userId);
     if (existing) {
@@ -470,20 +480,26 @@ export async function sendExpiryReminders(): Promise<{
   }
 
   const usersToNotify: Array<{ userId: string; email: string; expiringCredits: number }> = [];
+  const expiryDateStr = reminderDate.toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
 
   for (const [userId, data] of userCredits) {
-    usersToNotify.push({
-      userId,
-      email: data.user.email,
-      expiringCredits: data.total,
-    });
-    
-    // TODO: Send email notification
-    // await sendCreditExpiryReminderEmail(data.user.email, data.user.name, data.total);
+    usersToNotify.push({ userId, email: data.user.email, expiringCredits: data.total });
+
+    // Push/in-app + email, both gated by the user's 'credits' preference.
+    notifyCreditExpiring(userId, {
+      amount: data.total,
+      daysLeft: ECONOMICS.EXPIRY_REMINDER_DAYS,
+    }).catch((e) => console.error('[expiry] push failed:', e));
+
+    if (data.user.email && (await isNotificationEnabled(userId, 'credits'))) {
+      sendCreditExpiryReminder({
+        to: data.user.email,
+        userName: data.user.name || 'there',
+        creditsExpiring: data.total,
+        expiryDate: expiryDateStr,
+      }).catch((e) => console.error('[expiry] email failed:', e));
+    }
   }
 
-  return {
-    sent: usersToNotify.length,
-    users: usersToNotify,
-  };
+  return { sent: usersToNotify.length, users: usersToNotify };
 }

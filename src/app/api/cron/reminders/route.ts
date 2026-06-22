@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
-import { sendReservationReminder } from '@/services/sms.service';
-import { sendReservationConfirmation } from '@/services/email.service';
+import { sendReservationReminderEmail } from '@/services/email.service';
+import { notifyReservationReminder } from '@/services/notification.service';
+import { resolvePreferences } from '@/lib/notifications/preferences';
 
 /**
  * Reservation Reminder Cron Job
@@ -34,37 +35,41 @@ export async function GET(request: NextRequest) {
         status: 'confirmed',
       },
       include: {
-        user: { select: { phone: true, email: true, name: true } },
+        user: { select: { id: true, phone: true, email: true, name: true, notificationPreferences: true } },
         vendor: { select: { businessName: true } },
       },
     });
 
-    let smsSent = 0;
+    let pushSmsSent = 0;
     let emailSent = 0;
+    let skipped = 0;
 
     for (const reservation of upcomingReservations) {
       const vendorName = reservation.vendor?.businessName || 'Restaurant';
 
-      // Send SMS reminder
-      if (reservation.user.phone) {
-        try {
-          await sendReservationReminder({
-            to: reservation.user.phone,
-            vendorName,
-            date: reservation.date.toISOString().split('T')[0],
-            time: reservation.time,
-            reference: reservation.reference,
-          });
-          smsSent++;
-        } catch (err) {
-          console.error(`SMS reminder failed for reservation ${reservation.id}:`, err);
-        }
+      // Respect the user's "reminders" preference — a disabled toggle means no reminder.
+      const prefs = resolvePreferences(reservation.user.notificationPreferences);
+      if (!prefs.reminders) {
+        skipped++;
+        continue;
       }
 
-      // Send email reminder
+      // Push + SMS reminder (preference re-checked inside, multi-channel + persisted).
+      try {
+        await notifyReservationReminder(reservation.user.id, {
+          vendorName,
+          time: reservation.time,
+          reference: reservation.reference,
+        });
+        pushSmsSent++;
+      } catch (err) {
+        console.error(`Push/SMS reminder failed for reservation ${reservation.id}:`, err);
+      }
+
+      // Email reminder (proper reminder template, not the confirmation template).
       if (reservation.user.email) {
         try {
-          await sendReservationConfirmation({
+          await sendReservationReminderEmail({
             to: reservation.user.email,
             userName: reservation.user.name || 'Guest',
             vendorName,
@@ -86,8 +91,9 @@ export async function GET(request: NextRequest) {
       message: 'Reminder cron job completed',
       timestamp: new Date().toISOString(),
       reservationsFound: upcomingReservations.length,
-      smsSent,
+      pushSmsSent,
       emailSent,
+      skippedByPreference: skipped,
     });
   } catch (error) {
     console.error('Reminder cron job error:', error);

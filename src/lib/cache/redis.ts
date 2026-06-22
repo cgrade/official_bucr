@@ -61,19 +61,22 @@ export const CACHE_KEYS = {
   MENU: 'menu:',
   USER: 'user:',
   RATE_LIMIT: 'ratelimit:',
+  GEOCODE: 'geocode:',         // Mapbox geocoding results
+  REVERSE_GEOCODE: 'rgeo:',    // Mapbox reverse geocoding results
 } as const;
 
 // Default TTL values (in seconds)
 export const CACHE_TTL = {
-  SESSION: 60 * 60 * 24, // 24 hours
+  SESSION: 60 * 60 * 24,            // 24 hours
   TOKEN_BLACKLIST: 60 * 60 * 24 * 7, // 7 days
-  VENDOR: 60 * 5, // 5 minutes
-  VENDOR_LIST: 60 * 2, // 2 minutes
-  MENU: 60 * 10, // 10 minutes
-  USER: 60 * 5, // 5 minutes
-  RATE_LIMIT: 60 * 15, // 15 minutes
-  FEATURED: 60 * 5, // 5 minutes
-  VENDOR_DETAIL: 60 * 10, // 10 minutes
+  VENDOR: 60 * 5,                   // 5 minutes
+  VENDOR_LIST: 60 * 2,              // 2 minutes
+  MENU: 60 * 10,                    // 10 minutes
+  USER: 60 * 5,                     // 5 minutes
+  RATE_LIMIT: 60 * 15,              // 15 minutes
+  FEATURED: 60 * 5,                 // 5 minutes
+  VENDOR_DETAIL: 60 * 10,           // 10 minutes
+  GEOCODE: 60 * 60 * 24 * 30,       // 30 days (Mapbox permits caching)
 } as const;
 
 /**

@@ -38,13 +38,13 @@ describe('Auth API Integration Tests', () => {
       expect(data.success).toBe(true);
       expect(data.data.user).toBeDefined();
       expect(data.data.user.email).toBe(testUser.email);
-      expect(data.data.accessToken).toBeDefined();
-      expect(data.data.refreshToken).toBeDefined();
+      expect(data.data.tokens.accessToken).toBeDefined();
+      expect(data.data.tokens.refreshToken).toBeDefined();
 
       // Save for cleanup and subsequent tests
       createdUserId = data.data.user.id;
-      accessToken = data.data.accessToken;
-      refreshToken = data.data.refreshToken;
+      accessToken = data.data.tokens.accessToken;
+      refreshToken = data.data.tokens.refreshToken;
     });
 
     it('should reject duplicate email registration', async () => {
@@ -124,12 +124,12 @@ describe('Auth API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.data.user).toBeDefined();
-      expect(data.data.accessToken).toBeDefined();
-      expect(data.data.refreshToken).toBeDefined();
+      expect(data.data.tokens.accessToken).toBeDefined();
+      expect(data.data.tokens.refreshToken).toBeDefined();
 
       // Update tokens for subsequent tests
-      accessToken = data.data.accessToken;
-      refreshToken = data.data.refreshToken;
+      accessToken = data.data.tokens.accessToken;
+      refreshToken = data.data.tokens.refreshToken;
     });
 
     it('should reject invalid password', async () => {
@@ -193,8 +193,9 @@ describe('Auth API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.data.user).toBeDefined();
-      expect(data.data.user.email).toBe(testUser.email);
+      // /me returns { type, data: <user> }
+      expect(data.data.data).toBeDefined();
+      expect(data.data.data.email).toBe(testUser.email);
     });
 
     it('should reject request without token', async () => {
@@ -237,12 +238,12 @@ describe('Auth API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.data.accessToken).toBeDefined();
-      expect(data.data.refreshToken).toBeDefined();
+      expect(data.data.tokens.accessToken).toBeDefined();
+      expect(data.data.tokens.refreshToken).toBeDefined();
 
       // Update tokens
-      accessToken = data.data.accessToken;
-      refreshToken = data.data.refreshToken;
+      accessToken = data.data.tokens.accessToken;
+      refreshToken = data.data.tokens.refreshToken;
     });
 
     it('should reject invalid refresh token', async () => {

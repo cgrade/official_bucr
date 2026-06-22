@@ -12,57 +12,98 @@ export async function GET(
 ) {
   try {
     const { slug } = params;
+    const { searchParams } = new URL(request.url);
+    // context=dineIn|takeout — filters menu to the relevant channel
+    const context = searchParams.get('context') as 'dineIn' | 'takeout' | null;
 
-    const vendor = await (db.vendor as any).findFirst({
-      where: { slug, deletedAt: null, verificationStatus: 'approved' },
-      include: {
-        branches: {
-          where: { deletedAt: null, isActive: true },
-          orderBy: { isMainBranch: 'desc' },
-        },
-        galleryImages: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        menuCategories: {
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' },
-          include: {
-            items: {
-              where: { deletedAt: null, isAvailable: true },
-              orderBy: { sortOrder: 'asc' },
+    const now = new Date();
+
+    // Base menu availability filter: permanently available AND not temporarily 86'd
+    const menuAvailableWhere = {
+      deletedAt: null,
+      isAvailable: true,
+      OR: [
+        { unavailableUntil: null },
+        { unavailableUntil: { lt: now } }, // 86 window has passed
+      ],
+      // Channel filter when context is provided
+      ...(context === 'dineIn'  && { availableForDineIn: true }),
+      ...(context === 'takeout' && { availableForTakeout: true }),
+    };
+
+    const [vendor, reviewStats] = await Promise.all([
+      (db.vendor as any).findFirst({
+        where: { slug, deletedAt: null, verificationStatus: 'approved' },
+        include: {
+          branches: {
+            where: { deletedAt: null, isActive: true },
+            orderBy: { isMainBranch: 'desc' },
+          },
+          galleryImages: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          menuCategories: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            include: {
+              items: {
+                where: menuAvailableWhere,
+                orderBy: { sortOrder: 'asc' },
+              },
             },
           },
-        },
-        menus: {
-          where: { deletedAt: null, isAvailable: true, categoryId: null },
-          orderBy: { sortOrder: 'asc' },
-        },
-        experiences: {
-          where: { deletedAt: null, isActive: true },
-        },
-        specialOffers: {
-          where: { deletedAt: null, isActive: true },
-          orderBy: { createdAt: 'desc' },
-        },
-        achievements: {
-          orderBy: { earnedAt: 'desc' },
-        },
-        reviews: {
-          where: { isVisible: true },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
+          menus: {
+            where: { ...menuAvailableWhere, categoryId: null },
+            orderBy: { sortOrder: 'asc' },
+          },
+          experiences: {
+            where: { deletedAt: null, isActive: true },
+          },
+          specialOffers: {
+            where: { deletedAt: null, isActive: true },
+            orderBy: { createdAt: 'desc' },
+          },
+          achievements: {
+            orderBy: { earnedAt: 'desc' },
+          },
+          reviews: {
+            where: { isVisible: true },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+            include: {
+              user: {
+                select: { id: true, name: true, avatar: true },
               },
             },
           },
         },
-      },
-    });
+      }),
+      // Compute rating and review count live from the reviews table — never trust stored seed values
+      db.review.aggregate({
+        where: {
+          vendor: { slug },
+          isVisible: true,
+        },
+        _avg: { rating: true },
+        _count: { id: true },
+      }),
+    ]);
+
+    // Overwrite stored values with live-computed figures
+    if (vendor) {
+      const liveAvg   = reviewStats._avg.rating;
+      const liveCount = reviewStats._count.id;
+      vendor.averageRating = liveAvg !== null ? Math.round(liveAvg * 10) / 10 : null;
+      vendor.totalReviews  = liveCount;
+      // Persist back so list queries stay consistent (fire-and-forget)
+      db.vendor.update({
+        where: { id: vendor.id },
+        data: {
+          averageRating: vendor.averageRating,
+          totalReviews:  vendor.totalReviews,
+        },
+      }).catch(() => {});
+    }
 
     if (!vendor) {
       return notFoundResponse('Vendor');
@@ -128,7 +169,10 @@ export async function GET(
       averageRating: vendor.averageRating,
       totalReviews: vendor.totalReviews,
       verificationStatus: vendor.verificationStatus,
-      isPremium: vendor.subscriptionTier === 'premium',
+      subscriptionTier: vendor.subscriptionTier,
+      venueType: vendor.venueType,
+      reliabilityScore: vendor.reliabilityScore,
+      bookWithConfidence: vendor.bookWithConfidence,
       deliveryEnabled: vendor.deliveryEnabled,
       deliveryFeeType: vendor.deliveryFeeType,
       deliveryFlatFee: vendor.deliveryFlatFee,

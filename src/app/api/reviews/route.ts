@@ -9,6 +9,8 @@ import {
   validationErrorResponse,
 } from '@/lib/utils/api-response';
 import { awardBonus } from '@/services/credit.service';
+import { syncVendorAchievements } from '@/services/achievement.service';
+import { notifyVendorNewReview } from '@/services/notification.service';
 import { config } from '@/lib/config';
 
 const createReviewSchema = z.object({
@@ -156,6 +158,17 @@ export async function POST(request: NextRequest) {
 
       return newReview;
     });
+
+    // Sync achievements fire-and-forget — may unlock "Top Rated" (avg ≥ 4.5 with ≥ 10 reviews)
+    syncVendorAchievements(validation.data.vendorId).catch(() => {});
+
+    // Notify the vendor of the new review (gated by vendor 'newReviews' preference).
+    db.user
+      .findUnique({ where: { id: payload.sub }, select: { name: true } })
+      .then((u) =>
+        notifyVendorNewReview(vendorId, { guestName: u?.name || 'A guest', rating })
+      )
+      .catch((err) => console.error('Failed to notify vendor of review:', err));
 
     return successResponse(
       {

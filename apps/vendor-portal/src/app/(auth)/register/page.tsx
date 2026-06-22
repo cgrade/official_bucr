@@ -42,22 +42,33 @@ const ownerSchema = z.object({
 
 const BUSINESS_TYPES = [
   { value: 'restaurant', label: 'Restaurant' },
-  { value: 'bar', label: 'Bar' },
-  { value: 'cafe', label: 'Café' },
-  { value: 'lounge', label: 'Lounge' },
-  { value: 'hotel', label: 'Hotel Restaurant' },
-  { value: 'club', label: 'Club / Night Club' },
-  { value: 'bakery', label: 'Bakery' },
+  { value: 'bar',        label: 'Bar' },
+  { value: 'cafe',       label: 'Café' },
+  { value: 'lounge',     label: 'Lounge' },
+  { value: 'hotel',      label: 'Hotel Restaurant' },
+  { value: 'club',       label: 'Club / Night Club' },
+  { value: 'bakery',     label: 'Bakery' },
   { value: 'food_truck', label: 'Food Truck' },
-  { value: 'catering', label: 'Catering' },
-  { value: 'other', label: 'Other' },
+  { value: 'catering',   label: 'Catering' },
+  { value: 'other',      label: 'Other' },
+];
+
+// Venue type sets the default booking DEPOSIT (the per-cover success fee is a flat
+// ₦1,500 across all venue types). You can override the deposit later in Settings.
+// Values match the VenueType enum in the database exactly.
+const VENUE_TYPES = [
+  { value: 'fine_dining',    label: 'Fine Dining',    description: 'Premium tasting menus, high-end service · ₦20,000 deposit/booking' },
+  { value: 'upscale_casual', label: 'Upscale Casual', description: 'Quality dining without strict formality · ₦15,000 deposit/booking' },
+  { value: 'lounge',         label: 'Lounge',         description: 'Relaxed atmosphere, drinks & light bites · ₦10,000 deposit/booking' },
+  { value: 'casual',         label: 'Casual Dining',  description: 'Everyday dining, accessible pricing · ₦10,000 deposit/booking' },
 ];
 
 // Step 2: Business Details
 const businessSchema = z.object({
   businessType: z.string().min(1, 'Please select your business type'),
+  venueType:    z.string().min(1, 'Please select your venue type'),
   businessName: z.string().min(2, 'Business name is required'),
-  description: z.string().optional(),
+  description:  z.string().optional(),
   cuisineTypes: z.string().optional(),
 });
 
@@ -100,6 +111,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
   
   // Form data storage
   const [ownerData, setOwnerData] = useState<OwnerFormData | null>(null);
@@ -179,20 +191,17 @@ export default function RegisterPage() {
   };
 
   const handleFinalSubmit = async () => {
-    console.log('=== handleFinalSubmit called ===');
-    console.log('ownerData:', ownerData);
-    console.log('businessData:', businessData);
-    console.log('locationData:', locationData);
-    
     if (!ownerData || !businessData || !locationData) {
       const missing = [];
       if (!ownerData) missing.push('Owner details');
       if (!businessData) missing.push('Business info');
       if (!locationData) missing.push('Location');
-      const errorMsg = `Please complete: ${missing.join(', ')}`;
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      alert(errorMsg); // Fallback alert
+      toast.error(`Please complete: ${missing.join(', ')}`);
+      return;
+    }
+
+    if (!consentGiven) {
+      setRegistrationError('Please agree to the Terms of Service and Privacy Policy to continue');
       return;
     }
 
@@ -200,23 +209,17 @@ export default function RegisterPage() {
     const cacDoc = documents.find(d => d.type === 'cac');
     const ownerIdDoc = documents.find(d => d.type === 'owner_id');
 
-    console.log('CAC doc:', cacDoc);
-    console.log('Owner ID doc:', ownerIdDoc);
-
     if (!cacDoc?.file) {
       toast.error('CAC Certificate is required');
-      alert('CAC Certificate is required');
       return;
     }
 
     if (!ownerIdDoc?.file) {
-      toast.error('Owner ID is required');
-      alert('Owner ID is required');
+      toast.error("Owner's ID is required");
       return;
     }
 
     setIsSubmitting(true);
-    console.log('Starting registration...');
 
     try {
       // Step 1: Register the vendor
@@ -239,6 +242,9 @@ export default function RegisterPage() {
       if (businessData.businessType) {
         registrationData.businessType = businessData.businessType;
       }
+      if (businessData.venueType) {
+        registrationData.venueType = businessData.venueType;
+      }
       if (businessData.cuisineTypes?.trim()) {
         registrationData.cuisineTypes = businessData.cuisineTypes.split(',').map(c => c.trim()).filter(Boolean);
       }
@@ -249,39 +255,28 @@ export default function RegisterPage() {
         registrationData.branchEmail = locationData.branchEmail.trim();
       }
 
-      console.log('Registration data being sent:', registrationData);
-      console.log('API URL:', `${API_URL}/api/auth/vendor/register`);
-
       let registerResponse;
       let registerResult;
-      
+
       try {
         registerResponse = await fetch(`${API_URL}/api/auth/vendor/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(registrationData),
         });
-        
+
         const responseText = await registerResponse.text();
-        console.log('Raw API response:', responseText);
-        
         try {
           registerResult = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response as JSON:', parseError);
-          throw new Error(`Server returned invalid response: ${responseText.substring(0, 200)}`);
+        } catch {
+          throw new Error(`Server returned an invalid response: ${responseText.substring(0, 200)}`);
         }
       } catch (fetchError: any) {
-        console.error('Fetch error:', fetchError);
-        throw new Error(`Network error: ${fetchError.message}. Is the backend server running on ${API_URL}?`);
+        throw new Error(`Network error: ${fetchError.message}. Please check your connection and try again.`);
       }
-
-      console.log('Parsed API response:', registerResult);
-      console.log('Response status:', registerResponse.status);
 
       if (!registerResponse.ok) {
         // Handle validation errors from API
-        console.error('Registration failed:', registerResult);
         let errorMessage = '';
         
         if (registerResult.errors && Array.isArray(registerResult.errors)) {
@@ -396,7 +391,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-primary-900" />
+        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] " />
         
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl animate-pulse" />
@@ -433,14 +428,14 @@ export default function RegisterPage() {
                     transition={{ delay: index * 0.1 }}
                     className={cn(
                       'flex items-center gap-4 p-4 rounded-xl transition-all',
-                      isCurrent && 'bg-white/10 border border-white/20',
+                      isCurrent && 'bg-white/10 border border-[rgba(201,168,76,0.2)]',
                       isCompleted && 'opacity-60'
                     )}
                   >
                     <div className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-lg',
                       isCompleted && 'bg-green-500',
-                      isCurrent && 'bg-gradient-to-br from-primary-500 to-tertiary-500',
+                      isCurrent && 'bg-[#0f2547]',
                       !isCompleted && !isCurrent && 'bg-slate-700'
                     )}>
                       {isCompleted ? (
@@ -472,7 +467,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex w-full lg:w-3/5 flex-col items-center justify-center p-6 md:p-8 bg-slate-50 dark:bg-slate-950 overflow-y-auto">
+      <div className="flex w-full lg:w-3/5 flex-col items-center justify-center p-6 md:p-8 bg-slate-50 bg-[rgba(255,255,255,0.04)] overflow-y-auto">
         <div className="absolute top-6 right-6">
           <ThemeToggle />
         </div>
@@ -487,14 +482,14 @@ export default function RegisterPage() {
                     'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium',
                     currentStep > step.id && 'bg-green-500 text-white',
                     currentStep === step.id && 'bg-primary-500 text-white',
-                    currentStep < step.id && 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                    currentStep < step.id && 'bg-slate-200 bg-[rgba(255,255,255,0.04)] text-slate-500'
                   )}>
                     {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
                   </div>
                   {index < steps.length - 1 && (
                     <div className={cn(
                       'h-1 w-8 mx-1',
-                      currentStep > step.id ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-700'
+                      currentStep > step.id ? 'bg-green-500' : 'bg-slate-200 bg-[rgba(255,255,255,0.04)]'
                     )} />
                   )}
                 </div>
@@ -518,13 +513,13 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                   Owner Details
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                <p className="text-slate-500 text-[#7a8fa6] mb-6">
                   Tell us about the business owner
                 </p>
 
                 <form onSubmit={ownerForm.handleSubmit(handleOwnerSubmit)} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Full Name *
                     </label>
                     <Input
@@ -535,7 +530,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Email Address *
                     </label>
                     <Input
@@ -547,7 +542,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Phone Number *
                     </label>
                     <Input
@@ -558,7 +553,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Password *
                     </label>
                     <div className="relative">
@@ -576,13 +571,11 @@ export default function RegisterPage() {
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Min 8 chars, 1 uppercase, 1 lowercase, 1 number
-                    </p>
+                    <PasswordStrength value={ownerForm.watch('password') || ''} />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -629,17 +622,17 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                   Business Information
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                <p className="text-slate-500 text-[#7a8fa6] mb-6">
                   Tell us about your business
                 </p>
 
                 <form onSubmit={businessForm.handleSubmit(handleBusinessSubmit)} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Business Type *
                     </label>
                     <select
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       {...businessForm.register('businessType')}
                     >
                       <option value="">Select business type...</option>
@@ -652,8 +645,37 @@ export default function RegisterPage() {
                     )}
                   </div>
 
+                  {/* Venue Type — determines per-cover pricing tier */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-[#7a8fa6] mb-2">
+                      Venue Type * <span className="text-[10px] text-[rgba(122,143,166,0.6)] font-normal">(sets your default booking deposit)</span>
+                    </label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {VENUE_TYPES.map((v) => {
+                        const selected = businessForm.watch('venueType') === v.value;
+                        return (
+                          <label key={v.value}
+                            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                              selected
+                                ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.08)]'
+                                : 'border-[rgba(201,168,76,0.15)] bg-[rgba(255,255,255,0.02)] hover:border-[rgba(201,168,76,0.3)]'
+                            }`}>
+                            <input type="radio" value={v.value} {...businessForm.register('venueType')} className="mt-1 accent-[#c9a84c]" />
+                            <div>
+                              <p className={`text-[13px] font-semibold ${selected ? 'text-[#c9a84c]' : 'text-[#f5f0e8]'}`}>{v.label}</p>
+                              <p className="text-[11px] text-[#7a8fa6]">{v.description}</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {businessForm.formState.errors.venueType && (
+                      <p className="mt-1 text-xs text-red-500">{businessForm.formState.errors.venueType.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Business Name *
                     </label>
                     <Input
@@ -664,19 +686,19 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Description
                     </label>
                     <textarea
                       placeholder="Tell customers about your restaurant..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                       rows={3}
                       {...businessForm.register('description')}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Cuisine Types
                     </label>
                     <Input
@@ -712,13 +734,13 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                   Location Details
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                <p className="text-slate-500 text-[#7a8fa6] mb-6">
                   Where is your main branch located?
                 </p>
 
                 <form onSubmit={locationForm.handleSubmit(handleLocationSubmit)} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Street Address *
                     </label>
                     <Input
@@ -730,7 +752,7 @@ export default function RegisterPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                         City *
                       </label>
                       <Input
@@ -740,7 +762,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                         State *
                       </label>
                       <Input
@@ -752,7 +774,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Branch Phone (optional)
                     </label>
                     <Input
@@ -762,7 +784,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Branch Email (optional)
                     </label>
                     <Input
@@ -798,7 +820,7 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                   Verification Documents
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                <p className="text-slate-500 text-[#7a8fa6] mb-6">
                   Upload required documents for verification
                 </p>
 
@@ -823,20 +845,37 @@ export default function RegisterPage() {
                     onRemove={() => removeFile('owner_id')}
                   />
 
-                  <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4">
+                  <div className="bg-[#c9a84c]/5 dark:bg-[#c9a84c]/10 border border-[#c9a84c]/30 dark:border-[#c9a84c]/20 rounded-xl p-4">
                     <div className="flex gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="h-5 w-5 text-[#a07830] dark:text-[#e8d49a] flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        <p className="text-sm font-medium text-[#a07830] dark:text-[#e8d49a]">
                           Document Review
                         </p>
-                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        <p className="text-sm text-[#a07830] dark:text-[#e8d49a] mt-1">
                           Your documents will be reviewed by our team within 24-48 hours. 
                           You&apos;ll receive an email once your account is verified.
                         </p>
                       </div>
                     </div>
                   </div>
+
+                  {/* NDPA consent */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={consentGiven}
+                      onChange={(e) => setConsentGiven(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-[#c9a84c]"
+                    />
+                    <span className="text-xs text-[#7a8fa6] leading-relaxed">
+                      I agree to Bucr&apos;s{' '}
+                      <Link href="/terms" className="text-[#c9a84c] hover:underline">Terms of Service</Link>
+                      {' '}and{' '}
+                      <Link href="/privacy" className="text-[#c9a84c] hover:underline">Privacy Policy</Link>
+                      , and confirm I&apos;m authorised to register this business. Data is processed per the Nigeria Data Protection Act 2023.
+                    </span>
+                  </label>
 
                   {/* Error Display */}
                   {registrationError && (
@@ -860,10 +899,10 @@ export default function RegisterPage() {
                       <ArrowLeft className="mr-2 h-5 w-5" />
                       Back
                     </Button>
-                    <Button 
-                      onClick={() => { setRegistrationError(null); handleFinalSubmit(); }} 
+                    <Button
+                      onClick={() => { setRegistrationError(null); handleFinalSubmit(); }}
                       className="flex-1 btn-gradient"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !consentGiven}
                     >
                       {isSubmitting ? (
                         <>
@@ -884,6 +923,45 @@ export default function RegisterPage() {
           </AnimatePresence>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Live password strength meter + requirements checklist (mirrors backend rules).
+function PasswordStrength({ value }: { value: string }) {
+  const checks = {
+    'At least 8 characters': value.length >= 8,
+    'One uppercase letter': /[A-Z]/.test(value),
+    'One lowercase letter': /[a-z]/.test(value),
+    'One number': /[0-9]/.test(value),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  const meta =
+    score <= 1 ? { label: 'Weak', color: '#ef4444', pct: 25 }
+    : score === 2 ? { label: 'Fair', color: '#f59e0b', pct: 50 }
+    : score === 3 ? { label: 'Good', color: '#f59e0b', pct: 75 }
+    : { label: 'Strong', color: '#22c55e', pct: 100 };
+
+  if (!value) {
+    return <p className="mt-1 text-xs text-slate-500">Min 8 chars, 1 uppercase, 1 lowercase, 1 number</p>;
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 rounded-full bg-[rgba(255,255,255,0.1)] overflow-hidden">
+          <div className="h-full rounded-full transition-all" style={{ width: `${meta.pct}%`, backgroundColor: meta.color }} />
+        </div>
+        <span className="text-[11px] font-semibold w-12 text-right" style={{ color: meta.color }}>{meta.label}</span>
+      </div>
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {Object.entries(checks).map(([label, ok]) => (
+          <li key={label} className="flex items-center gap-1.5 text-[11px]" style={{ color: ok ? '#22c55e' : '#7a8fa6' }}>
+            {ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+            {label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -918,7 +996,7 @@ function DocumentUploadCard({
   };
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+    <div className="border border-slate-200 border-[rgba(201,168,76,0.18)] rounded-xl p-4">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-medium text-slate-900 dark:text-white">
@@ -933,7 +1011,7 @@ function DocumentUploadCard({
       </div>
 
       {document.file ? (
-        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+        <div className="flex items-center gap-3 p-3 bg-slate-50 bg-[rgba(255,255,255,0.04)] rounded-lg">
           {document.preview ? (
             <img 
               src={document.preview} 
@@ -941,7 +1019,7 @@ function DocumentUploadCard({
               className="h-12 w-12 object-cover rounded-lg"
             />
           ) : (
-            <div className="h-12 w-12 flex items-center justify-center bg-slate-200 dark:bg-slate-700 rounded-lg">
+            <div className="h-12 w-12 flex items-center justify-center bg-slate-200 bg-[rgba(255,255,255,0.04)] rounded-lg">
               <FileText className="h-6 w-6 text-slate-500" />
             </div>
           )}
@@ -958,7 +1036,7 @@ function DocumentUploadCard({
           ) : (
             <button
               onClick={onRemove}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+              className="p-1 hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] rounded"
             >
               <X className="h-5 w-5 text-slate-500" />
             </button>
@@ -968,10 +1046,10 @@ function DocumentUploadCard({
         <label
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
+          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] rounded-xl cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
         >
           <Upload className="h-8 w-8 text-slate-400 mb-2" />
-          <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+          <p className="text-sm text-slate-600 text-[#7a8fa6] text-center">
             <span className="font-medium text-primary-600 dark:text-primary-400">Click to upload</span>
             {' '}or drag and drop
           </p>

@@ -85,8 +85,10 @@ export const POST = withRateLimit(
         dietaryRestrictions: user.dietaryRestrictions,
         seatingPreferences: user.seatingPreferences,
       },
-      accessToken,
-      refreshToken,
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
     }, 'Login successful');
   }),
   authLimiter

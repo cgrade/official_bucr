@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/api-response';
 import { emailSchema, passwordSchema, nameSchema, phoneSchema } from '@/lib/utils/validation';
 import { slugify } from '@/lib/utils/helpers';
+import { getOperationalSettings } from '@/lib/config/system-settings';
 
 const vendorRegisterSchema = z.object({
   // Owner details
@@ -95,6 +96,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Create vendor with main branch
+    // Respect the admin "vendor verification required" setting: when disabled,
+    // new vendors are auto-approved instead of starting in 'pending'.
+    const { vendorVerificationRequired } = await getOperationalSettings();
+
     const vendor = await db.vendor.create({
       data: {
         ownerId: user.id,
@@ -105,6 +110,7 @@ export async function POST(request: NextRequest) {
         cuisineTypes: cuisineTypes || [],
         email: ownerEmail,
         phone: ownerPhone,
+        verificationStatus: vendorVerificationRequired ? 'pending' : 'approved',
         branches: {
           create: {
             name: 'Main Branch',

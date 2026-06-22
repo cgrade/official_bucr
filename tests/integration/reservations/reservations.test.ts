@@ -13,6 +13,13 @@ import { GET as getReservation, PATCH as modifyReservation, DELETE as cancelRese
 import { GET as getVendorReservations } from '@/app/api/vendor/reservations/route';
 import { POST as checkIn } from '@/app/api/vendor/reservations/[id]/check-in/route';
 import { POST as markNoShow } from '@/app/api/vendor/reservations/[id]/no-show/route';
+import { ECONOMICS } from '@/lib/config/economics';
+
+// Test vendor uses the schema default venueType (upscale_casual) → flat deposit
+// is the upscale_casual rate. Party size never changes the deposit.
+const EXPECTED_DEPOSIT =
+  ECONOMICS.DEPOSIT_BY_VENUE_TYPE.upscale_casual ?? ECONOMICS.DEPOSIT_DEFAULT;
+const TEST_BALANCE = EXPECTED_DEPOSIT * 5; // comfortably above one flat deposit
 
 describe('Reservations API Integration Tests', () => {
   let testUser: Awaited<ReturnType<typeof createTestUser>>;
@@ -36,7 +43,7 @@ describe('Reservations API Integration Tests', () => {
     });
     await prisma.user.update({
       where: { id: testUser.id },
-      data: { creditsBalance: 500 },
+      data: { creditsBalance: TEST_BALANCE },
     });
     userTokens = await generateTestTokens(testUser.id, 'user', testUser.email);
 
@@ -78,7 +85,7 @@ describe('Reservations API Integration Tests', () => {
       });
 
       it('should deduct credits from user balance', async () => {
-        const initialBalance = 500;
+        const initialBalance = TEST_BALANCE;
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 7);
 
@@ -89,14 +96,14 @@ describe('Reservations API Integration Tests', () => {
             branchId: testVendorData.branch.id,
             date: futureDate.toISOString(),
             time: '19:00',
-            partySize: 2, // 50 credits
+            partySize: 2, // flat deposit — party size does not change the amount
           },
         });
 
         await createReservation(request);
 
         const user = await prisma.user.findUnique({ where: { id: testUser.id } });
-        expect(user?.creditsBalance).toBe(initialBalance - 50);
+        expect(user?.creditsBalance).toBe(initialBalance - EXPECTED_DEPOSIT);
       });
 
       it('should reject reservation with insufficient credits', async () => {

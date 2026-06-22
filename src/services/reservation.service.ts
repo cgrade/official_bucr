@@ -1,18 +1,15 @@
 import { db } from '@/lib/db';
+import { ECONOMICS } from '@/lib/config/economics';
 import { generateBookingReference, generatePin, getHoursUntil } from '@/lib/utils/helpers';
 import { generateQRCode } from './qrcode.service';
 import {
-  deductCredits,
-  refundCredits,
-  awardBonus,
-  forfeitCredits,
-  calculateCreditsForPartySize,
+  calculateReservationDeposit,
   calculateShowupBonus,
   calculateCancellationRefund,
 } from './credit.service';
-import { config } from '@/lib/config';
 import { sendReservationConfirmation } from './email.service';
-import { notifyReservationConfirmed, notifyCheckInBonus, notifyNoShow } from './notification.service';
+import { notifyReservationConfirmed, notifyCheckInBonus, notifyNoShow, notifyVendorNewReservation, notifyVendorCancellation } from './notification.service';
+import { resolvePreferences } from '@/lib/notifications/preferences';
 
 export interface CreateReservationParams {
   userId: string;
@@ -24,63 +21,43 @@ export interface CreateReservationParams {
   partySize: number;
   specialRequests?: string;
   occasion?: string;
+  idempotencyKey?: string;
 }
 
 export async function createReservation(params: CreateReservationParams) {
-  const {
-    userId,
-    vendorId,
-    branchId,
-    experienceId,
-    date,
-    time,
-    partySize,
-    specialRequests,
-    occasion,
-  } = params;
+  const { userId, vendorId, branchId, experienceId, date, time, partySize, specialRequests, occasion, idempotencyKey } = params;
 
-  // Verify vendor exists and is active
   const vendor = await db.vendor.findUnique({
     where: { id: vendorId, deletedAt: null, verificationStatus: 'approved' },
+    select: { id: true, businessName: true, subscriptionTier: true, customDepositCredits: true, venueType: true },
   });
+  if (!vendor) throw new Error('Vendor not found or not verified');
 
-  if (!vendor) {
-    throw new Error('Vendor not found or not verified');
-  }
+  // Flat deposit per reservation — party size does NOT affect the amount.
+  // Vendor custom override → venue-type default → global default.
+  let creditsRequired = calculateReservationDeposit(
+    (vendor as any).venueType,
+    vendor.customDepositCredits
+  );
 
-  // Calculate required credits
-  let creditsRequired = calculateCreditsForPartySize(partySize);
-
-  // If experience, use experience credits
   if (experienceId) {
     const experience = await db.experience.findUnique({
       where: { id: experienceId, vendorId, deletedAt: null, isActive: true },
     });
-
-    if (!experience) {
-      throw new Error('Experience not found');
-    }
-
+    if (!experience) throw new Error('Experience not found');
     creditsRequired = experience.creditsRequired;
   }
 
-  // Check user has enough credits
   const user = await db.user.findUnique({
     where: { id: userId },
     select: { creditsBalance: true },
   });
+  if (!user || user.creditsBalance < creditsRequired) throw new Error('Insufficient credits');
 
-  if (!user || user.creditsBalance < creditsRequired) {
-    throw new Error('Insufficient credits');
-  }
-
-  // Generate reference, PIN, and QR code
   const reference = generateBookingReference();
   const pin = generatePin(4);
 
-  // Create reservation and deduct credits in transaction
   const reservation = await db.$transaction(async (tx) => {
-    // Deduct credits
     const newBalance = user.creditsBalance - creditsRequired;
 
     await tx.creditTransaction.create({
@@ -94,126 +71,91 @@ export async function createReservation(params: CreateReservationParams) {
       },
     });
 
-    await tx.user.update({
-      where: { id: userId },
-      data: { creditsBalance: newBalance },
-    });
+    await tx.user.update({ where: { id: userId }, data: { creditsBalance: newBalance } });
 
-    // Create reservation
     const newReservation = await tx.reservation.create({
       data: {
-        userId,
-        vendorId,
-        branchId,
-        experienceId,
-        reference,
-        date,
-        time,
-        partySize,
-        specialRequests,
-        occasion,
+        userId, vendorId, branchId, experienceId, reference,
+        date, time, partySize, specialRequests, occasion,
         creditsDeposited: creditsRequired,
         status: 'confirmed',
         pin,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
       },
       include: {
-        vendor: {
-          select: { businessName: true, slug: true },
-        },
-        branch: {
-          select: { name: true, address: true, city: true },
-        },
+        vendor: { select: { businessName: true, slug: true } },
+        branch: { select: { name: true, address: true, city: true } },
       },
     });
 
-    // Update vendor stats
-    await tx.vendor.update({
-      where: { id: vendorId },
-      data: { totalBookings: { increment: 1 } },
-    });
+    await tx.vendor.update({ where: { id: vendorId }, data: { totalBookings: { increment: 1 } } });
 
     return newReservation;
   });
 
-  // Generate QR code (outside transaction for performance)
-  const qrCode = await generateQRCode({
-    type: 'reservation',
-    id: reservation.id,
-    reference,
-    pin,
-  });
+  const qrCode = await generateQRCode({ type: 'reservation', id: reservation.id, reference, pin });
 
-  // Update reservation with QR code
-  await db.reservation.update({
-    where: { id: reservation.id },
-    data: { qrCode },
-  });
+  await db.reservation.update({ where: { id: reservation.id }, data: { qrCode } });
 
-  // Send confirmation email (fire-and-forget)
   const userForEmail = await db.user.findUnique({
     where: { id: userId },
-    select: { email: true, name: true },
+    select: { email: true, name: true, notificationPreferences: true },
   });
-  if (userForEmail?.email) {
+  const guestName = userForEmail?.name || 'A guest';
+  const vendorName = reservation.vendor?.businessName || 'Restaurant';
+  const dateStr = date.toISOString().split('T')[0];
+
+  // Guest confirmation email — gated by the guest's 'reservations' preference.
+  const reservationsEnabled = resolvePreferences(userForEmail?.notificationPreferences).reservations;
+  if (userForEmail?.email && reservationsEnabled) {
     sendReservationConfirmation({
       to: userForEmail.email,
       userName: userForEmail.name,
-      vendorName: reservation.vendor?.businessName || 'Restaurant',
-      date: date.toISOString().split('T')[0],
-      time,
-      partySize,
-      reference,
-      pin,
-      qrCodeUrl: qrCode || '',
+      vendorName,
+      date: dateStr,
+      time, partySize, reference, pin, qrCodeUrl: qrCode || '',
     }).catch((err) => console.error('Failed to send reservation email:', err));
   }
 
-  // Push notification (fire-and-forget)
+  // Guest push/in-app (gated internally by 'reservations').
   notifyReservationConfirmed(userId, {
-    vendorName: reservation.vendor?.businessName || 'Restaurant',
-    date: date.toISOString().split('T')[0],
-    time,
-    reference,
+    vendorName, date: dateStr, time, reference,
   }).catch((err) => console.error('Failed to send reservation push:', err));
+
+  // Vendor-facing notification (gated by vendor's 'newReservations' preference).
+  notifyVendorNewReservation(vendorId, {
+    guestName, date: dateStr, time, partySize, reference,
+  }).catch((err) => console.error('Failed to notify vendor of reservation:', err));
 
   return { ...reservation, qrCode };
 }
 
-export async function checkInReservation(
-  reservationId: string,
-  pin: string,
-  vendorId: string
-) {
+export async function checkInReservation(reservationId: string, pin: string, vendorId: string) {
   const reservation = await db.reservation.findFirst({
-    where: {
-      id: reservationId,
-      vendorId,
-      status: { in: ['confirmed', 'pending'] },
-    },
+    where: { id: reservationId, vendorId, status: { in: ['confirmed', 'pending'] } },
     include: {
       user: { select: { id: true, creditsBalance: true } },
-      vendor: { select: { businessName: true } },
+      vendor: { select: { businessName: true, subscriptionTier: true, venueType: true } },
     },
   });
+  if (!reservation) throw new Error('Reservation not found');
+  if (reservation.pin !== pin) throw new Error('Invalid PIN');
 
-  if (!reservation) {
-    throw new Error('Reservation not found');
-  }
-
-  if (reservation.pin !== pin) {
-    throw new Error('Invalid PIN');
-  }
-
-  // Calculate bonus
   const bonus = calculateShowupBonus(reservation.creditsDeposited);
   const totalRefund = reservation.creditsDeposited + bonus;
 
-  // Process check-in with credit refund and bonus
+  // Per-cover fee: charged to vendor on each checked-in guest
+  const venueType = (reservation.vendor as any)?.venueType ?? 'upscale_casual';
+  const tier = (reservation.vendor as any)?.subscriptionTier ?? 'basic';
+  const tierKey = (tier as string).replace('premium', 'elite');
+  const baseFee = ECONOMICS.PER_COVER_FEE[venueType] ?? ECONOMICS.PER_COVER_FEE['upscale_casual'];
+  const multiplier = ECONOMICS.PER_COVER_TIER_MULTIPLIER[tierKey] ?? 1.0;
+  const coverFee = Math.round(baseFee * multiplier * reservation.partySize);
+
   const updatedReservation = await db.$transaction(async (tx) => {
     const user = reservation.user;
     const newBalance = user.creditsBalance + totalRefund;
 
-    // Refund credits
     await tx.creditTransaction.create({
       data: {
         userId: user.id,
@@ -226,7 +168,6 @@ export async function checkInReservation(
       },
     });
 
-    // Award bonus
     if (bonus > 0) {
       await tx.creditTransaction.create({
         data: {
@@ -236,17 +177,13 @@ export async function checkInReservation(
           balanceAfter: newBalance,
           referenceType: 'reservation',
           referenceId: reservationId,
-          description: `${config.credits.showupBonusPercent}% show-up bonus`,
+          description: `${ECONOMICS.SHOWUP_BONUS_PCT * 100}% show-up bonus`,
         },
       });
     }
 
-    await tx.user.update({
-      where: { id: user.id },
-      data: { creditsBalance: newBalance },
-    });
+    await tx.user.update({ where: { id: user.id }, data: { creditsBalance: newBalance } });
 
-    // Update reservation
     const updated = await tx.reservation.update({
       where: { id: reservationId },
       data: {
@@ -257,30 +194,32 @@ export async function checkInReservation(
       },
     });
 
-    // Update or create guest profile
-    await tx.guestProfile.upsert({
-      where: {
-        vendorId_userId: {
-          vendorId: reservation.vendorId,
-          userId: user.id,
+    // Accrue per-cover fee — inside the transaction so it rolls back with the check-in
+    if (coverFee > 0) {
+      const now = new Date();
+      await (tx as any).coverCharge.create({
+        data: {
+          vendorId,
+          reservationId,
+          partySize: reservation.partySize,
+          feeCharged: coverFee,
+          venueType,
+          tierAtTime: tierKey,
+          billingMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+          status: 'accrued',
         },
-      },
-      create: {
-        vendorId: reservation.vendorId,
-        userId: user.id,
-        visitCount: 1,
-        lastVisit: new Date(),
-      },
-      update: {
-        visitCount: { increment: 1 },
-        lastVisit: new Date(),
-      },
+      });
+    }
+
+    await tx.guestProfile.upsert({
+      where: { vendorId_userId: { vendorId: reservation.vendorId, userId: user.id } },
+      create: { vendorId: reservation.vendorId, userId: user.id, visitCount: 1, lastVisit: new Date() },
+      update: { visitCount: { increment: 1 }, lastVisit: new Date() },
     });
 
     return updated;
   });
 
-  // Push notification for check-in bonus (fire-and-forget)
   notifyCheckInBonus(reservation.userId, {
     vendorName: reservation.vendor?.businessName || 'Restaurant',
     bonusCredits: bonus,
@@ -291,6 +230,7 @@ export async function checkInReservation(
     reservation: updatedReservation,
     creditsRefunded: reservation.creditsDeposited,
     bonusCredits: bonus,
+    coverFeeNgn: coverFee,
   };
 }
 
@@ -307,41 +247,33 @@ export async function cancelReservation(
       status: { in: ['pending', 'confirmed'] },
     },
     include: {
-      user: { select: { id: true, creditsBalance: true } },
+      user: { select: { id: true, name: true, creditsBalance: true } },
+      vendor: { select: { id: true, businessName: true } },
     },
   });
+  if (!reservation) throw new Error('Reservation not found or already processed');
 
-  if (!reservation) {
-    throw new Error('Reservation not found or already processed');
-  }
-
-  // Calculate refund based on cancellation policy
   const reservationDateTime = new Date(reservation.date);
   const [hours, minutes] = reservation.time.split(':').map(Number);
   reservationDateTime.setHours(hours, minutes);
-
   const hoursUntil = getHoursUntil(reservationDateTime);
-  
+
   let refundAmount: number;
   let bonusAmount = 0;
 
   if (cancelledBy === 'vendor') {
-    // Vendor cancellation: full refund + 10% bonus
-    refundAmount = reservation.creditsDeposited;
-    bonusAmount = Math.floor(reservation.creditsDeposited * 0.1);
+    refundAmount = reservation.creditsDeposited; // 100% refund
+    bonusAmount  = Math.floor(reservation.creditsDeposited * ECONOMICS.VENDOR_CANCEL_BONUS_PCT);
   } else {
-    // User cancellation: based on policy
     refundAmount = calculateCancellationRefund(reservation.creditsDeposited, hoursUntil);
   }
 
   const forfeitedAmount = reservation.creditsDeposited - refundAmount;
 
-  // Process cancellation
   const updatedReservation = await db.$transaction(async (tx) => {
     const user = reservation.user;
     let newBalance = user.creditsBalance;
 
-    // Refund credits if applicable
     if (refundAmount > 0) {
       newBalance += refundAmount;
       await tx.creditTransaction.create({
@@ -357,7 +289,6 @@ export async function cancelReservation(
       });
     }
 
-    // Award bonus for vendor cancellation
     if (bonusAmount > 0) {
       newBalance += bonusAmount;
       await tx.creditTransaction.create({
@@ -373,7 +304,6 @@ export async function cancelReservation(
       });
     }
 
-    // Record forfeiture if applicable
     if (forfeitedAmount > 0) {
       await tx.creditTransaction.create({
         data: {
@@ -388,12 +318,8 @@ export async function cancelReservation(
       });
     }
 
-    await tx.user.update({
-      where: { id: user.id },
-      data: { creditsBalance: newBalance },
-    });
+    await tx.user.update({ where: { id: user.id }, data: { creditsBalance: newBalance } });
 
-    // Update reservation
     return tx.reservation.update({
       where: { id: reservationId },
       data: {
@@ -405,6 +331,17 @@ export async function cancelReservation(
       },
     });
   });
+
+  // Notify the vendor when a guest cancels (gated by vendor 'cancellations' pref).
+  if (cancelledBy === 'user' && reservation.vendor?.id) {
+    notifyVendorCancellation(reservation.vendor.id, {
+      guestName: reservation.user?.name || 'A guest',
+      date: new Date(reservation.date).toISOString().split('T')[0],
+      time: reservation.time,
+      reference: reservation.reference,
+      reason: 'cancelled',
+    }).catch((err) => console.error('Failed to notify vendor of cancellation:', err));
+  }
 
   return {
     reservation: updatedReservation,
@@ -425,83 +362,31 @@ export async function modifyReservation(
   }
 ) {
   const reservation = await db.reservation.findFirst({
-    where: {
-      id: reservationId,
-      userId,
-      status: { in: ['pending', 'confirmed'] },
-    },
-    include: {
-      user: { select: { id: true, creditsBalance: true } },
-    },
+    where: { id: reservationId, userId, status: { in: ['pending', 'confirmed'] } },
+    include: { user: { select: { id: true, creditsBalance: true } } },
   });
+  if (!reservation) throw new Error('Reservation not found or cannot be modified');
 
-  if (!reservation) {
-    throw new Error('Reservation not found or cannot be modified');
-  }
-
-  // Check if within modification window (12 hours)
   const reservationDateTime = new Date(reservation.date);
   const [hours, minutes] = reservation.time.split(':').map(Number);
   reservationDateTime.setHours(hours, minutes);
-
   const hoursUntil = getHoursUntil(reservationDateTime);
 
-  if (hoursUntil < config.reservations.modificationWindowHours) {
-    throw new Error(
-      `Reservations can only be modified ${config.reservations.modificationWindowHours} hours before the scheduled time`
-    );
+  const MODIFICATION_WINDOW_HOURS = 12;
+  if (hoursUntil < MODIFICATION_WINDOW_HOURS) {
+    throw new Error(`Reservations can only be modified ${MODIFICATION_WINDOW_HOURS} hours before the scheduled time`);
   }
 
-  // Calculate new credits required if party size changed
-  let creditsDifference = 0;
-  if (updates.partySize && updates.partySize !== reservation.partySize) {
-    const newCreditsRequired = calculateCreditsForPartySize(updates.partySize);
-    creditsDifference = newCreditsRequired - reservation.creditsDeposited;
-
-    if (creditsDifference > 0 && reservation.user.creditsBalance < creditsDifference) {
-      throw new Error('Insufficient credits for larger party size');
-    }
-  }
-
-  // Process modification
+  // Deposit is FLAT per reservation — changing party size does NOT change the
+  // deposit, so no credit adjustment is needed when partySize changes.
   const updatedReservation = await db.$transaction(async (tx) => {
-    const user = reservation.user;
-
-    // Handle credit adjustment for party size change
-    if (creditsDifference !== 0) {
-      const newBalance = user.creditsBalance - creditsDifference;
-
-      await tx.creditTransaction.create({
-        data: {
-          userId: user.id,
-          type: creditsDifference > 0 ? 'redeem' : 'refund',
-          amount: -creditsDifference,
-          balanceAfter: newBalance,
-          referenceType: 'reservation',
-          referenceId: reservationId,
-          description: `Party size change adjustment`,
-        },
-      });
-
-      await tx.user.update({
-        where: { id: user.id },
-        data: { creditsBalance: newBalance },
-      });
-    }
-
-    // Update reservation
     return tx.reservation.update({
       where: { id: reservationId },
       data: {
         ...(updates.date && { date: updates.date }),
         ...(updates.time && { time: updates.time }),
-        ...(updates.partySize && {
-          partySize: updates.partySize,
-          creditsDeposited: reservation.creditsDeposited + creditsDifference,
-        }),
-        ...(updates.specialRequests !== undefined && {
-          specialRequests: updates.specialRequests,
-        }),
+        ...(updates.partySize && { partySize: updates.partySize }),
+        ...(updates.specialRequests !== undefined && { specialRequests: updates.specialRequests }),
       },
     });
   });
@@ -509,88 +394,151 @@ export async function modifyReservation(
   return updatedReservation;
 }
 
+// ============================================================================
+// PHASE 4 — Resolved no-show split
+//
+// deposit = creditsDeposited
+// forfeitPct = NOSHOW_FORFEIT_BY_VENUE[venueType] ?? NOSHOW_FORFEIT_PCT (default 0.30)
+// forfeit = floor(deposit × forfeitPct)
+//
+// guestKeeps   = deposit − forfeit          → returned as usable credits
+// vendorShare  = floor(deposit × 0.20)      → vendor marketing credits (non-cashable)
+// platformShare = forfeit − vendorShare     → BUCR platform revenue
+// ============================================================================
+
 export async function markNoShow(reservationId: string, vendorId: string) {
   const reservation = await db.reservation.findFirst({
-    where: {
-      id: reservationId,
-      vendorId,
-      status: 'confirmed',
-    },
+    where: { id: reservationId, vendorId, status: 'confirmed' },
     include: {
-      user: { select: { id: true, creditsBalance: true } },
+      user: { select: { id: true, creditsBalance: true, name: true } },
+      vendor: { select: { businessName: true, venueType: true } },
     },
   });
+  if (!reservation) throw new Error('Reservation not found');
 
-  if (!reservation) {
-    throw new Error('Reservation not found');
-  }
+  const deposit = reservation.creditsDeposited;
+  const venueType = (reservation.vendor as any)?.venueType ?? 'upscale_casual';
+  const forfeitPct =
+    ECONOMICS.NOSHOW_FORFEIT_BY_VENUE[venueType] ?? ECONOMICS.NOSHOW_FORFEIT_PCT;
 
-  const forfeitedCredits = reservation.creditsDeposited;
+  const forfeit = Math.floor(deposit * forfeitPct);
+  const guestKeeps = deposit - forfeit;
+  // Cap vendorShare at forfeit so platformShare can never be negative,
+  // even if NOSHOW_VENDOR_PCT is misconfigured > forfeitPct.
+  const vendorShare = Math.min(Math.floor(deposit * ECONOMICS.NOSHOW_VENDOR_PCT), forfeit);
+  const platformShare = forfeit - vendorShare; // always ≥ 0
 
-  // No-show forfeiture policy:
-  // - 100% of forfeited credits go to the platform
-  // - Vendor receives 0% (config.credits.noShowVendorSharePercent = 0)
-  // - User loses their deposited credits completely
-  
+  const now = new Date();
+  const billingMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
   await db.$transaction(async (tx) => {
-    // Record the forfeiture transaction for the user
+    // 1. Record forfeit (already debited at booking — this is just the ledger entry)
     await tx.creditTransaction.create({
       data: {
         userId: reservation.userId,
         type: 'forfeit',
-        amount: -forfeitedCredits,
-        balanceAfter: reservation.user.creditsBalance, // Balance unchanged since credits were already deducted at booking
+        amount: -forfeit,
+        balanceAfter: reservation.user.creditsBalance, // credits were already out of balance at booking
         referenceType: 'reservation',
         referenceId: reservationId,
-        description: `No-show forfeiture: ${forfeitedCredits} credits lost`,
+        description: `No-show: ${Math.round(forfeitPct * 100)}% of deposit forfeited`,
       },
     });
 
-    // Update reservation status
+    // 2. Return guestKeeps as usable credits
+    if (guestKeeps > 0) {
+      const newBalance = reservation.user.creditsBalance + guestKeeps;
+      await tx.creditTransaction.create({
+        data: {
+          userId: reservation.userId,
+          type: 'refund',
+          amount: guestKeeps,
+          balanceAfter: newBalance,
+          referenceType: 'reservation',
+          referenceId: reservationId,
+          description: `No-show: ${guestKeeps} credits returned (${100 - Math.round(forfeitPct * 100)}% of deposit)`,
+        },
+      });
+      await tx.user.update({
+        where: { id: reservation.userId },
+        data: { creditsBalance: newBalance },
+      });
+    }
+
+    // 3. Mark reservation no-show
     await tx.reservation.update({
       where: { id: reservationId },
-      data: { 
-        status: 'no_show',
-      },
+      data: { status: 'no_show' },
     });
 
-    // Update vendor no-show stats
+    // 4. Update vendor no-show stats
     await tx.vendor.update({
       where: { id: vendorId },
       data: { noShowCount: { increment: 1 } },
     });
 
-    // Update guest profile with no-show record
+    // 5. Update guest profile
     await tx.guestProfile.upsert({
-      where: {
-        vendorId_userId: {
-          vendorId: reservation.vendorId,
-          userId: reservation.userId,
-        },
-      },
-      create: {
-        vendorId: reservation.vendorId,
-        userId: reservation.userId,
-        noShowCount: 1,
-        lastVisit: new Date(),
-      },
-      update: {
-        noShowCount: { increment: 1 },
-        lastVisit: new Date(),
-      },
+      where: { vendorId_userId: { vendorId, userId: reservation.userId } },
+      create: { vendorId, userId: reservation.userId, noShowCount: 1, lastVisit: new Date() },
+      update: { noShowCount: { increment: 1 }, lastVisit: new Date() },
     });
+
+    // 6. Vendor marketing credit share (non-cashable)
+    if (vendorShare > 0) {
+      let wallet = await tx.vendorWallet.findUnique({ where: { vendorId } });
+      if (!wallet) {
+        wallet = await tx.vendorWallet.create({ data: { vendorId } });
+      }
+      const newVendorBalance = wallet.balance + vendorShare;
+      await tx.vendorCreditTransaction.create({
+        data: {
+          walletId: wallet.id,
+          type: 'no_show_share',
+          amount: vendorShare,
+          balanceAfter: newVendorBalance,
+          referenceType: 'reservation',
+          referenceId: reservationId,
+          description: `No-show share: ${vendorShare} marketing credits (${Math.round(ECONOMICS.NOSHOW_VENDOR_PCT * 100)}% of ${deposit}-credit deposit)`,
+        },
+      });
+      await tx.vendorWallet.update({
+        where: { id: wallet.id },
+        data: { balance: newVendorBalance, totalEarned: { increment: vendorShare } },
+      });
+    }
+
+    // 7. Platform revenue — no-show share (inside the transaction)
+    if (platformShare > 0) {
+      await (tx as any).platformRevenue.create({
+        data: {
+          type: 'noshow_platform_share',
+          amountNgn: platformShare * ECONOMICS.CREDIT_VALUE_NGN,
+          amountCredits: platformShare,
+          sourceType: 'reservation',
+          sourceId: reservationId,
+          vendorId,
+          userId: reservation.userId,
+          billingMonth,
+        },
+      });
+    }
   });
 
-  // Push notification for no-show (fire-and-forget)
+  // Notify guest (partial return) and vendor (marketing credits received) — fire-and-forget
   notifyNoShow(reservation.userId, {
-    vendorName: 'Restaurant',
-    creditsForfeited: forfeitedCredits,
-  }).catch((err) => console.error('Failed to send no-show push:', err));
+    vendorName: reservation.vendor?.businessName || 'Restaurant',
+    creditsForfeited: forfeit,
+    creditsReturned: guestKeeps,
+  } as any).catch(() => {});
 
-  return { 
+  return {
     message: 'Reservation marked as no-show',
-    creditsForfeited: forfeitedCredits,
-    vendorShare: 0,
-    platformShare: forfeitedCredits,
+    deposit,
+    forfeit,
+    guestKeeps,
+    vendorShare,
+    platformShare,
+    forfeitPct,
   };
 }

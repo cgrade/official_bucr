@@ -1,14 +1,19 @@
 import { db } from '@/lib/db';
 import { config } from '@/lib/config';
-import { SubscriptionTier } from '@prisma/client';
+import { ECONOMICS } from '@/lib/config/economics';
+import { syncVendorAchievements } from './achievement.service';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
+// 'elite' is the renamed tier (was 'premium'). The Prisma enum migration in
+// Phase 5 will rename the DB enum value. Until then we use a string union here.
+export type SubscriptionTierInput = 'basic' | 'pro' | 'elite';
+
 export interface ActivateSubscriptionParams {
   vendorId: string;
-  tier: 'basic' | 'pro' | 'premium';
+  tier: SubscriptionTierInput;
   paymentId: string;
   amountPaidKobo: number;
   durationMonths?: number;
@@ -17,7 +22,7 @@ export interface ActivateSubscriptionParams {
 export interface SubscriptionDetails {
   id: string;
   vendorId: string;
-  tier: SubscriptionTier;
+  tier: string;
   status: string;
   startsAt: Date;
   expiresAt: Date;
@@ -34,17 +39,15 @@ export interface SubscriptionDetails {
 export async function activateSubscription(params: ActivateSubscriptionParams) {
   const { vendorId, tier, paymentId, amountPaidKobo, durationMonths = 1 } = params;
 
-  const vendor = await db.vendor.findUnique({
-    where: { id: vendorId },
-  });
-
-  if (!vendor) {
-    throw new Error('Vendor not found');
+  // Basic is free — no Paystack call reaches here, but guard defensively
+  if (tier === 'basic' && amountPaidKobo > 0) {
+    throw new Error('Basic plan is free; unexpected payment amount');
   }
 
+  const vendor = await db.vendor.findUnique({ where: { id: vendorId } });
+  if (!vendor) throw new Error('Vendor not found');
+
   const now = new Date();
-  
-  // If vendor has an active subscription, extend from expiry date
   let startsAt = now;
   if (vendor.subscriptionExpiresAt && vendor.subscriptionExpiresAt > now) {
     startsAt = vendor.subscriptionExpiresAt;
@@ -53,11 +56,10 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
   const expiresAt = new Date(startsAt);
   expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
 
-  // Create subscription record
   const subscription = await db.vendorSubscription.create({
     data: {
       vendorId,
-      tier,
+      tier: tier as any,
       status: 'active',
       amountPaidKobo,
       paymentId,
@@ -67,12 +69,11 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
     },
   });
 
-  // Update vendor's subscription info
   await db.vendor.update({
     where: { id: vendorId },
     data: {
-      subscriptionTier: tier,
-      subscriptionExpiresAt: expiresAt,
+      subscriptionTier: tier as any,
+      subscriptionExpiresAt: tier === 'basic' ? null : expiresAt,
     },
   });
 
@@ -82,16 +83,10 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
 export async function getVendorSubscription(vendorId: string): Promise<SubscriptionDetails | null> {
   const vendor = await db.vendor.findUnique({
     where: { id: vendorId },
-    select: {
-      id: true,
-      subscriptionTier: true,
-      subscriptionExpiresAt: true,
-    },
+    select: { id: true, subscriptionTier: true, subscriptionExpiresAt: true },
   });
 
-  if (!vendor) {
-    return null;
-  }
+  if (!vendor) return null;
 
   const latestSubscription = await db.vendorSubscription.findFirst({
     where: { vendorId, status: 'active' },
@@ -100,28 +95,33 @@ export async function getVendorSubscription(vendorId: string): Promise<Subscript
 
   const now = new Date();
   const expiresAt = vendor.subscriptionExpiresAt || now;
-  const daysRemaining = Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-  
-  const tierConfig = config.subscriptions[vendor.subscriptionTier];
+  const daysRemaining = Math.max(
+    0,
+    Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  const tierKey = (vendor.subscriptionTier as string).replace('premium', 'elite') as SubscriptionTierInput;
+  const tierConfig = (config.subscriptions as unknown as Record<string, { name: string; priceNgn: number; features: string[] }>)[tierKey]
+    ?? config.subscriptions.basic;
 
   return {
     id: latestSubscription?.id || '',
     vendorId: vendor.id,
-    tier: vendor.subscriptionTier,
-    status: daysRemaining > 0 ? 'active' : 'expired',
+    tier: tierKey,
+    status: tierKey === 'basic' || daysRemaining > 0 ? 'active' : 'expired',
     startsAt: latestSubscription?.startsAt || now,
     expiresAt,
     autoRenew: latestSubscription?.autoRenew || false,
-    daysRemaining,
-    features: [...tierConfig.features] as string[],
+    daysRemaining: tierKey === 'basic' ? Infinity : daysRemaining,
+    features: [...tierConfig.features],
     price: tierConfig.priceNgn,
   };
 }
 
-export async function getSubscriptionHistory(vendorId: string, options: {
-  page?: number;
-  limit?: number;
-} = {}) {
+export async function getSubscriptionHistory(
+  vendorId: string,
+  options: { page?: number; limit?: number } = {}
+) {
   const { page = 1, limit = 20 } = options;
   const skip = (page - 1) * limit;
 
@@ -144,20 +144,13 @@ export async function cancelSubscription(vendorId: string): Promise<void> {
     orderBy: { createdAt: 'desc' },
   });
 
-  if (!subscription) {
-    throw new Error('No active subscription found');
-  }
+  if (!subscription) throw new Error('No active subscription found');
 
   await db.vendorSubscription.update({
     where: { id: subscription.id },
-    data: {
-      status: 'cancelled',
-      autoRenew: false,
-      cancelledAt: new Date(),
-    },
+    data: { status: 'cancelled', autoRenew: false, cancelledAt: new Date() },
   });
-
-  // Note: We don't immediately downgrade - they keep access until expiry
+  // Access continues until expiry; downgrade cron handles the rest
 }
 
 export async function toggleAutoRenew(vendorId: string, autoRenew: boolean): Promise<void> {
@@ -166,9 +159,7 @@ export async function toggleAutoRenew(vendorId: string, autoRenew: boolean): Pro
     orderBy: { createdAt: 'desc' },
   });
 
-  if (!subscription) {
-    throw new Error('No active subscription found');
-  }
+  if (!subscription) throw new Error('No active subscription found');
 
   await db.vendorSubscription.update({
     where: { id: subscription.id },
@@ -178,40 +169,31 @@ export async function toggleAutoRenew(vendorId: string, autoRenew: boolean): Pro
 
 export async function upgradeSubscription(params: {
   vendorId: string;
-  newTier: 'basic' | 'pro' | 'premium';
+  newTier: SubscriptionTierInput;
   paymentId: string;
   amountPaidKobo: number;
 }) {
   const { vendorId, newTier, paymentId, amountPaidKobo } = params;
 
-  const vendor = await db.vendor.findUnique({
-    where: { id: vendorId },
-  });
+  const vendor = await db.vendor.findUnique({ where: { id: vendorId } });
+  if (!vendor) throw new Error('Vendor not found');
 
-  if (!vendor) {
-    throw new Error('Vendor not found');
-  }
-
-  // Calculate prorated amount if upgrading mid-cycle
-  const currentTierPrice = config.subscriptions[vendor.subscriptionTier].priceNgn;
-  const newTierPrice = config.subscriptions[newTier].priceNgn;
-
-  if (newTierPrice <= currentTierPrice) {
+  const tierOrder: SubscriptionTierInput[] = ['basic', 'pro', 'elite'];
+  const currentTierNorm = (vendor.subscriptionTier as string).replace('premium', 'elite') as SubscriptionTierInput;
+  if (tierOrder.indexOf(newTier) <= tierOrder.indexOf(currentTierNorm)) {
     throw new Error('Can only upgrade to a higher tier');
   }
 
   const now = new Date();
-  
-  // For upgrades, apply immediately but keep same expiry date
-  const expiresAt = vendor.subscriptionExpiresAt && vendor.subscriptionExpiresAt > now
-    ? vendor.subscriptionExpiresAt
-    : new Date(now.setMonth(now.getMonth() + 1));
+  const expiresAt =
+    vendor.subscriptionExpiresAt && vendor.subscriptionExpiresAt > now
+      ? vendor.subscriptionExpiresAt
+      : new Date(now.setMonth(now.getMonth() + 1));
 
-  // Create new subscription record for the upgrade
   const subscription = await db.vendorSubscription.create({
     data: {
       vendorId,
-      tier: newTier,
+      tier: newTier as any,
       status: 'active',
       amountPaidKobo,
       paymentId,
@@ -221,62 +203,65 @@ export async function upgradeSubscription(params: {
     },
   });
 
-  // Update vendor's subscription tier
   await db.vendor.update({
     where: { id: vendorId },
-    data: {
-      subscriptionTier: newTier,
-    },
+    data: { subscriptionTier: newTier as any },
   });
+
+  // Sync achievements — Premium Partner badge is earned/revoked based on tier
+  syncVendorAchievements(vendorId).catch(() => {});
 
   return subscription;
 }
 
 // ============================================================================
-// SUBSCRIPTION TIERS INFO
+// SUBSCRIPTION TIER INFO
 // ============================================================================
 
 export function getSubscriptionTiers() {
   return {
     basic: {
-      name: config.subscriptions.basic.name,
-      priceNgn: config.subscriptions.basic.priceNgn,
-      priceKobo: config.subscriptions.basic.priceNgn * 100,
+      name: 'Basic',
+      priceNgn: ECONOMICS.SUBSCRIPTION.basic,
+      priceKobo: 0,
       features: config.subscriptions.basic.features,
       recommended: false,
+      free: true,
     },
     pro: {
-      name: config.subscriptions.pro.name,
-      priceNgn: config.subscriptions.pro.priceNgn,
-      priceKobo: config.subscriptions.pro.priceNgn * 100,
-      features: [
-        ...config.subscriptions.basic.features,
-        ...config.subscriptions.pro.features,
-      ],
+      name: 'Pro',
+      priceNgn: ECONOMICS.SUBSCRIPTION.pro,
+      priceKobo: ECONOMICS.SUBSCRIPTION.pro * 100,
+      features: [...config.subscriptions.basic.features, ...config.subscriptions.pro.features],
       recommended: true,
+      free: false,
     },
-    premium: {
-      name: config.subscriptions.premium.name,
-      priceNgn: config.subscriptions.premium.priceNgn,
-      priceKobo: config.subscriptions.premium.priceNgn * 100,
+    elite: {
+      name: 'Elite',
+      priceNgn: ECONOMICS.SUBSCRIPTION.elite,
+      priceKobo: ECONOMICS.SUBSCRIPTION.elite * 100,
       features: [
         ...config.subscriptions.basic.features,
         ...config.subscriptions.pro.features,
-        ...config.subscriptions.premium.features,
+        ...config.subscriptions.elite.features,
       ],
       recommended: false,
+      free: false,
     },
   };
 }
 
+export function getSubscriptionPrice(tier: SubscriptionTierInput): number {
+  return ECONOMICS.SUBSCRIPTION[tier] * 100; // kobo
+}
+
 // ============================================================================
-// EXPIRY CHECK (for cron jobs)
+// EXPIRY CHECK (cron)
 // ============================================================================
 
 export async function checkExpiredSubscriptions(): Promise<number> {
   const now = new Date();
 
-  // Find vendors with expired subscriptions
   const expiredVendors = await db.vendor.findMany({
     where: {
       subscriptionExpiresAt: { lt: now },
@@ -286,12 +271,11 @@ export async function checkExpiredSubscriptions(): Promise<number> {
     select: { id: true, subscriptionTier: true },
   });
 
-  // Downgrade to basic
   for (const vendor of expiredVendors) {
     await db.$transaction([
       db.vendor.update({
         where: { id: vendor.id },
-        data: { subscriptionTier: 'basic' },
+        data: { subscriptionTier: 'basic', subscriptionExpiresAt: null },
       }),
       db.vendorSubscription.updateMany({
         where: { vendorId: vendor.id, status: 'active' },
@@ -310,10 +294,7 @@ export async function getExpiringSubscriptions(daysAhead: number = 7) {
 
   return db.vendor.findMany({
     where: {
-      subscriptionExpiresAt: {
-        gte: now,
-        lte: futureDate,
-      },
+      subscriptionExpiresAt: { gte: now, lte: futureDate },
       subscriptionTier: { not: 'basic' },
       deletedAt: null,
     },

@@ -1,23 +1,33 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cormorant_Garamond, Jost } from 'next/font/google';
 import './globals.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const jost = Jost({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Bucr Admin Portal',
-  description: 'System administration for Bucr platform',
+  title: 'Bucr — Admin',
+  description: 'System administration for the Bucr platform.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${cormorant.variable} ${jost.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

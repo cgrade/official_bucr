@@ -69,6 +69,9 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/** 1 credit = ₦10 (canonical: CLAUDE.md §4.1 — locked, never ₦100) */
+export const CREDIT_VALUE_NGN = 10;
+
 export function creditsToNaira(credits: number): number {
-  return credits * 100;
+  return credits * CREDIT_VALUE_NGN;
 }

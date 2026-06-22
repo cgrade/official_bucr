@@ -12,7 +12,7 @@ import {
 
 const updateVendorSchema = z.object({
   verificationStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
-  subscriptionTier: z.enum(['basic', 'pro', 'premium']).optional(),
+  subscriptionTier: z.enum(['basic', 'pro', 'elite']).optional(),
   subscriptionExpiresAt: z.coerce.date().optional(),
 });
 

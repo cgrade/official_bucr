@@ -72,8 +72,10 @@ export async function POST(request: NextRequest) {
     });
 
     return successResponse({
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      tokens: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      },
     });
   } catch (error) {
     console.error('Token refresh error:', error);

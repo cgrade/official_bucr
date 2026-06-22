@@ -5,9 +5,10 @@ import Cookies from 'js-cookie';
 interface Admin {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: 'super_admin' | 'admin' | 'support';
+  name?: string;           // full name (from backend Admin model)
+  firstName?: string;
+  lastName?: string;
+  role: 'super_admin' | 'admin' | 'support' | 'sub_admin';
   permissions: string[];
 }
 

@@ -9,7 +9,11 @@ interface Vendor {
   email: string;
   phone: string;
   logo?: string;
-  subscriptionTier: 'BASIC' | 'PRO' | 'PREMIUM';
+  subscriptionTier: 'BASIC' | 'PRO' | 'PREMIUM' | 'basic' | 'pro' | 'elite';
+  subscriptionExpiresAt?: string | null;
+  venueType?: string;
+  reliabilityScore?: number | null;
+  bookWithConfidence?: boolean;
   isVerified: boolean;
   branches?: any[];
 }

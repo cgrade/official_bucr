@@ -21,7 +21,7 @@ import {
 } from '@/services/payment.service';
 
 const subscribeSchema = z.object({
-  tier: z.enum(['basic', 'pro', 'premium']),
+  tier: z.enum(['basic', 'pro', 'elite']),
   callbackUrl: z.string().url().optional(),
 });
 

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { syncVendorAchievements } from '@/services/achievement.service';
 import {
   successResponse,
   errorResponse,
@@ -45,6 +46,9 @@ export async function POST(
         verificationStatus: true,
       },
     });
+
+    // Sync achievements based on real vendor state (fire-and-forget)
+    syncVendorAchievements(params.id).catch(() => {});
 
     return successResponse(updatedVendor, 'Vendor activated successfully');
   } catch (error) {

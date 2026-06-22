@@ -18,7 +18,7 @@ const initializePaymentSchema = z.object({
   // For credit purchase
   credits: z.number().int().positive().min(10).optional(),
   // For subscription
-  tier: z.enum(['basic', 'pro', 'premium']).optional(),
+  tier: z.enum(['basic', 'pro', 'elite']).optional(),
   // For order payment
   orderId: z.string().uuid().optional(),
   amountKobo: z.number().int().positive().optional(),

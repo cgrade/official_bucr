@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { getLatLng } from '@/services/geocoding.service';
 import {
   successResponse,
   errorResponse,
@@ -88,6 +89,14 @@ export async function POST(request: NextRequest) {
       where: { vendorId: vendor.id, deletedAt: null },
     });
 
+    // Auto-geocode when lat/lng not supplied — fire-and-forget friendly
+    let latitude  = data.latitude;
+    let longitude = data.longitude;
+    if (latitude == null || longitude == null) {
+      const coords = await getLatLng(data.address, data.city, data.state).catch(() => null);
+      if (coords) { latitude = coords.lat; longitude = coords.lng; }
+    }
+
     const branch = await db.vendorBranch.create({
       data: {
         vendorId: vendor.id,
@@ -97,8 +106,8 @@ export async function POST(request: NextRequest) {
         state: data.state,
         phone: data.phone,
         email: data.email,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude,
+        longitude,
         operatingHours: data.operatingHours,
         isMainBranch: existingBranches === 0,
         isActive: true,

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/auth/password';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
 import {
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
           email: true,
           name: true,
           phone: true,
+          avatar: true,
           creditsBalance: true,
           status: true,
           createdAt: true,
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
       return errorResponse('User with this email or phone already exists', 409);
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await hashPassword(password);
 
     const user = await db.user.create({
       data: {

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { cleanupExpiredTokens } from '@/services/token.service';
+import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
 /**
@@ -20,12 +21,22 @@ export async function GET(request: NextRequest) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const tokensCleared = await cleanupExpiredTokens();
+    const now = new Date();
+
+    const [tokensCleared, menuItemsRestored] = await Promise.all([
+      cleanupExpiredTokens(),
+      // Clear expired "86" windows so items show as available again
+      (db.menu as any).updateMany({
+        where: { unavailableUntil: { lte: now } },
+        data: { unavailableUntil: null },
+      }).then((r: { count: number }) => r.count),
+    ]);
 
     return successResponse({
       message: 'Cleanup cron job completed',
       timestamp: new Date().toISOString(),
       tokensCleared,
+      menuItemsRestored,
     });
   } catch (error) {
     console.error('Cleanup cron job error:', error);

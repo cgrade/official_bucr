@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-  calculateCreditsForPartySize,
+  calculateReservationDeposit,
   calculateShowupBonus,
   calculateCancellationRefund,
 } from '@/services/credit.service';
+import { ECONOMICS } from '@/lib/config/economics';
 
 // Mock DB for DB-dependent service tests
 vi.mock('@/lib/db', () => {
@@ -36,34 +37,35 @@ vi.mock('@/lib/db', () => {
 });
 
 describe('Credit Service - Pure Calculations', () => {
-  describe('calculateCreditsForPartySize', () => {
-    it('should return 50 credits for 1-2 guests (standard tier)', () => {
-      expect(calculateCreditsForPartySize(1)).toBe(50);
-      expect(calculateCreditsForPartySize(2)).toBe(50);
+  describe('calculateReservationDeposit (flat, by venue type)', () => {
+    it('returns the configured flat deposit for each venue type', () => {
+      for (const [venue, credits] of Object.entries(ECONOMICS.DEPOSIT_BY_VENUE_TYPE)) {
+        expect(calculateReservationDeposit(venue)).toBe(credits);
+      }
     });
 
-    it('should return 100 credits for 3-6 guests (group tier)', () => {
-      expect(calculateCreditsForPartySize(3)).toBe(100);
-      expect(calculateCreditsForPartySize(4)).toBe(100);
-      expect(calculateCreditsForPartySize(5)).toBe(100);
-      expect(calculateCreditsForPartySize(6)).toBe(100);
+    it('vendor custom override wins over venue default', () => {
+      expect(calculateReservationDeposit('casual', 3000)).toBe(3000);
     });
 
-    it('should return 200 credits for 7+ guests (large party tier)', () => {
-      expect(calculateCreditsForPartySize(7)).toBe(200);
-      expect(calculateCreditsForPartySize(10)).toBe(200);
-      expect(calculateCreditsForPartySize(20)).toBe(200);
+    it('unknown / missing venue falls back to DEPOSIT_DEFAULT', () => {
+      expect(calculateReservationDeposit(undefined)).toBe(ECONOMICS.DEPOSIT_DEFAULT);
+      expect(calculateReservationDeposit('mystery')).toBe(ECONOMICS.DEPOSIT_DEFAULT);
     });
   });
 
-  describe('calculateShowupBonus', () => {
-    it('should calculate 5% bonus correctly', () => {
-      expect(calculateShowupBonus(50)).toBe(2); // 5% of 50 = 2.5, rounded down
-      expect(calculateShowupBonus(100)).toBe(5); // 5% of 100 = 5
-      expect(calculateShowupBonus(200)).toBe(10); // 5% of 200 = 10
+  describe('calculateShowupBonus (3%)', () => {
+    it('should calculate 3% bonus correctly', () => {
+      expect(calculateShowupBonus(1000)).toBe(30); // 3% of 1000
+      expect(calculateShowupBonus(1500)).toBe(45); // 3% of 1500
+      expect(calculateShowupBonus(2000)).toBe(60); // 3% of 2000
     });
 
-    it('should return at least 1 credit for small amounts', () => {
+    it('floors fractional bonus (3% of 50 = 1.5 → 1)', () => {
+      expect(calculateShowupBonus(50)).toBe(1);
+    });
+
+    it('should never be negative', () => {
       expect(calculateShowupBonus(10)).toBeGreaterThanOrEqual(0);
     });
   });

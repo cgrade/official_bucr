@@ -61,7 +61,9 @@ async function uploadLocal(
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 8);
   const filename = options.filename || `${timestamp}-${randomStr}`;
-  const ext = 'webp'; // Standardize to webp for web optimization
+  // Save as jpg — no format conversion happens locally, keeping .webp would
+  // cause iOS to fail decoding JPEG bytes as WebP (content/extension mismatch).
+  const ext = 'jpg';
   const fullFilename = `${filename}.${ext}`;
   const filePath = path.join(dirPath, fullFilename);
   

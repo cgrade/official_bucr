@@ -2,10 +2,13 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth.store';
+import { subscriptionApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import {
   CreditCard,
   Check,
@@ -21,57 +24,68 @@ import {
   Gift,
 } from 'lucide-react';
 
+// Prices and features match ECONOMICS config + /lib/features.ts FEATURE_TIERS exactly.
+// Scanner is Basic (required for guest check-in and cover-fee accrual).
+// Pro = analytics, guest_profiles, special_offers, experiences.
+// Elite = achievements, featured, display_settings.
 const plans = [
   {
     id: 'basic',
     name: 'Basic',
-    price: 75000,
+    price: 0,
+    free: true,
     period: 'month',
-    description: 'Perfect for getting started',
+    description: 'Free forever — get listed and start taking reservations today',
     icon: Zap,
-    color: 'from-slate-500 to-slate-600',
+    popular: false,
     features: [
-      'Restaurant listing',
+      'Restaurant listing & public profile',
       'Reservation management',
-      'Credit integration',
-      'Basic analytics',
+      'QR & PIN guest check-in scanner',
+      'Menu management (dine-in & takeout)',
+      'Photo gallery',
+      'Guest reviews display',
+      'Credit-backed deposit system',
+      'KYC document upload & verification',
       'Email support',
     ],
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: 145000,
+    price: 30000,
+    free: false,
     period: 'month',
-    description: 'Best for growing restaurants',
+    description: 'Growth tools for restaurants ready to scale',
     icon: Star,
-    color: 'from-primary-500 to-tertiary-500',
     popular: true,
     features: [
       'Everything in Basic',
-      'Advanced analytics',
-      'Custom profile page',
-      'Priority support',
-      'Guest CRM',
-      'Multi-branch support',
+      'Advanced analytics & booking trends',
+      'Guest profiles — CRM, notes & VIP tags',
+      'Special offers & promotional discounts',
+      'Special dining experiences',
+      '50% off per-cover success fees',
+      'Priority email & chat support',
     ],
   },
   {
-    id: 'premium',
-    name: 'Premium',
-    price: 250000,
+    id: 'elite',
+    name: 'Elite',
+    price: 85000,
+    free: false,
     period: 'month',
-    description: 'For high-volume establishments',
+    description: 'Maximum visibility for high-volume establishments',
     icon: Crown,
-    color: 'from-amber-500 to-orange-500',
+    popular: false,
     features: [
       'Everything in Pro',
-      'Marketing tools',
-      'Featured placement',
-      'Advanced CRM',
+      'Achievement badges on your public profile',
+      'Featured carousel & discovery placement',
+      'Custom display & branding settings',
+      'Zero per-cover success fees',
       'Dedicated account manager',
-      'API access',
-      'White-label options',
+      'Priority search placement in Abuja',
     ],
   },
 ];
@@ -85,27 +99,50 @@ const benefits = [
 
 export default function SubscriptionPage() {
   const { vendor } = useAuthStore();
-  const [selectedPlan, setSelectedPlan] = useState(vendor?.subscriptionTier?.toLowerCase() || 'basic');
+  // Normalise: 'premium' (legacy) → 'elite'
+  const currentTier = (vendor?.subscriptionTier?.toLowerCase() ?? 'basic').replace('premium', 'elite');
+  const [selectedPlan, setSelectedPlan] = useState(currentTier);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
+  const upgradeMutation = useMutation({
+    mutationFn: (planId: string) => subscriptionApi.upgrade(planId),
+    onSuccess: (data: any) => {
+      // If the backend returns a Paystack authorization URL, redirect to payment
+      const authUrl = data?.data?.authorizationUrl || data?.data?.authorization_url;
+      if (authUrl) {
+        window.location.href = authUrl;
+      } else {
+        toast.success('Subscription updated successfully!');
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Upgrade failed. Please try again.');
+    },
+  });
+
   const handleUpgrade = (planId: string) => {
-    toast.info(`Upgrading to ${planId} plan...`);
+    if (planId === 'basic') {
+      toast.info('Basic is free — no payment needed.');
+      return;
+    }
+    if (planId === currentTier) return;
+    upgradeMutation.mutate(planId);
   };
 
-  const currentPlan = plans.find(p => p.id === vendor?.subscriptionTier?.toLowerCase()) || plans[0];
+  const currentPlan = plans.find(p => p.id === currentTier) ?? plans[0];
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 glass-card border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#c9a84c] shadow-lg shadow-[#c9a84c]/30">
               <CreditCard className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage your plan and billing</p>
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">Subscription</h1>
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your plan and billing</p>
             </div>
           </div>
         </div>
@@ -120,18 +157,21 @@ export default function SubscriptionPage() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${currentPlan.color} shadow-lg`}>
+              <div className={`flex h-14 w-14 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] shadow-lg`}>
                 <currentPlan.icon className="h-7 w-7 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{currentPlan.name} Plan</h2>
+                  <h2 className="text-xl font-bold text-[#f5f0e8]">{currentPlan.name} Plan</h2>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
                     Active
                   </span>
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {formatCurrency(currentPlan.price)}/month • Renews on Feb 24, 2026
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">
+                  {currentPlan.free ? 'Free forever' : `${formatCurrency(currentPlan.price)}/month`}
+                  {!currentPlan.free && vendor?.subscriptionExpiresAt
+                    ? ` • Renews on ${new Date(vendor.subscriptionExpiresAt).toLocaleDateString()}`
+                    : ''}
                 </p>
               </div>
             </div>
@@ -143,25 +183,25 @@ export default function SubscriptionPage() {
         <div className="flex items-center justify-center gap-4">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               billingCycle === 'monthly'
-                ? 'bg-primary-500 text-white'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-[#c9a84c] text-[#0f2547]'
+                : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
             }`}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
               billingCycle === 'yearly'
-                ? 'bg-primary-500 text-white'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-[#c9a84c] text-[#0f2547]'
+                : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
             }`}
           >
             Yearly
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-              Save 20%
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold tracking-wide">
+              SAVE 20%
             </span>
           </button>
         </div>
@@ -169,7 +209,9 @@ export default function SubscriptionPage() {
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, index) => {
-            const isCurrentPlan = plan.id === vendor?.subscriptionTier?.toLowerCase();
+            // Normalise legacy 'premium' → 'elite' for comparison
+            const normalizedTier = (vendor?.subscriptionTier?.toLowerCase() ?? 'basic').replace('premium', 'elite');
+            const isCurrentPlan = plan.id === normalizedTier;
             const price = billingCycle === 'yearly' ? plan.price * 12 * 0.8 : plan.price;
             
             return (
@@ -184,42 +226,65 @@ export default function SubscriptionPage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary-500 to-tertiary-500 text-white text-xs font-semibold shadow-lg">
+                    <span className="px-3 py-1 rounded-full bg-[#0f2547] text-white text-xs font-semibold shadow-lg">
                       Most Popular
                     </span>
                   </div>
                 )}
 
                 <div className="text-center mb-6">
-                  <div className={`inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${plan.color} shadow-lg mb-4`}>
-                    <plan.icon className="h-7 w-7 text-white" />
+                  <div className={`inline-flex h-14 w-14 items-center justify-center rounded-xl mb-4 ${
+                    isCurrentPlan ? 'bg-[#c9a84c]' : 'bg-[rgba(201,168,76,0.1)]'
+                  }`}>
+                    <plan.icon className={`h-7 w-7 ${isCurrentPlan ? 'text-[#0f2547]' : 'text-[#c9a84c]'}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{plan.name}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{plan.description}</p>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-slate-900 dark:text-white">
-                      {formatCurrency(price)}
+                  <h3 className="text-xl font-bold text-[#f5f0e8]">{plan.name}</h3>
+                  {isCurrentPlan && (
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold tracking-wide uppercase">
+                      Your current plan
                     </span>
-                    <span className="text-slate-500 dark:text-slate-400">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                  )}
+                  <p className="text-[12px] text-[#7a8fa6] mt-2 leading-relaxed">{plan.description}</p>
+                  <div className="mt-4">
+                    {plan.free ? (
+                      <span className="text-4xl font-bold text-[#f5f0e8]">Free</span>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold text-[#f5f0e8]">
+                          {formatCurrency(price)}
+                        </span>
+                        <span className="text-[#7a8fa6] text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-2.5 mb-6">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                    <li key={feature} className="flex items-start gap-2.5 text-[13px] text-[rgba(245,240,232,0.75)]">
+                      <Check className="h-4 w-4 text-[#c9a84c] flex-shrink-0 mt-0.5" />
                       {feature}
                     </li>
                   ))}
                 </ul>
 
                 <Button
-                  className={`w-full ${plan.popular ? 'btn-gradient' : ''}`}
-                  variant={plan.popular ? 'default' : 'outline'}
+                  className={`w-full ${
+                    isCurrentPlan
+                      ? 'opacity-60 cursor-default'
+                      : plan.popular
+                      ? 'bg-[#c9a84c] text-[#0f2547] hover:bg-[#f5f0e8] border-[#c9a84c]'
+                      : ''
+                  }`}
+                  variant={plan.popular || isCurrentPlan ? 'default' : 'outline'}
                   onClick={() => handleUpgrade(plan.id)}
-                  disabled={isCurrentPlan}
+                  disabled={isCurrentPlan || upgradeMutation.isPending}
                 >
-                  {isCurrentPlan ? 'Current Plan' : 'Upgrade'}
+                  {upgradeMutation.isPending && upgradeMutation.variables === plan.id ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing…</>
+                  ) : isCurrentPlan ? 'Current Plan'
+                    : plan.free ? 'Get Started Free'
+                    : `Upgrade to ${plan.name}`}
                 </Button>
               </motion.div>
             );
@@ -234,8 +299,8 @@ export default function SubscriptionPage() {
           className="glass-card rounded-2xl p-8"
         >
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Why Upgrade?</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Unlock powerful features to grow your business</p>
+            <h2 className="text-2xl font-bold text-[#f5f0e8]">Why Upgrade?</h2>
+            <p className="text-slate-500 text-[#7a8fa6] mt-2">Unlock powerful features to grow your business</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -247,11 +312,11 @@ export default function SubscriptionPage() {
                 transition={{ delay: 0.5 + index * 0.1 }}
                 className="text-center"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-tertiary-500/10 mb-4">
-                  <benefit.icon className="h-6 w-6 text-primary-500" />
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] mb-4">
+                  <benefit.icon className="h-6 w-6 text-[#c9a84c]" />
                 </div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">{benefit.title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{benefit.desc}</p>
+                <h3 className="font-semibold text-[#f5f0e8]">{benefit.title}</h3>
+                <p className="text-sm text-slate-500 text-[#7a8fa6] mt-1">{benefit.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -259,9 +324,9 @@ export default function SubscriptionPage() {
 
         {/* FAQ or Support */}
         <div className="text-center py-8">
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-slate-500 text-[#7a8fa6]">
             Have questions about our plans?{' '}
-            <button className="text-primary-600 dark:text-primary-400 font-medium hover:underline">
+            <button className="text-[#c9a84c] font-medium hover:text-[#f5f0e8]">
               Contact our sales team
             </button>
           </p>

@@ -1,300 +1,198 @@
 'use client';
 
+/**
+ * Vendor Portal Header — pure BUCR brand palette
+ */
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { settingsApi } from '@/lib/api';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
-  Search,
-  Bell,
-  ChevronRight,
-  Menu,
-  X,
-  LogOut,
-  Settings,
-  CreditCard,
-  Home,
-  CalendarCheck,
-  ShoppingBag,
+  Search, Bell, ChevronRight, Menu, X, LogOut,
+  Settings, CreditCard, CalendarCheck, ShoppingBag, Home,
 } from 'lucide-react';
+import { BucrWordmark } from '@/components/ui/BucrWordmark';
 import { cn } from '@/lib/utils';
-import { BucrLogo } from '@/components/ui/BucrLogo';
 
 interface HeaderProps {
   onMenuClick?: () => void;
   isSidebarOpen?: boolean;
 }
 
-const getPageInfo = (pathname: string) => {
-  const segments = pathname.split('/').filter(Boolean);
-  const breadcrumbs = [{ name: 'Home', href: '/dashboard' }];
-  
-  let pageTitle = 'Dashboard';
-  
-  if (segments.length > 0) {
-    const currentPage = segments[segments.length - 1];
-    pageTitle = currentPage.charAt(0).toUpperCase() + currentPage.slice(1).replace(/-/g, ' ');
-    
-    if (segments[0] !== 'dashboard') {
-      breadcrumbs.push({ name: pageTitle, href: pathname });
-    }
-  }
-  
-  return { breadcrumbs, pageTitle };
+const getPageTitle = (pathname: string) => {
+  const seg = pathname.split('/').filter(Boolean).pop() ?? 'dashboard';
+  return seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' ');
 };
+
+// Brand token classes
+const HDR_BG     = 'bg-[#0f2547]';
+const BORDER     = 'border-[rgba(201,168,76,0.18)]';
+const TEXT       = 'text-[#f5f0e8]';
+const TEXT_MUTED = 'text-[#7a8fa6]';
+const TEXT_GOLD  = 'text-[#c9a84c]';
+const ICON_BTN   = 'p-2 rounded-lg text-[#7a8fa6] hover:text-[#f5f0e8] hover:bg-[rgba(255,255,255,0.06)] transition-colors';
 
 export function Header({ onMenuClick, isSidebarOpen }: HeaderProps) {
   const pathname = usePathname();
   const { vendor, logout } = useAuthStore();
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [showNotifs,  setShowNotifs]  = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   const { data: profileData } = useQuery({
     queryKey: ['vendor-profile'],
     queryFn: () => settingsApi.getProfile(),
-    staleTime: 10000,
+    staleTime: 10_000,
   });
 
-  const profile = profileData?.data;
+  const profile      = profileData?.data;
   const businessName = profile?.businessName || vendor?.businessName;
-  const logo = profile?.logo;
+  const logo         = profile?.logo;
+  const tier         = profile?.subscriptionTier || vendor?.subscriptionTier || 'basic';
+  // Blue tick = Pro or Elite subscription (not verification status)
+  const tierNorm = tier === 'premium' ? 'elite' : (tier || 'basic');
+  const isPremium = tierNorm === 'pro' || tierNorm === 'elite';
+  const pageTitle    = getPageTitle(pathname);
 
-  const { breadcrumbs, pageTitle } = getPageInfo(pathname);
+  const initials = (name?: string) =>
+    name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'V';
 
-  const getInitials = (name?: string) => {
-    if (!name) return 'V';
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  // Close dropdowns on outside click
   useEffect(() => {
-    const handleClickOutside = () => {
-      setShowNotifications(false);
-      setShowProfile(false);
-    };
-    if (showNotifications || showProfile) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [showNotifications, showProfile]);
+    if (!showNotifs && !showProfile) return;
+    const close = () => { setShowNotifs(false); setShowProfile(false); };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [showNotifs, showProfile]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-      {/* Main Header Bar */}
-      <div className="h-16 flex items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
-        {/* Left Section: Menu + Logo */}
-        <div className="flex items-center gap-4 flex-shrink-0">
-          {/* Mobile menu button */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Toggle menu"
-          >
+    <header className={cn('sticky top-0 z-50 border-b', HDR_BG, BORDER)}>
+      <div className="h-16 flex items-center justify-between gap-4 px-4 md:px-6">
+
+        {/* Left: mobile menu + logo */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <button onClick={onMenuClick} className={cn(ICON_BTN, 'lg:hidden')} aria-label="Toggle menu">
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
-            <BucrLogo width={120} height={30} />
-            <span className="hidden sm:inline text-[10px] font-semibold text-secondary-600 dark:text-secondary-400 uppercase tracking-wider">
-              Vendor Portal
+            <BucrWordmark height={26} />
+            <span className="hidden sm:inline-block text-[8px] font-sans font-semibold tracking-[0.18em] uppercase text-[#7a8fa6] border border-[rgba(201,168,76,0.25)] px-1.5 py-0.5 rounded">
+              Vendor
             </span>
           </Link>
         </div>
 
-        {/* Center Section: Search (desktop) */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        {/* Center: search */}
+        <div className="hidden md:flex flex-1 max-w-sm mx-4">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
             <input
               ref={searchRef}
               type="text"
-              placeholder="Search reservations, orders..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "w-full h-10 pl-10 pr-4 rounded-xl text-sm transition-all duration-200",
-                "bg-slate-100 dark:bg-slate-800 border-2 border-transparent",
-                "placeholder:text-slate-400 dark:placeholder:text-slate-500",
-                "text-slate-900 dark:text-slate-100",
-                "focus:outline-none focus:bg-white dark:focus:bg-slate-800",
-                "focus:border-primary-500 dark:focus:border-primary-500",
-                "focus:shadow-sm"
-              )}
+              placeholder="Search reservations, orders…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-9 pl-9 pr-4 rounded-lg text-[13px] bg-[rgba(255,255,255,0.05)] border border-[rgba(201,168,76,0.18)] text-[#f5f0e8] placeholder:text-[#7a8fa6] focus:outline-none focus:border-[#c9a84c] focus:bg-[rgba(255,255,255,0.07)] transition-all"
             />
           </div>
         </div>
 
-        {/* Right Section: Actions */}
-        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          {/* Mobile Search Button */}
-          <button
-            onClick={() => searchRef.current?.focus()}
-            className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Search"
-          >
+        {/* Right: actions */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={() => searchRef.current?.focus()} className={cn(ICON_BTN, 'md:hidden')}>
             <Search className="h-5 w-5" />
           </button>
+
           {/* Notifications */}
           <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowNotifications(!showNotifications);
-                setShowProfile(false);
-              }}
-              className="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-              aria-label="Notifications"
-            >
+            <button onClick={e => { e.stopPropagation(); setShowNotifs(!showNotifs); setShowProfile(false); }}
+              className={cn(ICON_BTN, 'relative')}>
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              </span>
             </button>
 
-            {showNotifications && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">Notifications</h3>
-                    <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 px-2 py-0.5 rounded-full">2 new</span>
-                  </div>
+            {showNotifs && (
+              <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border shadow-2xl overflow-hidden bg-[#0f2547] border-[rgba(201,168,76,0.25)]"
+                onClick={e => e.stopPropagation()}>
+                <div className="px-4 py-3 border-b border-[rgba(201,168,76,0.15)]">
+                  <h3 className="text-[13px] font-semibold text-[#f5f0e8]">Notifications</h3>
                 </div>
-                <div className="max-h-72 overflow-y-auto">
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
-                        <CalendarCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">New reservation</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">John D. booked a table for 4 at 7:00 PM</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">5 min ago</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
-                        <ShoppingBag className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">New takeout order</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Order #1234 - 3 items - ₦15,500</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">12 min ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 bg-slate-50 dark:bg-slate-800/50">
-                  <button className="w-full text-center text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
-                    View all notifications
-                  </button>
+                <div className="py-8 text-center">
+                  <Bell className="h-8 w-8 text-[rgba(201,168,76,0.2)] mx-auto mb-2" />
+                  <p className="text-[12px] text-[#7a8fa6]">No new notifications</p>
+                  <p className="text-[11px] text-[rgba(122,143,166,0.5)] mt-1">New bookings and alerts will appear here</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Divider */}
-          <div className="hidden md:block w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+          <div className="w-px h-5 bg-[rgba(201,168,76,0.2)] mx-1 hidden md:block" />
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
-
-          {/* Profile Dropdown */}
+          {/* Profile */}
           <div className="relative ml-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowProfile(!showProfile);
-                setShowNotifications(false);
-              }}
-              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 text-xs font-bold text-white ring-2 ring-white dark:ring-slate-900 overflow-hidden">
+            <button onClick={e => { e.stopPropagation(); setShowProfile(!showProfile); setShowNotifs(false); }}
+              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f2547] text-[11px] font-bold text-[#f5f0e8] border border-[rgba(201,168,76,0.35)] overflow-hidden">
                 {logo ? (
-                  <img 
-                    src={logo.startsWith('http') ? logo : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${logo}`}
-                    alt="Logo"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  getInitials(businessName)
-                )}
+                  <img src={logo.startsWith('http') ? logo : `${process.env.NEXT_PUBLIC_API_URL}${logo}`}
+                    alt="" className="w-full h-full object-cover" />
+                ) : initials(businessName)}
               </div>
               <div className="hidden lg:flex flex-col items-start">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200 leading-tight max-w-[100px] truncate">
-                  {businessName || 'Restaurant'}
-                </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 capitalize">
-                  {profile?.subscriptionTier || 'Basic'} Plan
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[12px] font-medium text-[#f5f0e8] leading-tight max-w-[90px] truncate">
+                    {businessName || 'Restaurant'}
+                  </span>
+                  {isPremium && (
+                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1d9bf0] text-white text-[8px] font-black flex-shrink-0">✓</span>
+                  )}
+                </div>
+                <span className="text-[9px] text-[#c9a84c] capitalize">{tierNorm} Plan</span>
               </div>
-              <ChevronRight className="hidden lg:block h-4 w-4 text-slate-400 rotate-90" />
+              <ChevronRight className="hidden lg:block h-3.5 w-3.5 text-[#7a8fa6] rotate-90" />
             </button>
 
             {showProfile && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-60 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-4 bg-gradient-to-br from-secondary-400 to-secondary-600">
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border shadow-2xl overflow-hidden bg-[#0f2547] border-[rgba(201,168,76,0.25)]"
+                onClick={e => e.stopPropagation()}>
+                {/* Profile header */}
+                <div className="p-4 bg-[#0f2547] border-b border-[rgba(201,168,76,0.15)]">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white overflow-hidden">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(201,168,76,0.4)] bg-[rgba(255,255,255,0.1)] text-[12px] font-bold text-[#f5f0e8] overflow-hidden">
                       {logo ? (
-                        <img 
-                          src={logo.startsWith('http') ? logo : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${logo}`}
-                          alt="Logo"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        getInitials(businessName)
-                      )}
+                        <img src={logo.startsWith('http') ? logo : `${process.env.NEXT_PUBLIC_API_URL}${logo}`}
+                          alt="" className="w-full h-full object-cover" />
+                      ) : initials(businessName)}
                     </div>
                     <div>
-                      <p className="font-semibold text-white truncate max-w-[140px]">
-                        {businessName || 'Your Restaurant'}
-                      </p>
-                      <p className="text-xs text-white/80 mt-0.5 capitalize">
-                        {profile?.subscriptionTier || 'Basic'} Plan
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[13px] font-semibold text-[#f5f0e8] truncate max-w-[110px]">
+                          {businessName || 'Your Restaurant'}
+                        </p>
+                        {isPremium && (
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#1d9bf0] text-white text-[9px] font-black flex-shrink-0">✓</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#c9a84c] capitalize mt-0.5">{tierNorm} Plan</p>
                     </div>
                   </div>
                 </div>
                 <div className="p-2">
-                  <Link
-                    href="/settings"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    onClick={() => setShowProfile(false)}
-                  >
-                    <Settings className="h-4 w-4 text-slate-400" />
-                    Settings
-                  </Link>
-                  <Link
-                    href="/subscription"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    onClick={() => setShowProfile(false)}
-                  >
-                    <CreditCard className="h-4 w-4 text-slate-400" />
-                    Subscription
-                  </Link>
-                  <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
-                  <button
-                    onClick={() => {
-                      setShowProfile(false);
-                      logout();
-                    }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors w-full"
-                  >
+                  {[
+                    { label: 'Settings',     href: '/settings/index',  icon: Settings },
+                    { label: 'Subscription', href: '/subscription', icon: CreditCard },
+                  ].map(item => (
+                    <Link key={item.label} href={item.href} onClick={() => setShowProfile(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-[rgba(245,240,232,0.75)] hover:text-[#f5f0e8] hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+                      <item.icon className="h-4 w-4 text-[#7a8fa6]" />
+                      {item.label}
+                    </Link>
+                  ))}
+                  <div className="my-1.5 border-t border-[rgba(201,168,76,0.1)]" />
+                  <button onClick={() => { setShowProfile(false); logout(); }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-[rgba(239,68,68,0.75)] hover:text-[#f87171] hover:bg-[rgba(239,68,68,0.08)] transition-colors w-full">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </button>
@@ -305,31 +203,21 @@ export function Header({ onMenuClick, isSidebarOpen }: HeaderProps) {
         </div>
       </div>
 
-      {/* Breadcrumb Bar */}
-      <div className="h-14 flex items-center gap-4 px-4 md:px-6 lg:px-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-1 text-sm">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-          >
-            <Home className="h-4 w-4" />
-          </Link>
-          {breadcrumbs.slice(1).map((crumb) => (
-            <div key={crumb.href} className="flex items-center">
-              <ChevronRight className="h-4 w-4 mx-1 text-slate-300 dark:text-slate-600" />
-              <span className="text-slate-600 dark:text-slate-300 font-medium">
-                {crumb.name}
-              </span>
-            </div>
-          ))}
-        </nav>
-
-        {/* Page Title */}
+      {/* Breadcrumb bar */}
+      <div className={cn('h-10 flex items-center gap-3 px-4 md:px-6 border-t bg-[rgba(255,255,255,0.02)]', BORDER)}>
+        <Link href="/dashboard" className="text-[#7a8fa6] hover:text-[#c9a84c] transition-colors">
+          <Home className="h-3.5 w-3.5" />
+        </Link>
+        {pathname !== '/dashboard' && (
+          <>
+            <ChevronRight className="h-3 w-3 text-[rgba(201,168,76,0.3)]" />
+            <span className="text-[12px] font-medium text-[#f5f0e8]">{pageTitle}</span>
+          </>
+        )}
         <div className="ml-auto">
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {pageTitle}
-          </h1>
+          <span className="text-[10px] font-semibold tracking-[0.15em] uppercase text-[rgba(201,168,76,0.5)]">
+            Bucr Vendor
+          </span>
         </div>
       </div>
     </header>

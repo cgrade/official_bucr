@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { processExpiredCredits, sendExpiryReminders } from '@/services/credit.service';
+import { processExpiredGifts } from '@/services/gift.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
 /**
@@ -35,16 +36,20 @@ export async function GET(request: NextRequest) {
     const results: {
       expiry?: Awaited<ReturnType<typeof processExpiredCredits>>;
       reminders?: Awaited<ReturnType<typeof sendExpiryReminders>>;
+      gifts?: Awaited<ReturnType<typeof processExpiredGifts>>;
     } = {};
 
-    // Process expired credits
     if (action === 'all' || action === 'expiry') {
       results.expiry = await processExpiredCredits();
     }
 
-    // Send expiry reminders
     if (action === 'all' || action === 'reminders') {
       results.reminders = await sendExpiryReminders();
+    }
+
+    // Expire unclaimed gifts and refund senders
+    if (action === 'all' || action === 'gifts') {
+      results.gifts = await processExpiredGifts();
     }
 
     return successResponse({

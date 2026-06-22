@@ -12,62 +12,47 @@ import Cookies from 'js-cookie';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, fetchProfile } = useAuthStore();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Enable real-time data synchronization
-  useRealtimeSync({
-    enabled: isAuthenticated,
-    onConnected: () => console.log('Real-time sync connected'),
-    onDisconnected: () => console.log('Real-time sync disconnected'),
-  });
+  useRealtimeSync({ enabled: isAuthenticated });
 
   useEffect(() => {
     const token = Cookies.get('vendor_token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!token) { router.push('/login'); return; }
+    // Always refresh on mount — ensures subscription tier, verification status, etc.
+    // reflect the latest backend state, not a stale persisted value.
+    fetchProfile().catch(() => router.push('/login'));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    if (!isAuthenticated) {
-      fetchProfile().catch(() => {
-        router.push('/login');
-      });
-    }
-  }, [isAuthenticated, fetchProfile, router]);
-
-  // Loading state
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-[#0f2547]">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-tertiary-500 to-tertiary-600 animate-pulse" />
-          <div className="h-2 w-24 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+          <div className="h-12 w-12 rounded-xl bg-[#c9a84c] animate-pulse" />
+          <div className="h-2 w-24 rounded-full bg-[rgba(201,168,76,0.2)] animate-pulse" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col">
-      {/* Header - Full width at top */}
+    // Ink background for the outermost shell — deepest layer
+    <div className="min-h-screen bg-[#0f2547] flex flex-col">
       <Header
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         isSidebarOpen={sidebarOpen}
       />
-
-      {/* Content area with sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <Sidebar
           isOpen={sidebarOpen}
           isCollapsed={sidebarCollapsed}
           onClose={() => setSidebarOpen(false)}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-
-        {/* Main content area */}
-        <main className="flex-1 p-4 md:p-5 lg:p-6 overflow-auto">
+        {/* Main content — slightly lighter navy so cards stand out */}
+        <main className="flex-1 p-4 md:p-6 overflow-auto bg-[#0a1d3a]">
           {children}
         </main>
       </div>

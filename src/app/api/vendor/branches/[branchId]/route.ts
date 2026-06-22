@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { getLatLng } from '@/services/geocoding.service';
 import {
   successResponse,
   errorResponse,
@@ -110,19 +111,31 @@ export async function PATCH(
 
     const data = validation.data;
 
+    // If the address changed but no explicit lat/lng provided, re-geocode
+    let newLat = data.latitude;
+    let newLng = data.longitude;
+    const addressChanged = data.address || data.city || data.state;
+    if (addressChanged && newLat == null && newLng == null) {
+      const resolvedAddress  = data.address ?? branch.address;
+      const resolvedCity     = data.city    ?? branch.city;
+      const resolvedState    = data.state   ?? branch.state;
+      const coords = await getLatLng(resolvedAddress, resolvedCity, resolvedState).catch(() => null);
+      if (coords) { newLat = coords.lat; newLng = coords.lng; }
+    }
+
     const updatedBranch = await db.vendorBranch.update({
       where: { id: branch.id },
       data: {
-        ...(data.name && { name: data.name }),
-        ...(data.address && { address: data.address }),
-        ...(data.city && { city: data.city }),
-        ...(data.state && { state: data.state }),
-        ...(data.phone && { phone: data.phone }),
-        ...(data.email && { email: data.email }),
-        ...(data.latitude !== undefined && { latitude: data.latitude }),
-        ...(data.longitude !== undefined && { longitude: data.longitude }),
-        ...(data.operatingHours && { operatingHours: data.operatingHours }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
+        ...(data.name     && { name:     data.name }),
+        ...(data.address  && { address:  data.address }),
+        ...(data.city     && { city:     data.city }),
+        ...(data.state    && { state:    data.state }),
+        ...(data.phone    && { phone:    data.phone }),
+        ...(data.email    && { email:    data.email }),
+        ...(newLat  != null && { latitude:  newLat }),
+        ...(newLng  != null && { longitude: newLng }),
+        ...(data.operatingHours          && { operatingHours: data.operatingHours }),
+        ...(data.isActive !== undefined  && { isActive: data.isActive }),
       },
     });
 

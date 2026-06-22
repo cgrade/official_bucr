@@ -40,30 +40,30 @@ export default function CreditsPage() {
     {
       name: 'Total Credits in Circulation',
       value: stats.totalCreditsInCirculation?.toLocaleString() || '0',
-      subValue: formatCurrency((stats.totalCreditsInCirculation || 0) * 100),
+      subValue: formatCurrency((stats.totalCreditsInCirculation || 0) * 10),
       icon: Wallet,
-      color: 'from-admin-500 to-admin-600',
+      color: '',
     },
     {
       name: 'User Credits',
       value: stats.totalUserCredits?.toLocaleString() || '0',
       subValue: 'Across all users',
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
+      color: '',
     },
     {
       name: 'Vendor Credits',
       value: stats.totalVendorCredits?.toLocaleString() || '0',
       subValue: 'Across all vendors',
       icon: Store,
-      color: 'from-green-500 to-green-600',
+      color: '',
     },
     {
       name: "Today's Purchases",
       value: stats.todayPurchases?.toLocaleString() || '0',
       subValue: 'Credits purchased today',
       icon: TrendingUp,
-      color: 'from-amber-500 to-amber-600',
+      color: '',
     },
   ];
 
@@ -90,8 +90,8 @@ export default function CreditsPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Credit System</h1>
-          <p className="text-slate-500 mt-1">Monitor credit circulation and transactions</p>
+          <h1 className="text-3xl font-bold text-[#f5f0e8]">Credit System</h1>
+          <p className="text-[#7a8fa6] mt-1">Monitor credit circulation and transactions</p>
         </div>
 
         {/* Stats Grid */}
@@ -99,15 +99,15 @@ export default function CreditsPage() {
           {statCards.map((stat) => (
             <div key={stat.name} className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-4">
-                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
+                <div className={`h-12 w-12 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center`}>
                   <stat.icon className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">{stat.name}</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                  <p className="text-sm text-[#7a8fa6]">{stat.name}</p>
+                  <p className="text-2xl font-bold text-[#f5f0e8]">
                     {statsLoading ? '...' : stat.value}
                   </p>
-                  <p className="text-xs text-slate-400">{stat.subValue}</p>
+                  <p className="text-xs text-[rgba(122,143,166,0.6)]">{stat.subValue}</p>
                 </div>
               </div>
             </div>
@@ -116,13 +116,13 @@ export default function CreditsPage() {
 
         {/* Transactions */}
         <div className="glass-card rounded-2xl overflow-hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+          <div className="p-6 border-b border-[rgba(201,168,76,0.1)]">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Transactions</h2>
+              <h2 className="text-lg font-semibold text-[#f5f0e8]">Recent Transactions</h2>
               <select
                 value={filter}
                 onChange={(e) => { setFilter(e.target.value); setPage(1); }}
-                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+                className="px-3 py-2 rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-sm"
               >
                 <option value="">All Types</option>
                 <option value="purchase">Purchases</option>
@@ -135,25 +135,25 @@ export default function CreditsPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800/50">
+              <thead className="bg-[rgba(255,255,255,0.04)]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Account</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Amount</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Balance After</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Account</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Amount</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Balance After</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-[rgba(201,168,76,0.08)]">
                 {txLoading ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-[rgba(122,143,166,0.6)]" />
                   </td></tr>
                 ) : transactions.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No transactions found</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-[#7a8fa6]">No transactions found</td></tr>
                 ) : (
                   transactions.map((tx: any) => (
-                    <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr key={tx.id} className="hover:bg-[rgba(255,255,255,0.04)]">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           {getTypeIcon(tx.type, tx.amount)}
@@ -163,7 +163,7 @@ export default function CreditsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           {tx.userId ? <Users className="h-4 w-4 text-blue-500" /> : <Store className="h-4 w-4 text-green-500" />}
-                          <span className="text-sm text-slate-500">{tx.userId ? 'User' : 'Vendor'}</span>
+                          <span className="text-sm text-[#7a8fa6]">{tx.userId ? 'User' : 'Vendor'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -171,8 +171,8 @@ export default function CreditsPage() {
                           {tx.amount > 0 ? '+' : ''}{tx.amount?.toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-500">{tx.balanceAfter?.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{formatDate(tx.createdAt)}</td>
+                      <td className="px-6 py-4 text-[#7a8fa6]">{tx.balanceAfter?.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-sm text-[#7a8fa6]">{formatDate(tx.createdAt)}</td>
                     </tr>
                   ))
                 )}
@@ -182,8 +182,8 @@ export default function CreditsPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <p className="text-sm text-slate-500">
+            <div className="px-6 py-4 border-t border-[rgba(201,168,76,0.1)] flex items-center justify-between">
+              <p className="text-sm text-[#7a8fa6]">
                 Page {pagination.page} of {pagination.totalPages}
               </p>
               <div className="flex gap-2">

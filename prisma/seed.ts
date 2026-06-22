@@ -70,7 +70,7 @@ async function main() {
       email: 'info@zumagrill.com',
       phone: '+2348098765432',
       website: 'https://zumagrill.com',
-      subscriptionTier: 'premium',
+      subscriptionTier: 'elite',
       subscriptionExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       verificationStatus: 'approved',
       bankName: 'GTBank',
@@ -80,9 +80,7 @@ async function main() {
       deliveryFeeType: 'flat',
       deliveryFlatFee: 150000, // ₦1,500 in kobo
       minDeliveryOrder: 500000, // ₦5,000 in kobo
-      averageRating: 4.5,
-      totalReviews: 127,
-      totalBookings: 543,
+      // averageRating and totalReviews are computed live from the reviews table — never seed these
       isFeatured: true,
       featuredAt: new Date(),
     },
@@ -268,34 +266,10 @@ async function main() {
   });
   console.log('✅ Vendor documents created');
 
-  // Create achievements
-  await prisma.achievement.createMany({
-    skipDuplicates: true,
-    data: [
-      {
-        vendorId: vendor.id,
-        title: 'Verified Business',
-        description: 'All business documents verified',
-        icon: '✅',
-        badgeType: 'verified',
-      },
-      {
-        vendorId: vendor.id,
-        title: 'Premium Partner',
-        description: 'Premium subscription member',
-        icon: '🏆',
-        badgeType: 'premium_partner',
-      },
-      {
-        vendorId: vendor.id,
-        title: 'Trusted Vendor',
-        description: '500+ successful bookings',
-        icon: '⭐',
-        badgeType: 'trusted',
-      },
-    ],
-  });
-  console.log('✅ Achievements created');
+  // Achievements are NOT seeded manually — they are auto-earned via syncVendorAchievements()
+  // which is called after document approval, subscription changes, and booking milestones.
+  // (see src/services/achievement.service.ts)
+  console.log('ℹ️  Achievements: auto-earned — not seeded');
 
   // Create experience (skip if already exists)
   const existingExperience = await prisma.experience.findFirst({

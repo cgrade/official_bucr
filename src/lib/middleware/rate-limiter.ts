@@ -40,6 +40,10 @@ export class RateLimiter {
   }
 
   async check(identifier: string): Promise<boolean> {
+    // Explicit opt-out for automated test runs only (never set in production).
+    if (process.env.RATE_LIMIT_DISABLED === 'true') {
+      return true;
+    }
     const now = Date.now();
     const record = store.get(identifier);
 

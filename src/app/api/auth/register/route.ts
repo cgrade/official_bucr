@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { hashPassword } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt';
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/lib/utils/api-response';
 import { emailSchema, passwordSchema, nameSchema, phoneSchema } from '@/lib/utils/validation';
 import { generateBookingReference } from '@/lib/utils/helpers';
+import { getOperationalSettings } from '@/lib/config/system-settings';
 
 const registerSchema = z.object({
   email: emailSchema,
@@ -21,6 +23,9 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = applyRateLimit(request, 'auth');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const validation = registerSchema.safeParse(body);
 
@@ -30,6 +35,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password, name, phone, referralCode } = validation.data;
+
+    // Enforce the admin-configured minimum password length (Settings → General),
+    // on top of the base schema's hard floor of 8.
+    const { minPasswordLength } = await getOperationalSettings();
+    if (password.length < minPasswordLength) {
+      return validationErrorResponse([`password: must be at least ${minPasswordLength} characters`]);
+    }
 
     // Check if email already exists
     const existingUser = await db.user.findFirst({
@@ -100,25 +112,33 @@ export async function POST(request: NextRequest) {
       role: 'user',
     });
 
-    // Award referral bonus if applicable
+    // Award referral bonuses — both parties benefit (fire-and-forget, non-blocking)
     if (referredById) {
-      try {
-        const { awardBonus } = await import('@/services/credit.service');
+      import('@/services/credit.service').then(async ({ awardBonus }) => {
         const { config } = await import('@/lib/config');
-        
-        // Award bonus to referrer
+        // Referrer gets their bonus
         await awardBonus({
-          userId: referredById,
+          userId: referredById!,
           credits: config.credits.referralBonus,
           referenceType: 'referral',
           referenceId: user.id,
-          description: `Referral bonus for inviting ${user.name}`,
+          description: `Referral bonus — ${user.name} joined using your code`,
         });
-      } catch (bonusError) {
-        // Log but don't fail registration if bonus fails
-        console.error('Failed to award referral bonus:', bonusError);
-      }
+        // Invitee (new user) also gets a welcome bonus for using a referral code
+        await awardBonus({
+          userId: user.id,
+          credits: config.credits.referralInviteeBonus,
+          referenceType: 'referral',
+          referenceId: referredById!,
+          description: `Welcome bonus for joining via referral`,
+        });
+      }).catch((err) => console.error('Referral bonus error:', err));
     }
+
+    // Auto-claim any pending gifts addressed to this user's email/phone (fire-and-forget)
+    import('@/services/gift.service')
+      .then(({ autoClaimGiftsForNewUser }) => autoClaimGiftsForNewUser(user.id))
+      .catch(() => {});
 
     return successResponse(
       {

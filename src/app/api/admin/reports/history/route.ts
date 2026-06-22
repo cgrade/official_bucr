@@ -56,25 +56,5 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * Record a generated report in history
- */
-export async function recordReport(params: {
-  type: string;
-  generatedBy: string;
-  adminId?: string;
-  parameters?: Record<string, unknown>;
-  fileUrl?: string;
-  status?: string;
-}) {
-  return db.reportHistory.create({
-    data: {
-      type: params.type,
-      generatedBy: params.generatedBy,
-      adminId: params.adminId,
-      parameters: (params.parameters || {}) as Record<string, string | number | boolean>,
-      fileUrl: params.fileUrl,
-      status: params.status || 'completed',
-    },
-  });
-}
+// recordReport() helper moved to '@/lib/admin/report-history' — Next.js route
+// modules may only export HTTP handlers and route config.

@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { generateOrderReference } from '@/lib/utils/helpers';
 import type { OrderItem } from '@/types';
 import { sendOrderConfirmation } from './email.service';
-import { notifyOrderStatusUpdate } from './notification.service';
+import { notifyOrderStatusUpdate, notifyVendorNewOrder } from './notification.service';
 
 export interface CreateOrderParams {
   userId: string;
@@ -168,6 +168,14 @@ export async function createOrder(params: CreateOrderParams) {
     status: 'confirmed',
     reference,
   }).catch((err) => console.error('Failed to send order push:', err));
+
+  // Vendor-facing notification (gated by vendor 'newOrders' preference).
+  notifyVendorNewOrder(vendorId, {
+    guestName: userForEmail?.name || 'A guest',
+    orderType,
+    total,
+    reference,
+  }).catch((err) => console.error('Failed to notify vendor of order:', err));
 
   return order;
 }

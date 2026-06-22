@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';

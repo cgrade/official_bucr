@@ -147,7 +147,7 @@ describe('Auth API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.data.user.email).toBe(testUser.email);
-      expect(data.data.accessToken).toBeDefined();
+      expect(data.data.tokens.accessToken).toBeDefined();
     });
 
     it('should reject invalid password', async () => {
@@ -198,8 +198,8 @@ describe('Auth API Integration Tests', () => {
       const data = await parseResponse(response);
 
       expect(response.status).toBe(200);
-      expect(data.data.accessToken).toBeDefined();
-      expect(data.data.refreshToken).toBeDefined();
+      expect(data.data.tokens.accessToken).toBeDefined();
+      expect(data.data.tokens.refreshToken).toBeDefined();
     });
 
     it('should reject invalid refresh token', async () => {

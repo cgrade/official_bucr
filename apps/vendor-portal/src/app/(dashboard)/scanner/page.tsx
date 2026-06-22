@@ -52,7 +52,7 @@ interface VerifiedReservation {
   };
 }
 
-export default function ScannerPage() {
+function ScannerPage() {
   const searchParams = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -295,7 +295,7 @@ export default function ScannerPage() {
                 {/* Guest Info */}
                 <div className="mb-6 rounded-lg bg-gray-50 p-4">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-xl font-semibold text-primary-600">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(201,168,76,0.15)] text-xl font-semibold text-[#c9a84c]">
                       {(verifiedReservation.user.fullName || verifiedReservation.user.name || '?').charAt(0)}
                     </div>
                     <div className="flex-1">
@@ -577,3 +577,5 @@ export default function ScannerPage() {
     </div>
   );
 }
+
+export default ScannerPage;

@@ -182,7 +182,22 @@ export function createMockRequest(
 
 // Clean up test data
 export async function cleanupTestData() {
-  // Delete in order of dependencies
+  // Delete in order of dependencies. Use a helper that ignores models which
+  // may not exist in older schemas, so cleanup never aborts mid-way.
+  const del = async (fn: () => Promise<unknown>) => {
+    try { await fn(); } catch { /* model absent or already empty — ignore */ }
+  };
+
+  // Financial / ledger children that FK to reservation, vendor, or user — must
+  // be cleared BEFORE the rows they reference (per-cover fees, wallet ledgers, etc.)
+  await del(() => (prisma as any).coverCharge?.deleteMany({}));
+  await del(() => (prisma as any).platformRevenue?.deleteMany({}));
+  await del(() => (prisma as any).vendorCreditTransaction?.deleteMany({}));
+  await del(() => (prisma as any).vendorWallet?.deleteMany({}));
+  await del(() => (prisma as any).gift?.deleteMany({}));
+  await del(() => (prisma as any).payment?.deleteMany({}));
+  await del(() => (prisma as any).notification?.deleteMany({}));
+
   await prisma.creditTransaction.deleteMany({});
   await prisma.review.deleteMany({});
   await prisma.invitation.deleteMany({});

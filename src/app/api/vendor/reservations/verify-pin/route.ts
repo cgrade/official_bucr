@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!reservation) {
-      return notFoundResponse('No reservation found with this PIN for today');
+      return errorResponse('No reservation found with this PIN for today', 404);
     }
 
     // Get guest profile if exists

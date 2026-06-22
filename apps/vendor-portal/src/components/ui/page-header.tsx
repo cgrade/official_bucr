@@ -13,11 +13,11 @@ export function PageHeader({ title, description, actions, className }: PageHeade
   return (
     <div className={cn('flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6', className)}>
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        <h1 className="text-2xl font-bold text-slate-900 text-[#7a8fa6]">
           {title}
         </h1>
         {description && (
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-500 text-[#7a8fa6]">
             {description}
           </p>
         )}
@@ -42,11 +42,11 @@ export function SectionHeader({ title, description, actions, className }: Sectio
   return (
     <div className={cn('flex items-center justify-between mb-4', className)}>
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-slate-900 text-[#7a8fa6]">
           {title}
         </h2>
         {description && (
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 text-[#7a8fa6]">
             {description}
           </p>
         )}

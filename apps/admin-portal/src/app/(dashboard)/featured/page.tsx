@@ -2,565 +2,336 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { featuredApi, vendorsApi } from '@/lib/api';
+import { featuredApi } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-  Star,
-  Sparkles,
-  Gift,
-  Clock,
-  Coins,
-  Plus,
-  Edit2,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Calendar,
-  Building2,
-  Search,
-  Filter,
+  Star, Sparkles, Gift, Clock, Coins, Plus, Edit2, Trash2,
+  CheckCircle, XCircle, Loader2, Calendar, Building2, X,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-type TabType = 'packages' | 'spots';
+type TabType     = 'packages' | 'spots';
 type FeaturedType = 'restaurant' | 'experience' | 'offer';
 
-const initialPackageForm = {
-  name: '',
-  type: 'restaurant' as FeaturedType,
-  description: '',
-  creditsCost: 100,
-  durationDays: 7,
-  isActive: true,
-  sortOrder: 0,
+const TYPE_STYLE: Record<FeaturedType, string> = {
+  restaurant: 'bg-[rgba(201,168,76,0.15)] text-[#c9a84c]',
+  experience: 'bg-[rgba(129,140,248,0.15)] text-[#818cf8]',
+  offer:      'bg-[rgba(52,211,153,0.15)] text-emerald-400',
 };
+
+const TYPE_ICONS: Record<FeaturedType, React.ElementType> = {
+  restaurant: Building2,
+  experience: Sparkles,
+  offer:      Gift,
+};
+
+function TypeBadge({ type }: { type: string }) {
+  const Icon = TYPE_ICONS[type as FeaturedType] ?? Star;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${TYPE_STYLE[type as FeaturedType] ?? 'bg-[rgba(122,143,166,0.15)] text-[#7a8fa6]'}`}>
+      <Icon className="h-3 w-3" />{type}
+    </span>
+  );
+}
+
+function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.8)]" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        className="w-full max-w-md bg-[#0f2547] border border-[rgba(201,168,76,0.25)] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const INIT = { name: '', type: 'restaurant' as FeaturedType, description: '', creditsCost: 100, durationDays: 7, isActive: true, sortOrder: 0 };
 
 export default function FeaturedPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabType>('packages');
-  const [showPackageModal, setShowPackageModal] = useState(false);
-  const [editingPackage, setEditingPackage] = useState<any>(null);
-  const [packageForm, setPackageForm] = useState(initialPackageForm);
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [tab, setTab]           = useState<TabType>('packages');
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing]   = useState<any>(null);
+  const [form, setForm]         = useState(INIT);
+  const [typeFilter, setType]   = useState('');
 
-  // Queries
-  const { data: packagesData, isLoading: loadingPackages } = useQuery({
+  const closeModal = () => { setShowModal(false); setEditing(null); setForm(INIT); };
+
+  const { data: pkgData, isLoading: loadingPkg } = useQuery({
     queryKey: ['featured-packages', typeFilter],
     queryFn: () => featuredApi.getPackages({ type: typeFilter || undefined }),
-    enabled: activeTab === 'packages',
+    enabled: tab === 'packages',
   });
 
   const { data: spotsData, isLoading: loadingSpots } = useQuery({
     queryKey: ['featured-spots', typeFilter],
     queryFn: () => featuredApi.getSpots({ type: typeFilter || undefined }),
-    enabled: activeTab === 'spots',
+    enabled: tab === 'spots',
   });
 
-  // Mutations
-  const createPackageMutation = useMutation({
+  const createM = useMutation({
     mutationFn: featuredApi.createPackage,
-    onSuccess: () => {
-      toast.success('Package created successfully');
-      queryClient.invalidateQueries({ queryKey: ['featured-packages'] });
-      closePackageModal();
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create package');
-    },
+    onSuccess: () => { toast.success('Package created'); queryClient.invalidateQueries({ queryKey: ['featured-packages'] }); closeModal(); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
   });
 
-  const updatePackageMutation = useMutation({
+  const updateM = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => featuredApi.updatePackage(id, payload),
-    onSuccess: () => {
-      toast.success('Package updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['featured-packages'] });
-      closePackageModal();
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update package');
-    },
+    onSuccess: () => { toast.success('Package updated'); queryClient.invalidateQueries({ queryKey: ['featured-packages'] }); closeModal(); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
   });
 
-  const deletePackageMutation = useMutation({
+  const deletePkgM = useMutation({
     mutationFn: featuredApi.deletePackage,
-    onSuccess: () => {
-      toast.success('Package deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['featured-packages'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete package');
-    },
+    onSuccess: () => { toast.success('Package deleted'); queryClient.invalidateQueries({ queryKey: ['featured-packages'] }); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
   });
 
-  const deleteSpotMutation = useMutation({
+  const deleteSpotM = useMutation({
     mutationFn: featuredApi.deleteSpot,
-    onSuccess: () => {
-      toast.success('Featured spot removed');
-      queryClient.invalidateQueries({ queryKey: ['featured-spots'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to remove spot');
-    },
+    onSuccess: () => { toast.success('Spot removed'); queryClient.invalidateQueries({ queryKey: ['featured-spots'] }); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Failed'),
   });
 
-  const openPackageModal = (pkg?: any) => {
-    if (pkg) {
-      setEditingPackage(pkg);
-      setPackageForm({
-        name: pkg.name,
-        type: pkg.type,
-        description: pkg.description || '',
-        creditsCost: pkg.creditsCost,
-        durationDays: pkg.durationDays,
-        isActive: pkg.isActive,
-        sortOrder: pkg.sortOrder || 0,
-      });
-    } else {
-      setEditingPackage(null);
-      setPackageForm(initialPackageForm);
-    }
-    setShowPackageModal(true);
+  const openEdit = (pkg: any) => {
+    setEditing(pkg);
+    setForm({ name: pkg.name, type: pkg.type, description: pkg.description || '', creditsCost: pkg.creditsCost, durationDays: pkg.durationDays, isActive: pkg.isActive, sortOrder: pkg.sortOrder || 0 });
+    setShowModal(true);
   };
 
-  const closePackageModal = () => {
-    setShowPackageModal(false);
-    setEditingPackage(null);
-    setPackageForm(initialPackageForm);
-  };
-
-  const handlePackageSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingPackage) {
-      updatePackageMutation.mutate({ id: editingPackage.id, payload: packageForm });
-    } else {
-      createPackageMutation.mutate(packageForm);
-    }
+    if (editing) updateM.mutate({ id: editing.id, payload: form });
+    else createM.mutate(form);
   };
 
-  const getPackageIcon = (type: string) => {
-    switch (type) {
-      case 'restaurant':
-        return <Building2 className="h-5 w-5" />;
-      case 'experience':
-        return <Sparkles className="h-5 w-5" />;
-      case 'offer':
-        return <Gift className="h-5 w-5" />;
-      default:
-        return <Star className="h-5 w-5" />;
-    }
-  };
+  const packages: any[] = pkgData?.data   ?? [];
+  const spots: any[]    = spotsData?.data?.spots ?? spotsData?.data ?? [];
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'restaurant':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'experience':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'offer':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
-  const packages = packagesData?.data || [];
-  const spots = spotsData?.data?.spots || [];
+  const TH = ({ children }: { children: string }) => (
+    <th className="px-5 py-3 text-left text-[10px] font-bold tracking-[0.15em] uppercase text-[#7a8fa6]">{children}</th>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
-        <div className="px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
-              <Star className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Featured Management
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Manage featured packages and vendor spots
-              </p>
-            </div>
+    <div className="min-h-screen bg-[#0a1d3a] p-6 lg:p-8 space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#c9a84c]">
+            <Star className="h-6 w-6 text-[#0f2547]" />
           </div>
-          {activeTab === 'packages' && (
-            <button
-              onClick={() => openPackageModal()}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-              Add Package
-            </button>
+          <div>
+            <h1 className="font-display text-2xl font-semibold text-[#f5f0e8]">Featured Management</h1>
+            <p className="text-[12px] text-[#7a8fa6]">Marketing packages and active vendor spots</p>
+          </div>
+        </div>
+        {tab === 'packages' && (
+          <Button className="gap-2" onClick={() => { setEditing(null); setForm(INIT); setShowModal(true); }}>
+            <Plus className="h-4 w-4" /> New Package
+          </Button>
+        )}
+      </div>
+
+      {/* Tabs + Filters */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex gap-1 bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.18)] rounded-lg p-1">
+          {(['packages', 'spots'] as TabType[]).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`px-4 py-1.5 rounded-md text-[12px] font-semibold capitalize transition-all ${
+                tab === t ? 'bg-[#c9a84c] text-[#0f2547]' : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
+              }`}>{t}</button>
+          ))}
+        </div>
+
+        <select value={typeFilter} onChange={e => setType(e.target.value)}
+          className="h-9 px-3 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.18)] text-[#f5f0e8] text-[12px] focus:outline-none focus:border-[#c9a84c] appearance-none min-w-32">
+          <option value="" className="bg-[#0f2547]">All Types</option>
+          <option value="restaurant" className="bg-[#0f2547]">Restaurant</option>
+          <option value="experience" className="bg-[#0f2547]">Experience</option>
+          <option value="offer"      className="bg-[#0f2547]">Offer</option>
+        </select>
+      </div>
+
+      {/* Packages table */}
+      {tab === 'packages' && (
+        <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
+          {loadingPkg ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#c9a84c]" /></div>
+          ) : packages.length === 0 ? (
+            <div className="py-16 text-center">
+              <Star className="h-10 w-10 text-[rgba(201,168,76,0.2)] mx-auto mb-3" />
+              <p className="text-[#7a8fa6] text-sm mb-4">No packages yet</p>
+              <Button onClick={() => { setEditing(null); setForm(INIT); setShowModal(true); }} className="gap-2">
+                <Plus className="h-4 w-4" /> Create First Package
+              </Button>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[rgba(201,168,76,0.12)]">
+                  {['Package','Type','Cost','Duration','Status','Uses',''].map(h => <TH key={h}>{h}</TH>)}
+                </tr>
+              </thead>
+              <tbody>
+                {packages.map((pkg: any) => (
+                  <tr key={pkg.id} className="border-b border-[rgba(201,168,76,0.06)] hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                    <td className="px-5 py-3.5">
+                      <p className="font-medium text-[#f5f0e8] text-[13px]">{pkg.name}</p>
+                      {pkg.description && <p className="text-[11px] text-[#7a8fa6] truncate max-w-xs">{pkg.description}</p>}
+                    </td>
+                    <td className="px-5 py-3.5"><TypeBadge type={pkg.type} /></td>
+                    <td className="px-5 py-3.5">
+                      <span className="flex items-center gap-1 text-[13px] text-[#c9a84c] font-semibold">
+                        <Coins className="h-3.5 w-3.5" />{pkg.creditsCost}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="flex items-center gap-1 text-[12px] text-[#7a8fa6]">
+                        <Clock className="h-3.5 w-3.5" />{pkg.durationDays}d
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {pkg.isActive
+                        ? <span className="flex items-center gap-1 text-emerald-400 text-[12px]"><CheckCircle className="h-3.5 w-3.5" />Active</span>
+                        : <span className="flex items-center gap-1 text-[#7a8fa6] text-[12px]"><XCircle className="h-3.5 w-3.5" />Inactive</span>}
+                    </td>
+                    <td className="px-5 py-3.5 text-[12px] text-[#7a8fa6]">{pkg._count?.featuredSpots ?? 0}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1 justify-end">
+                        <button onClick={() => openEdit(pkg)} title="Edit"
+                          className="p-1.5 rounded-lg text-[#7a8fa6] hover:text-[#c9a84c] hover:bg-[rgba(201,168,76,0.08)] transition-all">
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => deletePkgM.mutate(pkg.id)} title="Delete" disabled={deletePkgM.isPending}
+                          className="p-1.5 rounded-lg text-[rgba(248,113,113,0.5)] hover:text-[#f87171] hover:bg-[rgba(248,113,113,0.08)] transition-all">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
+      )}
 
-        {/* Tabs */}
-        <div className="px-8 flex gap-1 border-b border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => setActiveTab('packages')}
-            className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 -mb-px ${
-              activeTab === 'packages'
-                ? 'text-amber-600 border-amber-500'
-                : 'text-slate-500 border-transparent hover:text-slate-700'
-            }`}
-          >
-            Packages
-          </button>
-          <button
-            onClick={() => setActiveTab('spots')}
-            className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 -mb-px ${
-              activeTab === 'spots'
-                ? 'text-amber-600 border-amber-500'
-                : 'text-slate-500 border-transparent hover:text-slate-700'
-            }`}
-          >
-            Active Spots
-          </button>
+      {/* Spots table */}
+      {tab === 'spots' && (
+        <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
+          {loadingSpots ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#c9a84c]" /></div>
+          ) : spots.length === 0 ? (
+            <div className="py-16 text-center">
+              <Calendar className="h-10 w-10 text-[rgba(201,168,76,0.2)] mx-auto mb-3" />
+              <p className="text-[#7a8fa6] text-sm">No active featured spots</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[rgba(201,168,76,0.12)]">
+                  {['Vendor','Package','Type','Period','Credits','Source',''].map(h => <TH key={h}>{h}</TH>)}
+                </tr>
+              </thead>
+              <tbody>
+                {spots.map((spot: any) => (
+                  <tr key={spot.id} className="border-b border-[rgba(201,168,76,0.06)] hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-[rgba(201,168,76,0.1)] flex items-center justify-center text-[10px] font-bold text-[#c9a84c]">
+                          {spot.vendor?.businessName?.charAt(0)?.toUpperCase() ?? 'V'}
+                        </div>
+                        <span className="font-medium text-[#f5f0e8] text-[13px]">{spot.vendor?.businessName ?? '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-[12px] text-[#7a8fa6]">{spot.package?.name ?? '—'}</td>
+                    <td className="px-5 py-3.5"><TypeBadge type={spot.type} /></td>
+                    <td className="px-5 py-3.5 text-[12px] text-[#7a8fa6] whitespace-nowrap">
+                      {spot.startDate ? formatDate(spot.startDate) : '—'} → {spot.endDate ? formatDate(spot.endDate) : '—'}
+                    </td>
+                    <td className="px-5 py-3.5 text-[12px]">
+                      {(spot.creditsPaid ?? 0) > 0
+                        ? <span className="text-[#c9a84c] font-semibold">{spot.creditsPaid}</span>
+                        : <span className="text-[#7a8fa6]">Free</span>}
+                    </td>
+                    <td className="px-5 py-3.5 text-[12px]">
+                      {spot.addedByAdmin
+                        ? <span className="text-[#c9a84c]">Admin</span>
+                        : <span className="text-emerald-400">Purchased</span>}
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <button onClick={() => deleteSpotM.mutate(spot.id)} title="Remove spot" disabled={deleteSpotM.isPending}
+                        className="p-1.5 rounded-lg text-[rgba(248,113,113,0.5)] hover:text-[#f87171] hover:bg-[rgba(248,113,113,0.08)] transition-all">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-      </header>
+      )}
 
-      <main className="px-8 py-8 max-w-7xl mx-auto">
-        {/* Filter */}
-        <div className="mb-6 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-400" />
-            <span className="text-sm text-slate-500">Filter by type:</span>
+      {/* Package modal */}
+      {showModal && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">{editing ? 'Edit Package' : 'New Package'}</h2>
+            <button onClick={closeModal} className="text-[#7a8fa6] hover:text-[#f5f0e8]"><X className="h-5 w-5" /></button>
           </div>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
-          >
-            <option value="">All Types</option>
-            <option value="restaurant">Restaurant</option>
-            <option value="experience">Experience</option>
-            <option value="offer">Offer</option>
-          </select>
-        </div>
-
-        {/* Packages Tab */}
-        {activeTab === 'packages' && (
-          <div>
-            {loadingPackages ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-              </div>
-            ) : packages.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No featured packages yet</p>
-                <button
-                  onClick={() => openPackageModal()}
-                  className="mt-4 text-amber-600 hover:text-amber-700 font-medium"
-                >
-                  Create your first package
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Package</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Credits</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Duration</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Uses</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                    {packages.map((pkg: any) => (
-                      <tr key={pkg.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${getTypeColor(pkg.type)}`}>
-                              {getPackageIcon(pkg.type)}
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 dark:text-white">{pkg.name}</p>
-                              {pkg.description && (
-                                <p className="text-xs text-slate-500 truncate max-w-xs">{pkg.description}</p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium uppercase ${getTypeColor(pkg.type)}`}>
-                            {pkg.type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-1 text-sm">
-                            <Coins className="h-4 w-4 text-amber-500" />
-                            <span className="font-medium">{pkg.creditsCost}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
-                            <Clock className="h-4 w-4" />
-                            <span>{pkg.durationDays} days</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          {pkg.isActive ? (
-                            <span className="inline-flex items-center gap-1 text-green-600 text-sm">
-                              <CheckCircle className="h-4 w-4" />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-slate-400 text-sm">
-                              <XCircle className="h-4 w-4" />
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
-                          {pkg._count?.featuredSpots || 0}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => openPackageModal(pkg)}
-                              className="p-2 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm('Are you sure you want to delete this package?')) {
-                                  deletePackageMutation.mutate(pkg.id);
-                                }
-                              }}
-                              className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Spots Tab */}
-        {activeTab === 'spots' && (
-          <div>
-            {loadingSpots ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-              </div>
-            ) : spots.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No active featured spots</p>
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Package</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Period</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Credits</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Source</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                    {spots.map((spot: any) => (
-                      <tr key={spot.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            {spot.vendor?.logo ? (
-                              <img
-                                src={spot.vendor.logo.startsWith('http') ? spot.vendor.logo : `${process.env.NEXT_PUBLIC_API_URL}${spot.vendor.logo}`}
-                                alt=""
-                                className="h-10 w-10 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
-                                <Building2 className="h-5 w-5 text-slate-400" />
-                              </div>
-                            )}
-                            <span className="font-medium text-slate-900 dark:text-white">
-                              {spot.vendor?.businessName}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
-                          {spot.package?.name}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium uppercase ${getTypeColor(spot.type)}`}>
-                            {spot.type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
-                          {format(new Date(spot.startDate), 'MMM d')} - {format(new Date(spot.endDate), 'MMM d, yyyy')}
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          {spot.creditsPaid > 0 ? (
-                            <span className="text-amber-600 font-medium">{spot.creditsPaid}</span>
-                          ) : (
-                            <span className="text-slate-400">Free</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          {spot.addedByAdmin ? (
-                            <span className="text-blue-600">Admin</span>
-                          ) : (
-                            <span className="text-green-600">Purchased</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <button
-                            onClick={() => {
-                              if (confirm('Are you sure you want to remove this featured spot?')) {
-                                deleteSpotMutation.mutate(spot.id);
-                              }
-                            }}
-                            className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Package Modal */}
-      {showPackageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-              {editingPackage ? 'Edit Package' : 'Create Package'}
-            </h3>
-            
-            <form onSubmit={handlePackageSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Package Name *</label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Premium Spotlight" required />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Type</label>
+              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as FeaturedType }))}
+                disabled={!!editing}
+                className="w-full h-10 px-3 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.2)] text-[#f5f0e8] text-sm focus:outline-none focus:border-[#c9a84c] appearance-none">
+                <option value="restaurant" className="bg-[#0f2547]">Restaurant</option>
+                <option value="experience" className="bg-[#0f2547]">Experience</option>
+                <option value="offer"      className="bg-[#0f2547]">Offer</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Description</label>
+              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2}
+                placeholder="Brief description of this package…"
+                className="w-full px-3 py-2.5 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.2)] text-[#f5f0e8] text-[13px] placeholder:text-[#7a8fa6] focus:outline-none focus:border-[#c9a84c] resize-none" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Package Name
-                </label>
-                <input
-                  type="text"
-                  value={packageForm.name}
-                  onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                  required
-                />
+                <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Credits Cost</label>
+                <Input type="number" value={form.creditsCost} min={1}
+                  onChange={e => setForm(f => ({ ...f, creditsCost: parseInt(e.target.value) || 0 }))} required />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Type
-                </label>
-                <select
-                  value={packageForm.type}
-                  onChange={(e) => setPackageForm({ ...packageForm, type: e.target.value as FeaturedType })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                  disabled={!!editingPackage}
-                >
-                  <option value="restaurant">Restaurant</option>
-                  <option value="experience">Experience</option>
-                  <option value="offer">Offer</option>
-                </select>
+                <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Duration (days)</label>
+                <Input type="number" value={form.durationDays} min={1}
+                  onChange={e => setForm(f => ({ ...f, durationDays: parseInt(e.target.value) || 1 }))} required />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Description (optional)
-                </label>
-                <textarea
-                  value={packageForm.description}
-                  onChange={(e) => setPackageForm({ ...packageForm, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                  rows={2}
-                />
+            </div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
+                className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${form.isActive ? 'bg-[#c9a84c]' : 'bg-[rgba(255,255,255,0.1)]'}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${form.isActive ? 'translate-x-4' : ''}`} />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Credits Cost
-                  </label>
-                  <input
-                    type="number"
-                    value={packageForm.creditsCost}
-                    onChange={(e) => setPackageForm({ ...packageForm, creditsCost: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                    min="1"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Duration (days)
-                  </label>
-                  <input
-                    type="number"
-                    value={packageForm.durationDays}
-                    onChange={(e) => setPackageForm({ ...packageForm, durationDays: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={packageForm.isActive}
-                  onChange={(e) => setPackageForm({ ...packageForm, isActive: e.target.checked })}
-                  className="rounded"
-                />
-                <label htmlFor="isActive" className="text-sm text-slate-700 dark:text-slate-300">
-                  Active (available for purchase)
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closePackageModal}
-                  className="flex-1 py-2.5 px-4 rounded-xl font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createPackageMutation.isPending || updatePackageMutation.isPending}
-                  className="flex-1 py-2.5 px-4 rounded-xl font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {(createPackageMutation.isPending || updatePackageMutation.isPending) ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    editingPackage ? 'Update' : 'Create'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+              <span className="text-[13px] text-[rgba(245,240,232,0.75)]">Active (available for purchase)</span>
+            </label>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" disabled={createM.isPending || updateM.isPending} className="flex-1 gap-2">
+                {(createM.isPending || updateM.isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editing ? 'Update' : 'Create'}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
+            </div>
+          </form>
+        </ModalOverlay>
       )}
     </div>
   );

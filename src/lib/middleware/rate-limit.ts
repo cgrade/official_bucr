@@ -79,6 +79,10 @@ export function checkRateLimit(
   request: NextRequest,
   config: RateLimitConfig
 ): { allowed: boolean; remaining: number; resetAt: number } {
+  // Explicit opt-out for automated test runs only (never set in production).
+  if (process.env.RATE_LIMIT_DISABLED === 'true') {
+    return { allowed: true, remaining: config.maxRequests, resetAt: Date.now() + config.windowMs };
+  }
   const key = getClientIdentifier(request);
   const now = Date.now();
   

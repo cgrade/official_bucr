@@ -6,24 +6,14 @@ import {
   errorResponse,
   unauthorizedResponse,
 } from '@/lib/utils/api-response';
+import {
+  DEFAULT_OPERATIONAL_SETTINGS,
+  invalidateSystemSettingsCache,
+} from '@/lib/config/system-settings';
 
-// Default settings
-const defaultSettings = {
-  creditPurchaseRate: 100,
-  minCreditPurchase: 10,
-  maxCreditPurchase: 10000,
-  creditExpiryMonths: 6,
-  standardReservationCredits: 50,
-  groupReservationCredits: 100,
-  largePartyCredits: 200,
-  cancellation24HoursRefund: 100,
-  cancellation12HoursRefund: 50,
-  noShowPenalty: 100,
-  basicSubscriptionPrice: 75000,
-  proSubscriptionPrice: 145000,
-  premiumSubscriptionPrice: 250000,
-  vendorVerificationRequired: true,
-};
+// Admin-tunable OPERATIONAL defaults. Economic values are NOT here — they live
+// in the legally-reviewed ECONOMICS config and are surfaced read-only.
+const defaultSettings = { ...DEFAULT_OPERATIONAL_SETTINGS };
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,6 +73,9 @@ export async function PATCH(request: NextRequest) {
     );
 
     await db.$transaction(updates);
+
+    // Drop the cache so the new values take effect on the next request.
+    invalidateSystemSettingsCache();
 
     return successResponse({ message: 'Settings updated successfully' });
   } catch (error) {

@@ -10,7 +10,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700',
+        'animate-pulse rounded-lg bg-slate-200 bg-[rgba(255,255,255,0.04)]',
         className
       )}
     />
@@ -49,7 +49,7 @@ export function StatCardSkeleton() {
 
 export function TableRowSkeleton() {
   return (
-    <div className="flex items-center gap-4 p-4 border-b border-slate-200/50 dark:border-slate-800/50">
+    <div className="flex items-center gap-4 p-4 border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
       <Skeleton className="h-10 w-10 rounded-lg" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-1/4" />

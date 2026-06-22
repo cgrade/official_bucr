@@ -8,7 +8,7 @@ import {
   validationErrorResponse,
 } from '@/lib/utils/api-response';
 import { createReservation } from '@/services/reservation.service';
-import { sendReservationConfirmation } from '@/services/email.service';
+import { getOperationalSettings } from '@/lib/config/system-settings';
 import { db } from '@/lib/db';
 
 const createReservationSchema = z.object({
@@ -30,6 +30,26 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    // Idempotency: if client sends Idempotency-Key header, return existing reservation
+    // if same key was used within the last 24 hours. Prevents double-booking on retry.
+    const idempotencyKey = request.headers.get('Idempotency-Key');
+    if (idempotencyKey) {
+      const existing = await db.reservation.findFirst({
+        where: {
+          userId: payload.sub,
+          idempotencyKey,
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+        include: {
+          vendor:  { select: { businessName: true, slug: true } },
+          branch:  { select: { address: true, city: true } },
+        },
+      });
+      if (existing) {
+        return successResponse(existing, 'Reservation already exists', undefined, 200);
+      }
+    }
+
     const body = await request.json();
     const validation = createReservationSchema.safeParse(body);
 
@@ -39,6 +59,12 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validation.data;
+
+    // Enforce the admin-configured maximum party size (Settings → General).
+    const { maxPartySize } = await getOperationalSettings();
+    if (data.partySize > maxPartySize) {
+      return errorResponse(`Party size cannot exceed ${maxPartySize} guests`, 400);
+    }
 
     // Ensure date is in the future
     const reservationDate = new Date(data.date);
@@ -57,33 +83,12 @@ export async function POST(request: NextRequest) {
       partySize: data.partySize,
       specialRequests: data.specialRequests,
       occasion: data.occasion,
+      idempotencyKey: idempotencyKey ?? undefined,
     });
 
-    // Get user details for email
-    const user = await db.user.findUnique({
-      where: { id: payload.sub },
-      select: { name: true, email: true },
-    });
-
-    // Send confirmation email (async, don't wait)
-    if (user?.email && reservation.qrCode) {
-      sendReservationConfirmation({
-        to: user.email,
-        userName: user.name,
-        vendorName: reservation.vendor.businessName,
-        date: reservationDate.toLocaleDateString('en-NG', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-        time: data.time,
-        partySize: data.partySize,
-        reference: reservation.reference,
-        qrCodeUrl: reservation.qrCode,
-        pin: reservation.pin!,
-      }).catch(console.error);
-    }
+    // Confirmation email + push + vendor notification are all sent by
+    // createReservation() in the service layer (preference-gated), so the route
+    // no longer sends a duplicate email here.
 
     return successResponse(
       {

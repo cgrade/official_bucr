@@ -23,6 +23,8 @@ import {
   Leaf,
   Loader2,
   Upload,
+  Clock,
+  ChevronDown,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -172,10 +174,26 @@ export default function MenuPage() {
     },
   });
 
-  // Toggle availability mutation
+  // Availability toggle — uses the dedicated /availability endpoint
+  const [eightySixMenu, setEightySixMenu] = useState<string | null>(null); // item id whose 86-menu is open
+
+  const availabilityMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Parameters<typeof menuApi.updateAvailability>[1] }) =>
+      menuApi.updateAvailability(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu'] });
+      toast.success('Availability updated');
+      setEightySixMenu(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update availability');
+    },
+  });
+
+  // Legacy toggle kept for backward compat (still works via /menu/:id PATCH)
   const toggleMutation = useMutation({
-    mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) => 
-      menuApi.updateItem(id, { isAvailable }),
+    mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) =>
+      menuApi.updateAvailability(id, { isAvailable }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['menu'] });
       toast.success('Availability updated');
@@ -260,6 +278,22 @@ export default function MenuPage() {
     toggleMutation.mutate({ id: item.id, isAvailable: !item.isAvailable });
   }, [toggleMutation]);
 
+  const handle86 = useCallback((itemId: string, preset: string) => {
+    let unavailableUntil: string | null;
+    if (preset === 'clear') {
+      unavailableUntil = null;
+    } else if (preset === '2h') {
+      unavailableUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+    } else if (preset === '4h') {
+      unavailableUntil = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
+    } else { // end_of_service
+      const eod = new Date();
+      eod.setHours(23, 59, 0, 0);
+      unavailableUntil = eod.toISOString();
+    }
+    availabilityMutation.mutate({ id: itemId, payload: { unavailableUntil } });
+  }, [availabilityMutation]);
+
   const handleDelete = useCallback((id: string) => {
     deleteMutation.mutate(id);
   }, [deleteMutation]);
@@ -269,15 +303,15 @@ export default function MenuPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 glass-card border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 shadow-lg shadow-rose-500/30">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] shadow-lg shadow-rose-500/30">
               <UtensilsCrossed className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Menu Management</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage your restaurant menu items</p>
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">Menu Management</h1>
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your restaurant menu items</p>
             </div>
           </div>
           
@@ -288,7 +322,7 @@ export default function MenuPage() {
                 placeholder="Search menu..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-64 pl-10 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 border-0"
+                className="w-64 pl-10 h-11 rounded-xl bg-[rgba(255,255,255,0.05)] border-0"
               />
             </div>
             <Button className="btn-gradient gap-2" onClick={openCreateModal}>
@@ -308,8 +342,8 @@ export default function MenuPage() {
               onClick={() => setActiveCategory(cat.id)}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeCategory === cat.id
-                  ? 'bg-gradient-to-r from-tertiary-500 to-tertiary-600 text-white shadow-lg shadow-tertiary-500/30'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ? 'bg-[#c9a84c] text-white shadow-lg shadow-tertiary-500/30'
+                  : 'bg-[rgba(255,255,255,0.05)] text-slate-600 text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)]'
               }`}
             >
               {cat.name}
@@ -328,11 +362,11 @@ export default function MenuPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex h-64 flex-col items-center justify-center glass-card rounded-2xl"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
               <UtensilsCrossed className="h-8 w-8 text-slate-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">No menu items found</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Add your first menu item to get started</p>
+            <p className="text-slate-500 text-[#7a8fa6] font-medium">No menu items found</p>
+            <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Add your first menu item to get started</p>
             <Button className="btn-gradient mt-4 gap-2" onClick={openCreateModal}>
               <Plus className="h-4 w-4" />
               Add First Item
@@ -349,7 +383,7 @@ export default function MenuPage() {
                 className="glass-card rounded-2xl overflow-hidden group"
               >
                 {/* Image */}
-                <div className="relative h-40 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
+                <div className="relative h-40 bg-[rgba(255,255,255,0.06)] dark: dark:">
                   {item.image ? (
                     <img 
                       src={item.image.startsWith('http') ? item.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${item.image}`} 
@@ -394,16 +428,16 @@ export default function MenuPage() {
                 <div className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-1">{item.name}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                      <h3 className="font-semibold text-[#f5f0e8] line-clamp-1">{item.name}</h3>
+                      <p className="text-sm text-slate-500 text-[#7a8fa6] line-clamp-2 mt-1">
                         {item.description || 'No description'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
+                  <div className="flex items-center justify-between pt-2 border-t border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
                     {item.price ? (
-                      <span className="flex items-center gap-1 text-lg font-bold text-slate-900 dark:text-white">
+                      <span className="flex items-center gap-1 text-lg font-bold text-[#f5f0e8]">
                         <DollarSign className="h-4 w-4 text-emerald-500" />
                         {formatCurrency(item.price)}
                       </span>
@@ -411,21 +445,58 @@ export default function MenuPage() {
                       <span className="text-sm text-slate-400">Dine-in only</span>
                     )}
 
-                    <button 
-                      onClick={() => handleToggleAvailability(item)}
-                      disabled={toggleMutation.isPending}
-                      className={`p-2 rounded-lg transition-colors ${
-                        item.isAvailable 
-                          ? 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20' 
-                          : 'text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {item.isAvailable ? (
-                        <ToggleRight className="h-5 w-5" />
-                      ) : (
-                        <ToggleLeft className="h-5 w-5" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {/* 86-temporarily dropdown */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setEightySixMenu(eightySixMenu === item.id ? null : item.id)}
+                          className="p-2 rounded-lg text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
+                          title="86 temporarily"
+                        >
+                          <Clock className="h-4 w-4" />
+                        </button>
+                        {eightySixMenu === item.id && (
+                          <div className="absolute right-0 bottom-full mb-1 z-20 w-44 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(201,168,76,0.18)] shadow-xl overflow-hidden">
+                            <p className="px-3 py-2 text-xs font-semibold text-slate-500 text-[#7a8fa6] border-b border-[rgba(201,168,76,0.1)]">
+                              Mark unavailable for…
+                            </p>
+                            {[
+                              { label: '2 hours',          value: '2h' },
+                              { label: '4 hours',          value: '4h' },
+                              { label: 'End of service',   value: 'end_of_service' },
+                              { label: 'Clear 86 window',  value: 'clear' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.value}
+                                onClick={() => handle86(item.id, opt.value)}
+                                disabled={availabilityMutation.isPending}
+                                className="w-full text-left px-3 py-2 text-sm text-slate-700 text-[rgba(245,240,232,0.7)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* On/off toggle */}
+                      <button
+                        onClick={() => handleToggleAvailability(item)}
+                        disabled={toggleMutation.isPending}
+                        className={`p-2 rounded-lg transition-colors ${
+                          item.isAvailable
+                            ? 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20'
+                            : 'text-slate-400 bg-[rgba(255,255,255,0.05)] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)]'
+                        }`}
+                        title={item.isAvailable ? 'Mark unavailable' : 'Mark available'}
+                      >
+                        {item.isAvailable ? (
+                          <ToggleRight className="h-5 w-5" />
+                        ) : (
+                          <ToggleLeft className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -452,17 +523,17 @@ export default function MenuPage() {
               className="w-full max-w-lg glass-card rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-xl font-bold text-[#f5f0e8]">
                   {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
                 </h2>
-                <button onClick={closeModal} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <button onClick={closeModal} className="p-2 hover:bg-[rgba(255,255,255,0.06)] rounded-lg">
                   <X className="h-5 w-5 text-slate-500" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
+                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Name *</label>
                   <Input
                     required
                     value={formData.name}
@@ -473,11 +544,11 @@ export default function MenuPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
+                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Description</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="mt-1.5 w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     rows={3}
                     placeholder="Describe your dish..."
                   />
@@ -485,9 +556,9 @@ export default function MenuPage() {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Dish Image</label>
+                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Dish Image</label>
                   <div className="mt-1.5 flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                    <div className="h-20 w-20 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
                       {formData.image ? (
                         <img 
                           src={formData.image.startsWith('http') ? formData.image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${formData.image}`} 
@@ -517,14 +588,14 @@ export default function MenuPage() {
                         {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                         {uploadingImage ? 'Uploading...' : 'Upload Image'}
                       </Button>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">PNG, JPG up to 5MB</p>
+                      <p className="text-xs text-slate-500 text-[#7a8fa6] mt-1">PNG, JPG up to 5MB</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Price (₦)</label>
+                    <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Price (₦)</label>
                     <Input
                       type="number"
                       value={formData.price}
@@ -534,7 +605,7 @@ export default function MenuPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+                    <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Category</label>
                     {showNewCategory ? (
                       <div className="mt-1.5 flex gap-2">
                         <Input
@@ -578,7 +649,7 @@ export default function MenuPage() {
                         <select
                           value={formData.categoryId}
                           onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                          className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                          className="flex-1 h-11 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                         >
                           <option value="">No category (Uncategorized)</option>
                           {apiCategories.map((cat: any) => (
@@ -602,7 +673,7 @@ export default function MenuPage() {
                       className="rounded border-slate-300"
                     />
                     <Flame className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Spicy</span>
+                    <span className="text-sm text-slate-600 text-[#7a8fa6]">Spicy</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -612,7 +683,7 @@ export default function MenuPage() {
                       className="rounded border-slate-300"
                     />
                     <Leaf className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Vegetarian</span>
+                    <span className="text-sm text-slate-600 text-[#7a8fa6]">Vegetarian</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -621,7 +692,7 @@ export default function MenuPage() {
                       onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
                       className="rounded border-slate-300"
                     />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Available</span>
+                    <span className="text-sm text-slate-600 text-[#7a8fa6]">Available</span>
                   </label>
                 </div>
 
@@ -660,8 +731,8 @@ export default function MenuPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20 mx-auto mb-4">
                 <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Delete Menu Item?</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              <h3 className="text-lg font-semibold text-[#f5f0e8] mb-2">Delete Menu Item?</h3>
+              <p className="text-sm text-slate-500 text-[#7a8fa6] mb-6">
                 This action cannot be undone. The item will be permanently removed.
               </p>
               <div className="flex gap-3">

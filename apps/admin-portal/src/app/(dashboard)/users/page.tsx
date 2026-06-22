@@ -1,567 +1,396 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * Admin Users — full CRUD + credit adjustment, brand colors, real API data.
+ */
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { usersApi } from '@/lib/api';
-import { DataTable } from '@/components/ui/data-table';
-import { formatDate, formatCurrency, cn } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import {
-  Users, UserCheck, UserX, CreditCard, Mail, Phone, Calendar,
-  AlertTriangle, Plus, Download, Eye, MoreHorizontal, Star,
-  Activity, Wallet, Clock, CheckCircle
+  Users, Search, Plus, CheckCircle, AlertTriangle, Clock,
+  Eye, Trash2, Ban, PlayCircle, CreditCard, Loader2, X, Mail, Phone, Calendar,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+const CREDIT_VALUE_NGN = 10;
+
+const STATUS_STYLE: Record<string, { bg: string; icon: any }> = {
+  active:    { bg: 'text-emerald-400 bg-[rgba(52,211,153,0.1)]', icon: CheckCircle },
+  suspended: { bg: 'text-[#f87171] bg-[rgba(248,113,113,0.1)]',  icon: AlertTriangle },
+  banned:    { bg: 'text-[#f87171] bg-[rgba(248,113,113,0.1)]',  icon: AlertTriangle },
+  inactive:  { bg: 'text-[#7a8fa6] bg-[rgba(122,143,166,0.1)]', icon: Clock },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_STYLE[status] ?? STATUS_STYLE.inactive;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${s.bg}`}>
+      <s.icon className="h-3 w-3" />{status}
+    </span>
+  );
+}
+
+function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.8)]" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        className="w-full max-w-md bg-[#0f2547] border border-[rgba(201,168,76,0.25)] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<'credits' | 'add' | 'view' | 'suspend'>('credits');
-  const [creditAmount, setCreditAmount] = useState('');
-  const [creditReason, setCreditReason] = useState('');
+  const [search, setSearch]     = useState('');
+  const [debSearch, setDeb]     = useState('');
+  const [page, setPage]         = useState(1);
+  const [statusFilter, setStatus] = useState('');
+  const [modal, setModal]       = useState<'none'|'add'|'view'|'credits'|'suspend'|'delete'>('none');
+  const [selected, setSelected] = useState<any>(null);
   const [suspendReason, setSuspendReason] = useState('');
-  const [newUserForm, setNewUserForm] = useState({ name: '', email: '', phone: '', password: '' });
+  const [creditAmount, setCreditAmount]   = useState('');
+  const [creditReason, setCreditReason]   = useState('');
+  const [newForm, setNewForm] = useState({ name: '', email: '', phone: '', password: '' });
 
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    clearTimeout((window as any).__us);
+    (window as any).__us = setTimeout(() => { setDeb(v); setPage(1); }, 300);
+  };
+
+  const closeModal = useCallback(() => {
+    setModal('none'); setSelected(null);
+    setSuspendReason(''); setCreditAmount(''); setCreditReason('');
+  }, []);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+
+  // ── Queries ────────────────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-users', page, search],
-    queryFn: () => usersApi.getAll({ page, limit: 20, search: search || undefined }),
-  });
+    queryKey: ['admin-users', page, debSearch, statusFilter],
+    queryFn: () => usersApi.getAll({ page, limit: 20, search: debSearch || undefined, status: statusFilter || undefined }),
+    keepPreviousData: true,
+  } as any);
 
-  const suspendMutation = useMutation({
+  // Backend may return users in data.data.users or data.data (array)
+  const rawData = (data as any);
+  const users   = rawData?.data?.users ?? rawData?.data ?? [];
+  const total   = rawData?.data?.pagination?.total ?? rawData?.pagination?.total ?? users.length;
+
+  // ── Mutations ─────────────────────────────────────────────────────────
+  const suspendM = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) => usersApi.suspend(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User suspended');
-      setShowModal(false);
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to suspend user'),
-  });
+    onSuccess: () => { invalidate(); toast.success('User suspended'); closeModal(); },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to suspend') });
 
-  const activateMutation = useMutation({
+  const activateM = useMutation({
     mutationFn: (id: string) => usersApi.activate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User activated');
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to activate user'),
-  });
+    onSuccess: () => { invalidate(); toast.success('User activated'); },
+    onError: () => toast.error('Failed to activate') });
 
-  const adjustCreditsMutation = useMutation({
-    mutationFn: ({ id, amount, reason }: { id: string; amount: number; reason: string }) =>
-      usersApi.adjustCredits(id, amount, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('Credits adjusted');
-      setShowModal(false);
-      setCreditAmount('');
-      setCreditReason('');
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to adjust credits'),
-  });
-
-  const createUserMutation = useMutation({
-    mutationFn: (data: { name: string; email: string; phone?: string; password: string }) =>
-      usersApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User created successfully');
-      setShowModal(false);
-      setNewUserForm({ name: '', email: '', phone: '', password: '' });
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to create user'),
-  });
-
-  const deleteUserMutation = useMutation({
+  const deleteM = useMutation({
     mutationFn: (id: string) => usersApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User deleted');
-      setShowModal(false);
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to delete user'),
-  });
+    onSuccess: () => { invalidate(); toast.success('User deleted'); closeModal(); },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to delete') });
 
-  const users = data?.data?.users || [];
-  const pagination = data?.data?.pagination || { page: 1, total: 0, totalPages: 1 };
+  const createM = useMutation({
+    mutationFn: () => usersApi.create({ name: newForm.name, email: newForm.email, phone: newForm.phone || undefined, password: newForm.password }),
+    onSuccess: () => { invalidate(); toast.success('User created'); closeModal(); setNewForm({ name:'', email:'', phone:'', password:'' }); },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to create') });
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: { icon: CheckCircle, color: 'text-green-700 bg-green-50 border-green-200', label: 'Active' },
-      suspended: { icon: AlertTriangle, color: 'text-red-700 bg-red-50 border-red-200', label: 'Suspended' },
-      inactive: { icon: Clock, color: 'text-slate-700 bg-slate-50 border-slate-200', label: 'Inactive' },
-    };
-    
-    const badge = badges[status as keyof typeof badges] || badges.active;
-    const IconComponent = badge.icon;
-    
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${badge.color}`}>
-        <IconComponent className="h-3 w-3" />
-        {badge.label}
-      </span>
-    );
-  };
+  const creditM = useMutation({
+    mutationFn: () => usersApi.adjustCredits(selected.id, parseInt(creditAmount), creditReason),
+    onSuccess: () => { invalidate(); toast.success('Credits adjusted'); closeModal(); },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to adjust credits') });
 
-  const columns = [
-    {
-      key: 'user' as const,
-      label: 'User',
-      render: (user: any) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-            {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-slate-900 dark:text-white truncate">
-              {user.firstName} {user.lastName}
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
-              ID: {user.id.slice(0, 8)}...
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'contact' as const,
-      label: 'Contact',
-      render: (user: any) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="h-3 w-3 text-slate-400" />
-            <span className="text-slate-900 dark:text-white truncate">{user.email}</span>
-          </div>
-          {user.phone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Phone className="h-3 w-3 text-slate-400" />
-              <span className="text-slate-500 dark:text-slate-400">{user.phone}</span>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'credits' as const,
-      label: 'Credits',
-      render: (user: any) => (
-        <div className="text-center">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-primary-500" />
-            <span className="font-semibold text-slate-900 dark:text-white">
-              {user.creditsBalance || 0}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {formatCurrency((user.creditsBalance || 0) * 100)}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: 'status' as const,
-      label: 'Status',
-      render: (user: any) => getStatusBadge(user.status || 'active'),
-    },
-    {
-      key: 'activity' as const,
-      label: 'Activity',
-      render: (user: any) => (
-        <div className="space-y-1 text-xs">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3 text-slate-400" />
-            <span className="text-slate-600 dark:text-slate-400">
-              {user.totalBookings || 0} bookings
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Star className="h-3 w-3 text-amber-400" />
-            <span className="text-slate-600 dark:text-slate-400">
-              {user.totalReviews || 0} reviews
-            </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'joined' as const,
-      label: 'Joined',
-      render: (user: any) => (
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          {formatDate(user.createdAt)}
-        </span>
-      ),
-    },
-    {
-      key: 'actions' as const,
-      label: 'Actions',
-      render: (user: any) => (
-        <div className="flex items-center gap-2">
-          <button 
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            onClick={() => { setSelectedUser(user); setModalType('credits'); setShowModal(true); }}
-            title="Adjust credits"
-          >
-            <CreditCard className="h-4 w-4 text-primary-500" />
-          </button>
-          
-          {user.status === 'suspended' ? (
-            <button
-              onClick={() => activateMutation.mutate(user.id)}
-              disabled={activateMutation.isPending}
-              className="p-1.5 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors"
-              title="Activate user"
-            >
-              <UserCheck className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setSelectedUser(user);
-                setModalType('suspend');
-                setSuspendReason('');
-                setShowModal(true);
-              }}
-              className="p-1.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
-              title="Suspend user"
-            >
-              <UserX className="h-4 w-4" />
-            </button>
-          )}
-          
-          <button 
-            onClick={() => {
-              setSelectedUser(user);
-              setModalType('view');
-              setShowModal(true);
-            }}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="View details"
-          >
-            <Eye className="h-4 w-4 text-slate-500" />
-          </button>
-          
-          <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <MoreHorizontal className="h-4 w-4 text-slate-500" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const handleSearch = (query: string) => {
-    setSearch(query);
-    setPage(1);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-[#0a1d3a] p-6 lg:p-8 space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#c9a84c]">
+            <Users className="h-6 w-6 text-[#0f2547]" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold gradient-text">User Management</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Manage platform users and their credits ({pagination.total} total)
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <Download className="h-4 w-4" />
-              <span className="text-sm font-medium">Export</span>
-            </button>
-            <button 
-              onClick={() => {
-                setSelectedUser(null);
-                setModalType('add');
-                setNewUserForm({ name: '', email: '', phone: '', password: '' });
-                setShowModal(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="text-sm font-medium">Add User</span>
-            </button>
+            <h1 className="font-display text-2xl font-semibold text-[#f5f0e8]">Users</h1>
+            <p className="text-[12px] text-[#7a8fa6]">{total} registered guests</p>
           </div>
         </div>
+        <Button className="gap-2" onClick={() => setModal('add')}>
+          <Plus className="h-4 w-4" /> Add User
+        </Button>
+      </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass-card rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Users</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{pagination.total}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="glass-card rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Active</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {users.filter((u: any) => u.status !== 'suspended').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="glass-card rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-primary-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Credits</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {users.reduce((acc: number, u: any) => acc + (u.creditsBalance || 0), 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="glass-card rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Suspended</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">
-                  {users.filter((u: any) => u.status === 'suspended').length}
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-52">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
+          <Input value={search} onChange={e => handleSearch(e.target.value)}
+            placeholder="Search by name or email…" className="pl-9" />
         </div>
+        <div className="flex gap-1 bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.18)] rounded-lg p-1">
+          {['', 'active', 'suspended'].map(s => (
+            <button key={s || 'all'} onClick={() => { setStatus(s); setPage(1); }}
+              className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                statusFilter === s ? 'bg-[#c9a84c] text-[#0f2547]' : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
+              }`}>{s || 'All'}</button>
+          ))}
+        </div>
+      </div>
 
-        {/* Data Table */}
-        <DataTable
-          data={users}
-          columns={columns}
-          isLoading={isLoading}
-          currentPage={page}
-          totalPages={pagination.totalPages}
-          pageSize={20}
-          onPageChange={handlePageChange}
-          onSearch={handleSearch}
-          searchPlaceholder="Search by name, email, or phone..."
-        />
-
-        {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="glass-card rounded-2xl p-6 w-full max-w-md bg-white dark:bg-slate-900">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  {modalType === 'add' && 'Add New User'}
-                  {modalType === 'view' && 'User Details'}
-                  {modalType === 'credits' && 'Adjust Credits'}
-                  {modalType === 'suspend' && 'Suspend User'}
-                </h3>
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Add User Form */}
-              {modalType === 'add' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Full Name</label>
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      value={newUserForm.name}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Email</label>
-                    <input
-                      type="email"
-                      placeholder="john@example.com"
-                      value={newUserForm.email}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Phone (optional)</label>
-                    <input
-                      type="tel"
-                      placeholder="+234..."
-                      value={newUserForm.phone}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Password</label>
-                    <input
-                      type="password"
-                      placeholder="Min 8 characters"
-                      value={newUserForm.password}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!newUserForm.name || !newUserForm.email || !newUserForm.password) {
-                        return toast.error('Please fill in all required fields');
-                      }
-                      createUserMutation.mutate(newUserForm);
-                    }}
-                    disabled={createUserMutation.isPending}
-                    className="w-full mt-2 px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50"
-                  >
-                    {createUserMutation.isPending ? 'Creating...' : 'Create User'}
-                  </button>
-                </div>
-              )}
-
-              {/* View User Details */}
-              {modalType === 'view' && selectedUser && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xl font-bold">
-                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
+      {/* Table */}
+      <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[rgba(201,168,76,0.12)]">
+                {['User', 'Credits', 'Status', 'Joined', 'Actions'].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-[10px] font-bold tracking-[0.15em] uppercase text-[#7a8fa6]">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-b border-[rgba(201,168,76,0.06)]">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <td key={j} className="px-5 py-4">
+                        <div className="h-4 rounded bg-[rgba(255,255,255,0.04)] animate-pulse" style={{ width: `${55 + j * 8}%` }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : users.length === 0 ? (
+                <tr><td colSpan={5} className="py-16 text-center text-[#7a8fa6] text-sm">
+                  {debSearch ? 'No users match your search' : 'No users yet'}
+                </td></tr>
+              ) : users.map((u: any) => (
+                <tr key={u.id} className="border-b border-[rgba(201,168,76,0.06)] hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      {u.avatar ? (
+                        <img
+                          src={u.avatar.startsWith('http') ? u.avatar : `${process.env.NEXT_PUBLIC_API_URL || ''}${u.avatar}`}
+                          alt={u.name}
+                          className="h-9 w-9 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-[rgba(201,168,76,0.1)] flex items-center justify-center text-[11px] font-bold text-[#c9a84c] flex-shrink-0">
+                          {u.name?.charAt(0)?.toUpperCase() ?? '?'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-[#f5f0e8] text-[13px]">{u.name}</p>
+                        <p className="text-[11px] text-[#7a8fa6]">{u.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{selectedUser.firstName} {selectedUser.lastName}</p>
-                      <p className="text-sm text-slate-500">{selectedUser.email}</p>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <p className="text-[13px] font-semibold text-[#f5f0e8]">{(u.creditsBalance || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-[#7a8fa6]">₦{((u.creditsBalance || 0) * CREDIT_VALUE_NGN).toLocaleString()} value</p>
+                  </td>
+                  <td className="px-5 py-3.5"><StatusBadge status={u.status ?? 'active'} /></td>
+                  <td className="px-5 py-3.5 text-[12px] text-[#7a8fa6] whitespace-nowrap">
+                    {u.createdAt ? formatDate(u.createdAt) : '—'}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => { setSelected(u); setModal('view'); }} title="View details"
+                        className="p-1.5 rounded-lg text-[#7a8fa6] hover:text-[#f5f0e8] hover:bg-[rgba(255,255,255,0.06)] transition-all">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => { setSelected(u); setModal('credits'); }} title="Adjust credits"
+                        className="p-1.5 rounded-lg text-[#7a8fa6] hover:text-[#c9a84c] hover:bg-[rgba(201,168,76,0.08)] transition-all">
+                        <CreditCard className="h-4 w-4" />
+                      </button>
+                      {u.status === 'active' ? (
+                        <button onClick={() => { setSelected(u); setModal('suspend'); }} title="Suspend user"
+                          className="p-1.5 rounded-lg text-[#c9a84c] hover:bg-[rgba(201,168,76,0.08)] transition-all">
+                          <Ban className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <button onClick={() => activateM.mutate(u.id)} title="Activate user" disabled={activateM.isPending}
+                          className="p-1.5 rounded-lg text-[#7a8fa6] hover:text-emerald-400 hover:bg-[rgba(52,211,153,0.08)] transition-all">
+                          <PlayCircle className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button onClick={() => { setSelected(u); setModal('delete'); }} title="Delete user"
+                        className="p-1.5 rounded-lg text-[rgba(248,113,113,0.5)] hover:text-[#f87171] hover:bg-[rgba(248,113,113,0.08)] transition-all">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-500">Phone</span>
-                      <span className="text-slate-900 dark:text-white">{selectedUser.phone || 'Not provided'}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-500">Credits Balance</span>
-                      <span className="text-slate-900 dark:text-white font-semibold">{selectedUser.creditsBalance || 0}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-500">Status</span>
-                      {getStatusBadge(selectedUser.status || 'active')}
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-500">Total Bookings</span>
-                      <span className="text-slate-900 dark:text-white">{selectedUser.totalBookings || 0}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-500">Joined</span>
-                      <span className="text-slate-900 dark:text-white">{formatDate(selectedUser.createdAt)}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <button
-                      onClick={() => { setModalType('credits'); }}
-                      className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600"
-                    >
-                      Adjust Credits
-                    </button>
-                    <button
-                      onClick={() => deleteUserMutation.mutate(selectedUser.id)}
-                      disabled={deleteUserMutation.isPending}
-                      className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50"
-                    >
-                      {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Adjust Credits Form */}
-              {modalType === 'credits' && selectedUser && (
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-500 mb-2">{selectedUser.firstName} {selectedUser.lastName}</p>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Amount (+/-)</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 50 or -20"
-                      value={creditAmount}
-                      onChange={(e) => setCreditAmount(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Reason</label>
-                    <input
-                      placeholder="Reason for adjustment"
-                      value={creditReason}
-                      onChange={(e) => setCreditReason(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!creditAmount || !creditReason) return toast.error('Enter amount and reason');
-                      adjustCreditsMutation.mutate({
-                        id: selectedUser.id,
-                        amount: parseInt(creditAmount),
-                        reason: creditReason,
-                      });
-                    }}
-                    disabled={adjustCreditsMutation.isPending}
-                    className="w-full px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50"
-                  >
-                    {adjustCreditsMutation.isPending ? 'Adjusting...' : 'Adjust Credits'}
-                  </button>
-                </div>
-              )}
-
-              {/* Suspend User Form */}
-              {modalType === 'suspend' && selectedUser && (
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-500">Suspending: {selectedUser.firstName} {selectedUser.lastName}</p>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Reason for suspension</label>
-                    <textarea
-                      placeholder="Enter reason..."
-                      value={suspendReason}
-                      onChange={(e) => setSuspendReason(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    />
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!suspendReason) return toast.error('Please provide a reason');
-                      suspendMutation.mutate({ id: selectedUser.id, reason: suspendReason });
-                    }}
-                    disabled={suspendMutation.isPending}
-                    className="w-full px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50"
-                  >
-                    {suspendMutation.isPending ? 'Suspending...' : 'Suspend User'}
-                  </button>
-                </div>
-              )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {total > 20 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-[rgba(201,168,76,0.1)]">
+            <p className="text-[12px] text-[#7a8fa6]">Page {page} · {total} total</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1,p-1))} disabled={page<=1}>Prev</Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => p+1)} disabled={users.length<20}>Next</Button>
             </div>
           </div>
         )}
       </div>
+
+      {/* ── Modals ─────────────────────────────────────────────────────── */}
+
+      {/* Add user */}
+      {modal === 'add' && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">Add User</h2>
+            <button onClick={closeModal} className="text-[#7a8fa6] hover:text-[#f5f0e8]"><X className="h-5 w-5" /></button>
+          </div>
+          <div className="space-y-4">
+            {[['name','Full Name','John Doe'],['email','Email','user@email.ng'],['phone','Phone (optional)','+234 800 000 0000'],['password','Password','Min 8 characters']].map(([k,l,p]) => (
+              <div key={k}>
+                <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">{l}</label>
+                <Input value={(newForm as any)[k]} onChange={e => setNewForm(f => ({ ...f, [k]: e.target.value }))}
+                  placeholder={p} type={k === 'password' ? 'password' : 'text'} />
+              </div>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <Button onClick={() => createM.mutate()} disabled={!newForm.name || !newForm.email || !newForm.password || createM.isPending} className="gap-2">
+                {createM.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Create User
+              </Button>
+              <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* View */}
+      {modal === 'view' && selected && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">{selected.name}</h2>
+            <button onClick={closeModal} className="text-[#7a8fa6] hover:text-[#f5f0e8]"><X className="h-5 w-5" /></button>
+          </div>
+          <div className="space-y-3 text-[13px]">
+            {[
+              [Mail,       'Email',    selected.email],
+              [Phone,      'Phone',    selected.phone ?? '—'],
+              [CreditCard, 'Credits',  `${(selected.creditsBalance||0).toLocaleString()} (₦${((selected.creditsBalance||0)*CREDIT_VALUE_NGN).toLocaleString()})`],
+              [Calendar,   'Joined',   selected.createdAt ? formatDate(selected.createdAt) : '—'],
+            ].map(([Icon, label, value]) => (
+              <div key={label as string} className="flex items-center gap-3 p-3 rounded-lg bg-[rgba(255,255,255,0.03)]">
+                <Icon className="h-4 w-4 text-[#c9a84c] flex-shrink-0" />
+                <span className="text-[#7a8fa6] w-20 flex-shrink-0">{label as string}</span>
+                <span className="text-[#f5f0e8] font-medium">{value as string}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-5">
+            <Button onClick={() => { closeModal(); setSelected(selected); setModal('credits'); }} variant="outline" className="gap-2">
+              <CreditCard className="h-4 w-4" /> Adjust Credits
+            </Button>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* Adjust credits */}
+      {modal === 'credits' && selected && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">Adjust Credits</h2>
+            <button onClick={closeModal} className="text-[#7a8fa6] hover:text-[#f5f0e8]"><X className="h-5 w-5" /></button>
+          </div>
+          <div className="p-4 rounded-xl bg-[rgba(201,168,76,0.06)] border border-[rgba(201,168,76,0.15)] mb-5">
+            <p className="text-[13px] text-[#f5f0e8] font-semibold">{selected.name}</p>
+            <p className="text-[12px] text-[#7a8fa6] mt-0.5">
+              Current balance: <strong className="text-[#c9a84c]">{(selected.creditsBalance||0).toLocaleString()} credits</strong>
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">
+                Amount (use negative to deduct)
+              </label>
+              <Input type="number" value={creditAmount} onChange={e => setCreditAmount(e.target.value)}
+                placeholder="e.g. 100 or -50" />
+              {creditAmount && !isNaN(parseInt(creditAmount)) && (
+                <p className="text-[11px] text-[#7a8fa6] mt-1">
+                  New balance: <strong className="text-[#c9a84c]">
+                    {((selected.creditsBalance||0) + parseInt(creditAmount)).toLocaleString()} credits
+                  </strong>
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Reason *</label>
+              <Input value={creditReason} onChange={e => setCreditReason(e.target.value)}
+                placeholder="e.g. Compensation for service issue" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={() => creditM.mutate()}
+                disabled={!creditAmount || !creditReason.trim() || isNaN(parseInt(creditAmount)) || creditM.isPending}
+                className="gap-2">
+                {creditM.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Apply Adjustment
+              </Button>
+              <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* Suspend */}
+      {modal === 'suspend' && selected && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">Suspend User</h2>
+            <button onClick={closeModal} className="text-[#7a8fa6] hover:text-[#f5f0e8]"><X className="h-5 w-5" /></button>
+          </div>
+          <p className="text-[13px] text-[#7a8fa6] mb-4">Suspending <strong className="text-[#f5f0e8]">{selected.name}</strong> will revoke their access immediately.</p>
+          <div className="mb-4">
+            <label className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Reason *</label>
+            <textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} rows={3}
+              placeholder="State the reason for suspension…"
+              className="w-full px-3 py-2.5 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.2)] text-[#f5f0e8] text-[13px] placeholder:text-[#7a8fa6] focus:outline-none focus:border-[#c9a84c] resize-none" />
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={() => suspendM.mutate({ id: selected.id, reason: suspendReason })}
+              disabled={!suspendReason.trim() || suspendM.isPending}
+              className="gap-2 bg-red-600 hover:bg-red-700 border-red-600 text-white">
+              {suspendM.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Suspend
+            </Button>
+            <Button variant="outline" onClick={closeModal}>Cancel</Button>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* Delete confirm */}
+      {modal === 'delete' && selected && (
+        <ModalOverlay onClose={closeModal}>
+          <div className="text-center py-4 space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(248,113,113,0.1)] border border-[rgba(248,113,113,0.25)] mx-auto">
+              <Trash2 className="h-7 w-7 text-[#f87171]" />
+            </div>
+            <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">Delete User</h2>
+            <p className="text-[13px] text-[#7a8fa6]">
+              Soft-delete <strong className="text-[#f5f0e8]">{selected.name}</strong>?<br/>
+              Their data is retained for compliance but they lose access.
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
+              <Button onClick={() => deleteM.mutate(selected.id)} disabled={deleteM.isPending}
+                className="gap-2 bg-red-600 hover:bg-red-700 border-red-600 text-white">
+                {deleteM.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Delete
+              </Button>
+              <Button variant="outline" onClick={closeModal}>Cancel</Button>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
     </div>
   );
 }

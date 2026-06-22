@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { ECONOMICS } from '@/lib/config/economics';
 import { authenticateRequest } from '@/lib/auth/middleware';
 import {
   successResponse,
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
         take: 5,
-        select: { id: true, name: true, email: true, createdAt: true },
+        select: { id: true, name: true, email: true, avatar: true, createdAt: true },
       }),
       db.vendor.findMany({
         where: { deletedAt: null },
@@ -68,44 +69,28 @@ export async function GET(request: NextRequest) {
     ]);
 
     const creditsPurchasedTotal = totalCreditsPurchased._sum.amount || 0;
-    const totalRevenue = creditsPurchasedTotal * 120; // ₦120 per credit in kobo
+    // Revenue = credits × purchase price per credit (₦10 × 1.06 spread = ₦10.60/credit)
+    const purchasePriceNgn = ECONOMICS.CREDIT_VALUE_NGN * (1 + ECONOMICS.CREDIT_SPREAD);
+    const totalRevenue = Math.round(creditsPurchasedTotal * purchasePriceNgn);
 
     return successResponse({
-      // Flat format for admin portal compatibility
       totalUsers,
-      activeUsers: totalUsers, // All non-deleted users are considered active
+      activeUsers: totalUsers,
       totalVendors,
       verifiedVendors: activeVendors,
       totalCredits: totalCreditsInCirculation._sum.creditsBalance || 0,
-      creditsPurchased: creditsPurchasedTotal * 120, // In kobo (₦120 per credit)
+      creditsPurchased: Math.round(creditsPurchasedTotal * purchasePriceNgn),
       todayReservations,
       pendingVerifications,
-      totalOrders,
       totalRevenue,
-      monthlyGrowth: 0, // TODO: Calculate actual growth percentage
-      // Original nested format preserved
-      overview: {
-        totalUsers,
-        totalVendors,
-        activeVendors,
-        pendingVerifications,
-      },
-      today: {
-        reservations: todayReservations,
-        orders: todayOrders,
-      },
-      thisMonth: {
-        reservations: monthlyReservations,
-        orders: monthlyOrders,
-      },
+      monthlyGrowth: 0,
+      today: { reservations: todayReservations },
+      thisMonth: { reservations: monthlyReservations },
       credits: {
         totalInCirculation: totalCreditsInCirculation._sum.creditsBalance || 0,
-        valueNgn: (totalCreditsInCirculation._sum.creditsBalance || 0) * 100,
+        valueNgn: (totalCreditsInCirculation._sum.creditsBalance || 0) * ECONOMICS.CREDIT_VALUE_NGN,
       },
-      recent: {
-        users: recentUsers,
-        vendors: recentVendors,
-      },
+      recent: { users: recentUsers, vendors: recentVendors },
     });
   } catch (error) {
     console.error('Admin dashboard error:', error);

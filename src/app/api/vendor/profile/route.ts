@@ -10,6 +10,7 @@ import {
   forbiddenResponse,
 } from '@/lib/utils/api-response';
 import { broadcastEvent } from '@/lib/realtime';
+import { resolveVendorPreferences } from '@/lib/notifications/preferences';
 
 const updateVendorSchema = z.object({
   businessName: z.string().min(2).optional(),
@@ -33,6 +34,20 @@ const updateVendorSchema = z.object({
     fee: z.number().int().positive(),
   })).optional(),
   minDeliveryOrder: z.number().int().positive().optional(),
+  // Vendor-configurable deposit (null = use global tier table; positive int = flat amount)
+  // Max 10,000 credits = ₦100,000 — high enough for any Abuja fine-dining venue
+  customDepositCredits: z.number().int().min(100).max(10000).optional().nullable(),
+  // Vendor notification preferences (which venue events the owner is alerted about)
+  notifications: z
+    .object({
+      newReservations: z.boolean().optional(),
+      cancellations: z.boolean().optional(),
+      newOrders: z.boolean().optional(),
+      newReviews: z.boolean().optional(),
+      weeklyReports: z.boolean().optional(),
+    })
+    .partial()
+    .optional(),
 });
 
 async function getVendorForUser(userId: string) {
@@ -82,6 +97,8 @@ export async function GET(request: NextRequest) {
       deliveryFlatFee: vendor.deliveryFlatFee,
       deliveryZones: vendor.deliveryZones,
       minDeliveryOrder: vendor.minDeliveryOrder,
+      customDepositCredits: (vendor as any).customDepositCredits ?? null,
+      notifications: resolveVendorPreferences((vendor as any).notificationPreferences),
       totalBookings: vendor.totalBookings,
       noShowCount: vendor.noShowCount,
       averageRating: vendor.averageRating,
@@ -146,6 +163,13 @@ export async function PATCH(request: NextRequest) {
         ...(data.deliveryFlatFee && { deliveryFlatFee: data.deliveryFlatFee }),
         ...(data.deliveryZones && { deliveryZones: data.deliveryZones }),
         ...(data.minDeliveryOrder && { minDeliveryOrder: data.minDeliveryOrder }),
+        ...(data.customDepositCredits !== undefined && { customDepositCredits: data.customDepositCredits }),
+        ...(data.notifications !== undefined && {
+          notificationPreferences: {
+            ...resolveVendorPreferences((vendor as any).notificationPreferences),
+            ...data.notifications,
+          },
+        }),
       },
     });
 

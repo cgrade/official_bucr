@@ -5,23 +5,17 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./tests/utils/integration-setup.ts'],
-    globalSetup: ['./tests/utils/global-setup.ts'],
+    setupFiles: ['./src/test/setup.integration.ts'],
     include: ['tests/integration/**/*.test.ts', 'tests/e2e/**/*.test.ts'],
-    testTimeout: 60_000, // containers need more time
-    hookTimeout: 120_000,
-    coverage: {
-      provider: 'v8',
-      exclude: [
-        'node_modules/**',
-        '**/*.test.ts',
-        '**/__tests__/**',
-      ],
-    },
+    exclude: ['node_modules/**', 'apps/**'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    fileParallelism: false, // DB tests run sequentially
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@/lib': path.resolve(__dirname, './src/lib'),
     },
   },
 });

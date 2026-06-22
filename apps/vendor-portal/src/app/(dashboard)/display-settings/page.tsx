@@ -1,4 +1,5 @@
 'use client';
+import FeatureGate from '@/components/ui/FeatureGate';
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ interface DisplaySettings {
   promoEnabled: boolean;
 }
 
-export default function DisplaySettingsPage() {
+function DisplaySettingsPageInner() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<DisplaySettings>({
     showExperiences: true,
@@ -87,8 +88,8 @@ export default function DisplaySettingsPage() {
       label: 'Menu',
       description: 'Show your menu to mobile app users',
       icon: UtensilsCrossed,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/10',
+      color: 'text-[#c9a84c]',
+      bgColor: 'bg-[#c9a84c]/10',
     },
     {
       key: 'showGallery' as const,
@@ -141,18 +142,18 @@ export default function DisplaySettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-tertiary-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-[#0a1d3a]">
+      <header className="sticky top-0 z-10 bg-[#0f2547] border-b border-[rgba(201,168,76,0.18)]">
         <div className="px-8 py-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-tertiary-500 shadow-lg shadow-primary-500/30">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0f2547] shadow-lg shadow-primary-500/30">
               <Smartphone className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 Display Settings
               </h1>
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-slate-500 text-[#7a8fa6]">
                 Control what mobile app users can see on your venue page
               </p>
             </div>
@@ -169,7 +170,7 @@ export default function DisplaySettingsPage() {
         >
           <div className="flex items-center gap-3 mb-6">
             <Settings2 className="h-5 w-5 text-primary-500" />
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#f5f0e8]">
               Visibility Controls
             </h2>
           </div>
@@ -181,15 +182,15 @@ export default function DisplaySettingsPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.bgColor}`}>
                     <item.icon className={`h-5 w-5 ${item.color}`} />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 dark:text-white">{item.label}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{item.description}</p>
+                    <p className="font-medium text-[#f5f0e8]">{item.label}</p>
+                    <p className="text-sm text-slate-500 text-[#7a8fa6]">{item.description}</p>
                   </div>
                 </div>
                 <button
@@ -197,8 +198,8 @@ export default function DisplaySettingsPage() {
                   disabled={updateMutation.isPending}
                   className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                     settings[item.key]
-                      ? 'bg-gradient-to-r from-primary-500 to-tertiary-500'
-                      : 'bg-slate-300 dark:bg-slate-600'
+                      ? 'bg-[#c9a84c]'
+                      : 'bg-[rgba(255,255,255,0.1)]'
                   }`}
                 >
                   <span
@@ -221,16 +222,16 @@ export default function DisplaySettingsPage() {
         >
           <div className="flex items-center gap-3 mb-6">
             <Megaphone className="h-5 w-5 text-pink-500" />
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#f5f0e8]">
               Promotional Banner
             </h2>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">Enable Promo Banner</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="font-medium text-[#f5f0e8]">Enable Promo Banner</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">
                   Show a promotional message at the top of your venue page
                 </p>
               </div>
@@ -241,8 +242,8 @@ export default function DisplaySettingsPage() {
                 }}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                   settings.promoEnabled
-                    ? 'bg-gradient-to-r from-pink-500 to-rose-500'
-                    : 'bg-slate-300 dark:bg-slate-600'
+                    ? 'bg-[#c9a84c]'
+                    : 'bg-[rgba(255,255,255,0.1)]'
                 }`}
               >
                 <span
@@ -259,14 +260,14 @@ export default function DisplaySettingsPage() {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="space-y-3"
               >
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">
                   Promo Message (max 500 characters)
                 </label>
                 <textarea
                   value={settings.promoMessage || ''}
                   onChange={(e) => setSettings({ ...settings, promoMessage: e.target.value })}
                   placeholder="e.g., 🎉 20% off all orders this weekend! Use code WEEKEND20"
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  className="w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                   rows={3}
                   maxLength={500}
                 />
@@ -301,18 +302,18 @@ export default function DisplaySettingsPage() {
         >
           <div className="flex items-center gap-3 mb-6">
             <Eye className="h-5 w-5 text-emerald-500" />
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#f5f0e8]">
               Mobile Preview
             </h2>
           </div>
 
-          <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <div className="bg-[rgba(255,255,255,0.05)] rounded-xl p-4">
+            <p className="text-sm text-slate-600 text-[#7a8fa6] mb-4">
               Users will see the following sections on your venue page:
             </p>
             <div className="flex flex-wrap gap-2">
               {settings.showMenu && (
-                <span className="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-sm font-medium">
+                <span className="px-3 py-1 rounded-full bg-[#c9a84c]/10 dark:bg-[#c9a84c]/15 text-[#a07830] dark:text-[#e8d49a] text-sm font-medium">
                   Menu
                 </span>
               )}
@@ -349,7 +350,7 @@ export default function DisplaySettingsPage() {
             </div>
             {!settings.showMenu && !settings.showGallery && !settings.showExperiences && 
              !settings.showAchievements && !settings.showReviews && !settings.showSpecialOffers && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              <p className="text-sm text-slate-500 text-[#7a8fa6] mt-2">
                 ⚠️ All sections are hidden. Users will only see basic venue info.
               </p>
             )}
@@ -359,3 +360,5 @@ export default function DisplaySettingsPage() {
     </div>
   );
 }
+
+export default function DisplaySettingsPage() { return <FeatureGate feature="display_settings"><DisplaySettingsPageInner /></FeatureGate>; }

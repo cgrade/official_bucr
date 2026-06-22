@@ -1,0 +1,107 @@
+{
+  "expo": {
+    "name": "Bucr",
+    "slug": "bucr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "bucr",
+
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bucr.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Bucr uses your location to show nearby restaurants.",
+        "NSCameraUsageDescription": "Bucr uses the camera to scan reservation QR codes.",
+        "NSPhotoLibraryUsageDescription": "Bucr accesses photos for your profile picture."
+      }
+    },
+
+    "android": {
+      "package": "com.bucr.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+
+    "plugins": [
+      "expo-secure-store",
+      "expo-updates",
+      [
+        "expo-router",
+        {
+          "origin": "https://bucr.ng"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1a1a2e",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Bucr uses your location to find restaurants near you."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bucr accesses photos for your profile picture."
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "$(MAPBOX_DOWNLOADS_TOKEN)"
+        }
+      ]
+    ],
+
+    "experiments": {
+      "typedRoutes": true
+    },
+
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/bucr"
+    },
+
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+
+    "extra": {
+      "eas": {
+        "_note": "Replace projectId below with your real EAS UUID from: eas init OR expo.dev, OR set EXPO_PUBLIC_PROJECT_ID in .env",
+        "projectId": ""
+      }
+    }
+  }
+}

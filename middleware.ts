@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Security headers applied to all responses
+ * Middleware is intentionally minimal: it ONLY answers CORS preflight.
+ *
+ * Security headers and CORS headers for normal responses are set in
+ * next.config.js `headers()` — the reliable mechanism. Header mutations on
+ * `NextResponse.next()` here do NOT propagate onto App Router Route Handler
+ * responses, so doing it in middleware was dead code.
+ *
+ * Preflight still needs middleware: an unhandled OPTIONS on a route that only
+ * exports GET/POST returns 405, which fails the browser preflight (it requires
+ * a 2xx). next.config can't change that status, so we short-circuit OPTIONS
+ * here with a 204 carrying the CORS + security headers.
+ *
+ * Auth is Bearer-token only (no cookies), so a wildcard origin without
+ * credentials is correct and safe.
  */
-const securityHeaders = {
+const preflightHeaders: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+  'Access-Control-Max-Age': '86400',
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
@@ -11,82 +28,19 @@ const securityHeaders = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
 };
 
-/**
- * Allowed origins for CORS
- */
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'http://localhost:3003',
-  'http://localhost:8081',
-  'http://localhost:8082',
-  'http://localhost:8083',
-  'http://localhost:8084',
-  process.env.NEXT_PUBLIC_APP_URL,
-  process.env.ADMIN_PORTAL_URL,
-  process.env.VENDOR_PORTAL_URL,
-].filter(Boolean);
-
-function isOriginAllowed(origin: string | null): boolean {
-  if (!origin) return false;
-  return (
-    ALLOWED_ORIGINS.includes(origin) ||
-    origin.startsWith('http://192.168.') ||
-    origin.startsWith('http://10.')
-  );
-}
-
 export function middleware(request: NextRequest) {
-  const origin = request.headers.get('origin');
-  const isPreflight = request.method === 'OPTIONS';
-
-  // Handle CORS preflight
-  if (isPreflight) {
+  if (request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 });
-
-    if (origin && isOriginAllowed(origin)) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      response.headers.set(
-        'Access-Control-Allow-Methods',
-        'GET, POST, PUT, PATCH, DELETE, OPTIONS'
-      );
-      response.headers.set(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Requested-With'
-      );
-      response.headers.set('Access-Control-Max-Age', '86400');
-    }
-
-    // Add security headers
-    Object.entries(securityHeaders).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(preflightHeaders)) {
       response.headers.set(key, value);
-    });
-
+    }
     return response;
   }
 
-  // Continue with request
-  const response = NextResponse.next();
-
-  // Add CORS headers for allowed origins
-  if (origin && isOriginAllowed(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-  }
-
-  // Add security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-
-  return response;
+  // All other methods: headers come from next.config.js headers().
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Match all API routes
-    '/api/:path*',
-  ],
+  matcher: ['/api/:path*'],
 };

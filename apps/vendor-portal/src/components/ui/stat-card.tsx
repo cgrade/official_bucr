@@ -18,19 +18,19 @@ interface StatCardProps {
 
 const variantStyles = {
   default: {
-    icon: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+    icon: 'bg-slate-100 bg-[rgba(255,255,255,0.04)] text-slate-600 text-[#7a8fa6]',
   },
   primary: {
-    icon: 'bg-gradient-to-br from-tertiary-500 to-tertiary-600 text-white shadow-lg shadow-tertiary-500/30',
+    icon: 'bg-[#c9a84c] text-white shadow-lg shadow-tertiary-500/30',
   },
   success: {
-    icon: 'bg-gradient-to-br from-success-500 to-success-600 text-white shadow-lg shadow-success-500/30',
+    icon: 'bg-[rgba(255,255,255,0.06)]  text-white shadow-lg shadow-success-500/30',
   },
   warning: {
-    icon: 'bg-gradient-to-br from-warning-500 to-warning-600 text-white shadow-lg shadow-warning-500/30',
+    icon: 'bg-[rgba(255,255,255,0.06)]  text-white shadow-lg shadow-warning-500/30',
   },
   secondary: {
-    icon: 'bg-gradient-to-br from-secondary-400 to-secondary-600 text-white shadow-lg shadow-secondary-500/30',
+    icon: 'bg-[rgba(255,255,255,0.06)] text-white shadow-lg shadow-secondary-500/30',
   },
 };
 
@@ -54,14 +54,14 @@ export function StatCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          <p className="text-sm font-medium text-slate-500 text-[#7a8fa6]">
             {title}
           </p>
-          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <p className="mt-2 text-3xl font-bold text-slate-900 text-[#7a8fa6]">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
           {subtitle && (
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-slate-500 text-[#7a8fa6]">
               {subtitle}
             </p>
           )}
@@ -77,7 +77,7 @@ export function StatCard({
               >
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-500 text-[#7a8fa6]">
                 vs last period
               </span>
             </div>

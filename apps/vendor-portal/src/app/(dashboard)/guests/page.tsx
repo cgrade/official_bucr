@@ -1,6 +1,7 @@
 'use client';
+import FeatureGate from '@/components/ui/FeatureGate';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -9,370 +10,327 @@ import { guestsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-  Users,
-  Search,
-  Star,
-  Calendar,
-  Phone,
-  Mail,
-  ChevronRight,
-  Crown,
-  TrendingUp,
-  Heart,
-  AlertCircle,
-  X,
-  Loader2,
-  Edit2,
-  Save,
+  Users, Search, Star, Calendar, ChevronRight,
+  Crown, TrendingUp, AlertCircle, X, Loader2, Save,
 } from 'lucide-react';
 
+// ── Types match the backend GuestProfile model ──────────────────────────────
 interface Guest {
-  id: string;
-  user?: { name?: string; fullName?: string; email?: string; phone?: string };
-  totalVisits: number;
-  lastVisit?: string;
-  dietaryRestrictions?: string;
-  notes?: string;
-  preferences?: string;
+  id: string;                      // GuestProfile.id
+  userId: string;
+  visitCount: number;              // NOT totalVisits
+  noShowCount: number;
+  totalSpend: number;
+  lastVisit: string | null;
+  notes: string | null;
+  tags: string[];
+  preferences: any;
+  isVip: boolean;
+  user: {
+    id: string;
+    name: string;                  // NOT fullName
+    email: string;
+    phone: string | null;
+    avatar: string | null;
+    dietaryRestrictions: string[];
+  };
 }
 
-export default function GuestsPage() {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
-  const [notesValue, setNotesValue] = useState('');
-  const [preferencesValue, setPreferencesValue] = useState('');
+function GuestCard({ guest, onSelect, selected }: {
+  guest: Guest;
+  onSelect: (g: Guest) => void;
+  selected: boolean;
+}) {
+  return (
+    <button onClick={() => onSelect(guest)}
+      className={`w-full text-left p-4 rounded-xl border transition-all ${
+        selected
+          ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.08)]'
+          : 'border-[rgba(201,168,76,0.15)] bg-[#0f2547] hover:border-[rgba(201,168,76,0.3)]'
+      }`}>
+      <div className="flex items-center gap-3">
+        {guest.user?.avatar ? (
+          <img
+            src={guest.user.avatar.startsWith('http') ? guest.user.avatar : `${process.env.NEXT_PUBLIC_API_URL || ''}${guest.user.avatar}`}
+            alt={guest.user.name}
+            className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(201,168,76,0.15)] text-[#c9a84c] text-sm font-bold flex-shrink-0">
+            {guest.user?.name?.charAt(0)?.toUpperCase() ?? '?'}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="font-semibold text-[#f5f0e8] text-[14px] truncate">{guest.user?.name ?? 'Guest'}</p>
+            {guest.isVip && <Crown className="h-3.5 w-3.5 text-[#c9a84c] flex-shrink-0" />}
+          </div>
+          <p className="text-[11px] text-[#7a8fa6] truncate">{guest.user?.email}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-[13px] font-semibold text-[#f5f0e8]">{guest.visitCount}</p>
+          <p className="text-[10px] text-[#7a8fa6]">visits</p>
+        </div>
+      </div>
+
+      {/* Tags */}
+      {guest.tags?.length > 0 && (
+        <div className="flex gap-1.5 mt-2.5 flex-wrap">
+          {guest.tags.slice(0, 3).map(tag => (
+            <span key={tag} className="text-[9px] font-semibold tracking-[0.1em] uppercase px-1.5 py-0.5 rounded bg-[rgba(201,168,76,0.1)] text-[#c9a84c]">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </button>
+  );
+}
+
+function GuestsPageInner() {
+  const [search, setSearch]       = useState('');
+  const [debouncedSearch, setDebounced] = useState('');
+  const [page, setPage]           = useState(1);
+  const [vipOnly, setVipOnly]     = useState(false);
+  const [selected, setSelected]   = useState<Guest | null>(null);
+  const [notes, setNotes]         = useState('');
+  const [tags, setTags]           = useState('');
+  const [isVip, setIsVip]         = useState(false);
   const queryClient = useQueryClient();
 
+  // Debounce search
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    clearTimeout((window as any).__guestSearch);
+    (window as any).__guestSearch = setTimeout(() => { setDebounced(v); setPage(1); }, 300);
+  };
+
   const { data, isLoading } = useQuery({
-    queryKey: ['guests', page, search],
-    queryFn: () => guestsApi.getAll({ page, search }),
-  });
+    queryKey: ['guests', page, debouncedSearch, vipOnly],
+    queryFn: () => guestsApi.getAll({ page, search: debouncedSearch || undefined }),
+    keepPreviousData: true,
+  } as any);
 
-  const guests: Guest[] = Array.isArray(data?.data) ? data.data : [];
-  const pagination = data?.pagination;
+  // Backend returns paginated shape; handle both array and paginated response
+  const rawData = (data as any);
+  const guests: Guest[] = Array.isArray(rawData?.data)
+    ? rawData.data
+    : Array.isArray(rawData?.data?.profiles)
+      ? rawData.data.profiles
+      : [];
+  const total = rawData?.pagination?.total ?? rawData?.data?.total ?? guests.length;
+  const filtered = vipOnly ? guests.filter(g => g.isVip) : guests;
 
-  // Update guest notes mutation
-  const updateNotesMutation = useMutation({
-    mutationFn: ({ guestId, notes, preferences }: { guestId: string; notes: string; preferences: string }) =>
-      guestsApi.updateNotes(guestId, { notes, preferences }),
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      guestsApi.updateNotes(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guests'] });
-      toast.success('Guest notes updated');
-      setSelectedGuest(null);
+      toast.success('Guest profile updated');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update notes');
-    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Update failed'),
   });
 
-  const openGuestDetails = useCallback((guest: Guest) => {
-    setSelectedGuest(guest);
-    setNotesValue(guest.notes || '');
-    setPreferencesValue(guest.preferences || '');
-  }, []);
+  const openGuest = (g: Guest) => {
+    setSelected(g);
+    setNotes(g.notes ?? '');
+    setTags(g.tags?.join(', ') ?? '');
+    setIsVip(g.isVip);
+  };
 
-  const handleSaveNotes = useCallback(() => {
-    if (!selectedGuest) return;
-    updateNotesMutation.mutate({
-      guestId: selectedGuest.id,
-      notes: notesValue,
-      preferences: preferencesValue,
+  const saveGuest = () => {
+    if (!selected) return;
+    updateMutation.mutate({
+      id: selected.userId,
+      payload: {
+        notes:   notes   || null,
+        tags:    tags    ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        isVip,
+      },
     });
-  }, [selectedGuest, notesValue, preferencesValue, updateNotesMutation]);
-
-  // Stats from pagination data
-  const stats = [
-    { label: 'Total Guests', value: pagination?.total || 0, icon: Users, color: 'from-tertiary-500 to-tertiary-600' },
-    { label: 'VIP Guests', value: guests.filter((g: Guest) => g.totalVisits >= 5).length, icon: Crown, color: 'from-amber-500 to-orange-500' },
-    { label: 'Returning', value: guests.filter((g: Guest) => g.totalVisits > 1).length, icon: TrendingUp, color: 'from-emerald-500 to-teal-500' },
-    { label: 'With Preferences', value: guests.filter((g: Guest) => g.dietaryRestrictions || g.preferences).length, icon: Heart, color: 'from-pink-500 to-rose-500' },
-  ];
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 bg-[#0f2547] border-b border-[rgba(201,168,76,0.18)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg shadow-violet-500/30">
-              <Users className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#c9a84c]">
+              <Users className="h-6 w-6 text-[#0f2547]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Guest Profiles</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage your guest CRM & preferences</p>
+              <h1 className="text-2xl font-display font-semibold text-[#f5f0e8]">Guest Profiles</h1>
+              <p className="text-sm text-[#7a8fa6]">{total} guests in your CRM</p>
             </div>
           </div>
-          
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search guests..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-64 pl-10 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 border-0"
-              />
-            </div>
+            <button onClick={() => setVipOnly(!vipOnly)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                vipOnly
+                  ? 'bg-[#c9a84c] border-[#c9a84c] text-[#0f2547]'
+                  : 'border-[rgba(201,168,76,0.25)] text-[#7a8fa6] hover:border-[#c9a84c] hover:text-[#c9a84c]'
+              }`}>
+              <Crown className="h-3.5 w-3.5" />
+              VIP Only
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 p-8 space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-card rounded-2xl p-5"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
-                  <stat.icon className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Guests List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass-card rounded-2xl"
-        >
-          <div className="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">All Guests</h2>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Guest list */}
+        <div className="w-80 flex-shrink-0 border-r border-[rgba(201,168,76,0.12)] flex flex-col">
+          {/* Search */}
+          <div className="p-4 border-b border-[rgba(201,168,76,0.1)]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
+              <Input value={search} onChange={e => handleSearch(e.target.value)}
+                placeholder="Search by name…" className="pl-9 text-sm" />
+            </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-            </div>
-          ) : guests.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
-                <Users className="h-8 w-8 text-slate-400" />
+          {/* List */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-[#c9a84c]" />
               </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">No guests found</p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Guests will appear after their first reservation</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-200/50 dark:divide-slate-800/50">
-              {guests.map((guest: any, index: number) => (
-                <motion.div
-                  key={guest.id || index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  onClick={() => openGuestDetails(guest)}
-                  className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 text-sm font-bold text-slate-600 dark:text-slate-300">
-                      {(guest.user?.name || guest.user?.fullName || 'G').charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          {guest.user?.name || guest.user?.fullName || 'Guest'}
-                        </p>
-                        {guest.totalVisits >= 5 && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                            <Crown className="h-3 w-3" />
-                            VIP
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {guest.user?.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3.5 w-3.5" />
-                            {guest.user.email}
-                          </span>
-                        )}
-                        {guest.user?.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3.5 w-3.5" />
-                            {guest.user.phone}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-sm font-medium text-slate-900 dark:text-white">
-                        <Calendar className="h-4 w-4 text-slate-400" />
-                        {guest.totalVisits || 0} visits
-                      </div>
-                      {guest.lastVisit && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Last: {formatDate(guest.lastVisit)}
-                        </p>
-                      )}
-                    </div>
-
-                    {guest.dietaryRestrictions && (
-                      <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        Dietary
-                      </div>
-                    )}
-
-                    <ChevronRight className="h-5 w-5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+            ) : filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Users className="h-10 w-10 text-[rgba(201,168,76,0.3)] mx-auto mb-3" />
+                <p className="text-sm text-[#7a8fa6]">
+                  {debouncedSearch ? 'No guests found' : 'No guests yet'}
+                </p>
+                {!debouncedSearch && <p className="text-[11px] text-[rgba(122,143,166,0.6)] mt-1">Guests appear after their first check-in</p>}
+              </div>
+            ) : (
+              filtered.map(g => (
+                <GuestCard key={g.id} guest={g} onSelect={openGuest} selected={selected?.id === g.id} />
+              ))
+            )}
+          </div>
 
           {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200/50 dark:border-slate-800/50">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                  disabled={page === pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+          {total > 20 && (
+            <div className="border-t border-[rgba(201,168,76,0.1)] p-3 flex justify-between items-center">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
+                Prev
+              </Button>
+              <span className="text-[11px] text-[#7a8fa6]">Page {page}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={guests.length < 20}>
+                Next
+              </Button>
             </div>
           )}
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Guest Details Modal */}
-      <AnimatePresence>
-        {selectedGuest && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={() => setSelectedGuest(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg glass-card rounded-2xl p-6"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 text-xl font-bold text-white">
-                    {(selectedGuest.user?.name || selectedGuest.user?.fullName || 'G').charAt(0).toUpperCase()}
+        {/* Detail panel */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {!selected ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <Users className="h-14 w-14 text-[rgba(201,168,76,0.2)] mb-4" />
+              <p className="text-[#7a8fa6]">Select a guest to view their profile</p>
+            </div>
+          ) : (
+            <motion.div key={selected.id} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+              className="max-w-2xl space-y-6">
+
+              {/* Guest header */}
+              <div className="flex items-start gap-5">
+                {selected.user?.avatar ? (
+                  <img
+                    src={selected.user.avatar.startsWith('http') ? selected.user.avatar : `${process.env.NEXT_PUBLIC_API_URL || ''}${selected.user.avatar}`}
+                    alt={selected.user.name}
+                    className="h-16 w-16 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(201,168,76,0.15)] text-[#c9a84c] text-2xl font-bold flex-shrink-0">
+                    {selected.user?.name?.charAt(0)?.toUpperCase() ?? '?'}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-2xl font-semibold text-[#f5f0e8]">{selected.user?.name}</h2>
+                    {selected.isVip && <Crown className="h-5 w-5 text-[#c9a84c]" />}
+                  </div>
+                  <p className="text-[#7a8fa6] text-sm mt-0.5">{selected.user?.email}</p>
+                  {selected.user?.phone && <p className="text-[#7a8fa6] text-sm">{selected.user.phone}</p>}
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: 'Visits',      value: selected.visitCount },
+                  { label: 'No-shows',    value: selected.noShowCount },
+                  { label: 'Last Visit',  value: selected.lastVisit ? formatDate(selected.lastVisit) : '—' },
+                ].map(s => (
+                  <div key={s.label} className="bg-[#0f2547] border border-[rgba(201,168,76,0.15)] rounded-xl p-4 text-center">
+                    <p className="text-xl font-semibold text-[#f5f0e8]">{s.value}</p>
+                    <p className="text-[11px] text-[#7a8fa6] uppercase tracking-wide mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dietary */}
+              {selected.user?.dietaryRestrictions?.length > 0 && (
+                <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.15)] rounded-xl p-4">
+                  <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#7a8fa6] mb-2">Dietary Restrictions</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {selected.user.dietaryRestrictions.map(d => (
+                      <span key={d} className="text-[11px] px-2 py-1 rounded bg-[rgba(201,168,76,0.1)] text-[#c9a84c] font-medium">{d}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Editable fields */}
+              <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.15)] rounded-xl p-5 space-y-4">
+                <h3 className="font-semibold text-[#f5f0e8] text-[15px]">CRM Notes</h3>
+
+                {/* VIP toggle */}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div onClick={() => setIsVip(!isVip)}
+                    className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 cursor-pointer ${isVip ? 'bg-[#c9a84c]' : 'bg-[rgba(255,255,255,0.1)]'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isVip ? 'translate-x-5' : ''}`} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                      {selectedGuest.user?.name || selectedGuest.user?.fullName || 'Guest'}
-                    </h2>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {selectedGuest.totalVisits} visits
-                      </span>
-                      {selectedGuest.totalVisits >= 5 && (
-                        <span className="flex items-center gap-1 text-amber-500">
-                          <Crown className="h-4 w-4" />
-                          VIP
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-[13px] font-semibold text-[#f5f0e8]">Mark as VIP</p>
+                    <p className="text-[11px] text-[#7a8fa6]">VIPs appear first and are flagged for staff attention</p>
                   </div>
-                </div>
-                <button onClick={() => setSelectedGuest(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                  <X className="h-5 w-5 text-slate-500" />
-                </button>
-              </div>
+                </label>
 
-              {/* Contact Info */}
-              <div className="space-y-3 mb-6">
-                {selectedGuest.user?.email && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-600 dark:text-slate-300">{selectedGuest.user.email}</span>
-                  </div>
-                )}
-                {selectedGuest.user?.phone && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Phone className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-600 dark:text-slate-300">{selectedGuest.user.phone}</span>
-                  </div>
-                )}
-                {selectedGuest.dietaryRestrictions && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <AlertCircle className="h-4 w-4 text-rose-500" />
-                    <span className="text-rose-600 dark:text-rose-400">{selectedGuest.dietaryRestrictions}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-4">
+                {/* Tags */}
                 <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Preferences</label>
-                  <textarea
-                    value={preferencesValue}
-                    onChange={(e) => setPreferencesValue(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                    rows={2}
-                    placeholder="Seating preferences, favorite dishes, etc..."
-                  />
+                  <label className="text-[11px] font-semibold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Tags (comma-separated)</label>
+                  <Input value={tags} onChange={e => setTags(e.target.value)}
+                    placeholder="regular, birthday, wine-lover" />
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Internal Notes</label>
-                  <textarea
-                    value={notesValue}
-                    onChange={(e) => setNotesValue(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                    rows={3}
-                    placeholder="Add notes about this guest..."
-                  />
-                </div>
-              </div>
 
-              <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setSelectedGuest(null)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button 
-                  className="btn-gradient flex-1" 
-                  onClick={handleSaveNotes}
-                  disabled={updateNotesMutation.isPending}
-                >
-                  {updateNotesMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Save Notes
+                {/* Notes */}
+                <div>
+                  <label className="text-[11px] font-semibold tracking-[0.1em] uppercase text-[#7a8fa6] mb-1.5 block">Private notes</label>
+                  <textarea value={notes} onChange={e => setNotes(e.target.value)}
+                    placeholder="Prefers window seats, celebrating anniversary in March…"
+                    rows={4}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(201,168,76,0.2)] text-[#f5f0e8] text-[13px] placeholder:text-[#7a8fa6] focus:outline-none focus:border-[#c9a84c] resize-none" />
+                </div>
+
+                <Button onClick={saveGuest} disabled={updateMutation.isPending} className="gap-2">
+                  {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <Save className="h-4 w-4" />
+                  Save Changes
                 </Button>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+      </div>
     </div>
   );
+}
+
+export default function GuestsPage() {
+  return <FeatureGate feature="guest_profiles"><GuestsPageInner /></FeatureGate>;
 }

@@ -136,24 +136,24 @@ export default function GalleryPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 glass-card border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.04)] shadow-lg shadow-indigo-500/30">
               <ImageIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Gallery</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage your restaurant photos</p>
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">Gallery</h1>
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your restaurant photos</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgba(255,255,255,0.05)]">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-400'
+                  viewMode === 'grid' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-slate-400'
                 }`}
               >
                 <Grid className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function GalleryPage() {
               <button
                 onClick={() => setViewMode('large')}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'large' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-400'
+                  viewMode === 'large' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-slate-400'
                 }`}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -184,12 +184,12 @@ export default function GalleryPage() {
             className="glass-card rounded-2xl p-5"
           >
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-tertiary-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0f2547]">
                 <ImageIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Photos</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{images.length}</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Total Photos</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{images.length}</p>
               </div>
             </div>
           </motion.div>
@@ -201,12 +201,12 @@ export default function GalleryPage() {
             className="glass-card rounded-2xl p-5"
           >
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)]">
                 <Star className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Featured</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Featured</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">
                   {images.filter((i: any) => i.isFeatured).length}
                 </p>
               </div>
@@ -220,12 +220,12 @@ export default function GalleryPage() {
             className="glass-card rounded-2xl p-5"
           >
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600">
                 <Eye className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Views</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">Total Views</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">0</p>
               </div>
             </div>
           </motion.div>
@@ -242,11 +242,11 @@ export default function GalleryPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex h-64 flex-col items-center justify-center glass-card rounded-2xl"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
               <ImageIcon className="h-8 w-8 text-slate-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">No photos yet</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Upload photos to showcase your restaurant</p>
+            <p className="text-slate-500 text-[#7a8fa6] font-medium">No photos yet</p>
+            <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Upload photos to showcase your restaurant</p>
             <Button className="btn-gradient mt-4 gap-2" onClick={handleUploadClick} disabled={uploadMutation.isPending}>
               {uploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               {uploadMutation.isPending ? 'Uploading...' : 'Upload First Photo'}
@@ -264,7 +264,7 @@ export default function GalleryPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className={`relative group rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-800 ${
+                className={`relative group rounded-2xl overflow-hidden bg-slate-200 bg-[#1a3c6e] ${
                   viewMode === 'grid' ? 'aspect-square' : 'aspect-video'
                 }`}
               >
@@ -276,7 +276,7 @@ export default function GalleryPage() {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[rgba(255,255,255,0.06)] dark: dark:">
                     <ImageIcon className="h-12 w-12 text-slate-400" />
                   </div>
                 )}
@@ -284,7 +284,7 @@ export default function GalleryPage() {
                 {/* Featured Badge */}
                 {image.isFeatured && (
                   <div className="absolute top-3 left-3">
-                    <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/90 text-white text-xs font-medium">
+                    <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#c9a84c]/90 text-white text-xs font-medium">
                       <Star className="h-3 w-3" />
                       Featured
                     </span>
@@ -300,7 +300,7 @@ export default function GalleryPage() {
                       View
                     </Button>
                     <Button size="sm" variant="secondary" className="gap-1" onClick={() => handleToggleFeatured(image)}>
-                      <Star className={`h-4 w-4 ${image.isFeatured ? 'fill-amber-500 text-amber-500' : ''}`} />
+                      <Star className={`h-4 w-4 ${image.isFeatured ? 'fill-[#c9a84c] text-[#c9a84c]' : ''}`} />
                     </Button>
                     <Button size="sm" variant="destructive" className="gap-1" onClick={() => setDeleteConfirm(image.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -317,7 +317,7 @@ export default function GalleryPage() {
               transition={{ delay: images.length * 0.05 }}
               onClick={handleUploadClick}
               disabled={uploadMutation.isPending}
-              className={`rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600 transition-colors ${
+              className={`rounded-2xl border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8] hover:border-slate-400 dark:hover:border-slate-600 transition-colors ${
                 viewMode === 'grid' ? 'aspect-square' : 'aspect-video'
               }`}
             >
@@ -354,7 +354,7 @@ export default function GalleryPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl glass-card rounded-2xl overflow-hidden"
             >
-              <div className="relative aspect-video bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+              <div className="relative aspect-video bg-slate-200 bg-[#1a3c6e] flex items-center justify-center">
                 {selectedImage.url ? (
                   <img 
                     src={selectedImage.url.startsWith('http') ? selectedImage.url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${selectedImage.url}`} 
@@ -381,7 +381,7 @@ export default function GalleryPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-medium text-slate-900 dark:text-white">
+                    <p className="text-lg font-medium text-[#f5f0e8]">
                       {selectedImage.caption || 'No caption'}
                     </p>
                     <Button variant="ghost" size="sm" onClick={() => openEditCaption(selectedImage)}>
@@ -396,7 +396,7 @@ export default function GalleryPage() {
                     onClick={() => handleToggleFeatured(selectedImage)}
                     disabled={featureMutation.isPending}
                   >
-                    <Star className={`h-4 w-4 mr-2 ${selectedImage.isFeatured ? 'fill-amber-500 text-amber-500' : ''}`} />
+                    <Star className={`h-4 w-4 mr-2 ${selectedImage.isFeatured ? 'fill-[#c9a84c] text-[#c9a84c]' : ''}`} />
                     {selectedImage.isFeatured ? 'Featured' : 'Set as Featured'}
                   </Button>
                   <Button variant="destructive" onClick={() => setDeleteConfirm(selectedImage.id)}>
@@ -429,8 +429,8 @@ export default function GalleryPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20 mx-auto mb-4">
                 <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Delete Photo?</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              <h3 className="text-lg font-semibold text-[#f5f0e8] mb-2">Delete Photo?</h3>
+              <p className="text-sm text-slate-500 text-[#7a8fa6] mb-6">
                 This action cannot be undone. The photo will be permanently removed.
               </p>
               <div className="flex gap-3">

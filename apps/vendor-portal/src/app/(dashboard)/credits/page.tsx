@@ -96,16 +96,18 @@ export default function CreditsPage() {
 
   const wallet = walletData?.data?.wallet;
   const transactions = txData?.data?.transactions || [];
-  const balanceInNaira = (wallet?.balance || 0) * 100;
+  const CREDIT_VALUE_NGN = 10;
+const CREDIT_PURCHASE_PRICE = 10.6; // ₦10 × 1.06 spread
+const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-6 lg:p-8">
+    <div className="min-h-screen bg-[#0a1d3a] p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Bucr Credits</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Purchase, earn, and spend credits on the platform</p>
+            <h1 className="text-3xl font-bold text-[#f5f0e8]">Bucr Credits</h1>
+            <p className="text-slate-500 text-[#7a8fa6] mt-1">Purchase, earn, and spend credits on the platform</p>
           </div>
           <Button onClick={() => setShowPurchaseModal(true)} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />Buy Credits
@@ -114,9 +116,9 @@ export default function CreditsPage() {
 
         {/* Wallet Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="glass-card rounded-2xl p-6 bg-gradient-to-br from-primary-500 to-tertiary-500 text-white">
+          <div className="glass-card rounded-2xl p-6 bg-[#0f2547] text-white">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center">
                 <Wallet className="h-6 w-6" />
               </div>
               <div>
@@ -129,36 +131,36 @@ export default function CreditsPage() {
 
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="h-12 w-12 rounded-xl bg-[rgba(52,211,153,0.1)] flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Total Earned</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{(wallet?.totalEarned || 0).toLocaleString()}</p>
+                <p className="text-sm text-[#7a8fa6]">Total Earned</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{(wallet?.totalEarned || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
 
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-rose-600" />
+              <div className="h-12 w-12 rounded-xl bg-[rgba(248,113,113,0.1)] flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-[#f87171]" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Total Spent</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{(wallet?.totalSpent || 0).toLocaleString()}</p>
+                <p className="text-sm text-[#7a8fa6]">Total Spent</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">{(wallet?.totalSpent || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
 
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-xl bg-[rgba(129,140,248,0.1)] flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-[#818cf8]" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">This Month</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <p className="text-sm text-[#7a8fa6]">This Month</p>
+                <p className="text-2xl font-bold text-[#f5f0e8]">
                   +{walletData?.data?.summary?.last30Days?.reduce((sum: number, s: any) => sum + (s.total > 0 ? s.total : 0), 0)?.toLocaleString() || 0}
                 </p>
               </div>
@@ -170,29 +172,29 @@ export default function CreditsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* How to Earn */}
           <div className="glass-card rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" /> How You Earn
+            <h2 className="text-xl font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-400" /> How You Earn
             </h2>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-green-50 dark:bg-green-900/20">
-                <Users className="h-5 w-5 text-green-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(52,211,153,0.08)]">
+                <Users className="h-5 w-5 text-emerald-400 mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Diner Check-ins</p>
-                  <p className="text-sm text-slate-500">Earn credits when diners redeem their reservation deposit</p>
+                  <p className="font-medium text-[#f5f0e8]">Diner Check-ins</p>
+                  <p className="text-sm text-[#7a8fa6]">Earn credits when diners redeem their reservation deposit</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20">
-                <Clock className="h-5 w-5 text-amber-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(201,168,76,0.08)]">
+                <Clock className="h-5 w-5 text-[#c9a84c] mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">No-Show Share</p>
-                  <p className="text-sm text-slate-500">Receive 50% of forfeited credits when diners don&apos;t show</p>
+                  <p className="font-medium text-[#f5f0e8]">No-Show Share</p>
+                  <p className="text-sm text-[#7a8fa6]">Receive 50% of forfeited credits when diners don&apos;t show</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                <Star className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(122,143,166,0.08)]">
+                <Star className="h-5 w-5 text-[#7a8fa6] mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Review Responses</p>
-                  <p className="text-sm text-slate-500">Earn bonus credits for responding to customer reviews</p>
+                  <p className="font-medium text-[#f5f0e8]">Review Responses</p>
+                  <p className="text-sm text-[#7a8fa6]">Earn bonus credits for responding to customer reviews</p>
                 </div>
               </div>
             </div>
@@ -200,29 +202,29 @@ export default function CreditsPage() {
 
           {/* How to Spend */}
           <div className="glass-card rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-rose-600" /> How to Spend
+            <h2 className="text-xl font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-[#f87171]" /> How to Spend
             </h2>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-                <Sparkles className="h-5 w-5 text-purple-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(129,140,248,0.08)]">
+                <Sparkles className="h-5 w-5 text-[#818cf8] mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Featured Placement</p>
-                  <p className="text-sm text-slate-500">Boost your visibility in search results and listings</p>
+                  <p className="font-medium text-[#f5f0e8]">Featured Placement</p>
+                  <p className="text-sm text-[#7a8fa6]">Boost your visibility in search results and listings</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20">
-                <Megaphone className="h-5 w-5 text-rose-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(248,113,113,0.08)]">
+                <Megaphone className="h-5 w-5 text-[#f87171] mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Marketing Tools</p>
-                  <p className="text-sm text-slate-500">Promote special offers and events to diners</p>
+                  <p className="font-medium text-[#f5f0e8]">Marketing Tools</p>
+                  <p className="text-sm text-[#7a8fa6]">Promote special offers and events to diners</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-tertiary-50 dark:bg-tertiary-900/20">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(201,168,76,0.08)]">
                 <Crown className="h-5 w-5 text-tertiary-600 mt-0.5" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">Subscription Credits</p>
-                  <p className="text-sm text-slate-500">Apply credits toward your monthly subscription</p>
+                  <p className="font-medium text-[#f5f0e8]">Subscription Credits</p>
+                  <p className="text-sm text-[#7a8fa6]">Apply credits toward your monthly subscription</p>
                 </div>
               </div>
             </div>
@@ -231,23 +233,23 @@ export default function CreditsPage() {
 
         {/* Transactions */}
         <div className="glass-card rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Recent Transactions</h2>
+          <h2 className="text-xl font-semibold text-[#f5f0e8] mb-4">Recent Transactions</h2>
           {transactions.length === 0 ? (
             <p className="text-slate-500 text-center py-8">No transactions yet. Purchase or earn credits to see them here.</p>
           ) : (
             <div className="space-y-3">
               {transactions.map((tx: any) => (
-                <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                   <div className="flex items-center gap-3">
-                    <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', tx.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600')}>
+                    <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', tx.amount > 0 ? 'bg-[rgba(52,211,153,0.1)] text-emerald-400' : 'bg-[rgba(248,113,113,0.1)] text-[#f87171]')}>
                       {tx.amount > 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-white">{TYPE_LABELS[tx.type] || tx.type}</p>
-                      <p className="text-sm text-slate-500">{formatDate(tx.createdAt)}</p>
+                      <p className="font-medium text-[#f5f0e8]">{TYPE_LABELS[tx.type] || tx.type}</p>
+                      <p className="text-sm text-[#7a8fa6]">{formatDate(tx.createdAt)}</p>
                     </div>
                   </div>
-                  <p className={cn('font-semibold', tx.amount > 0 ? 'text-green-600' : 'text-rose-600')}>
+                  <p className={cn('font-semibold', tx.amount > 0 ? 'text-emerald-400' : 'text-[#f87171]')}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()}
                   </p>
                 </div>
@@ -258,18 +260,18 @@ export default function CreditsPage() {
 
         {/* Purchase Modal */}
         {showPurchaseModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.75)] p-4">
             <div className="glass-card rounded-2xl p-6 w-full max-w-lg">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Buy Bucr Credits</h3>
+                <h3 className="text-xl font-semibold text-[#f5f0e8]">Buy Bucr Credits</h3>
                 <button onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-slate-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-sm text-[#7a8fa6] mb-4">
                 <CreditCard className="inline h-4 w-4 mr-1" />
-                1 credit = ₦100 (flat rate)
+                1 credit = ₦10.00 value · ₦10.60 purchase price (6% spread)
               </p>
 
               {/* Package Selection */}
@@ -281,25 +283,25 @@ export default function CreditsPage() {
                     className={cn(
                       'relative p-4 rounded-xl border-2 transition-all text-left',
                       selectedPackage === pkg.credits
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                        ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.08)]'
+                        : 'border-[rgba(201,168,76,0.18)] hover:border-[rgba(201,168,76,0.35)]'
                     )}
                   >
                     {pkg.popular && (
-                      <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      <span className="absolute -top-2 -right-2 bg-[#c9a84c] text-white text-xs px-2 py-0.5 rounded-full">
                         Popular
                       </span>
                     )}
-                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{pkg.credits}</p>
-                    <p className="text-sm text-slate-500">credits</p>
-                    <p className="text-sm font-medium text-primary-600 mt-1">{formatCurrency(pkg.credits * 100)}</p>
+                    <p className="text-2xl font-bold text-[#f5f0e8]">{pkg.credits}</p>
+                    <p className="text-sm text-[#7a8fa6]">credits</p>
+                    <p className="text-sm font-medium text-[#c9a84c] mt-1">{formatCurrency(Math.ceil(pkg.credits * CREDIT_PURCHASE_PRICE))}</p>
                   </button>
                 ))}
               </div>
 
               {/* Custom Amount */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)] mb-2">
                   Or enter custom amount (min 10)
                 </label>
                 <div className="flex gap-2">
@@ -312,8 +314,8 @@ export default function CreditsPage() {
                     className="flex-1"
                   />
                   {customCredits && parseInt(customCredits) >= 10 && (
-                    <div className="flex items-center px-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm">
-                      = {formatCurrency(parseInt(customCredits) * 100)}
+                    <div className="flex items-center px-3 bg-[rgba(255,255,255,0.05)] rounded-lg text-sm">
+                      = {formatCurrency(Math.ceil(parseInt(customCredits) * CREDIT_PURCHASE_PRICE))}
                     </div>
                   )}
                 </div>
@@ -321,19 +323,19 @@ export default function CreditsPage() {
 
               {/* Summary */}
               {(selectedPackage || (customCredits && parseInt(customCredits) >= 10)) && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 mb-6">
+                <div className="bg-[rgba(255,255,255,0.04)] rounded-xl p-4 mb-6">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-500">Credits</span>
                     <span className="font-medium">{selectedPackage || parseInt(customCredits)}</span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-500">Rate</span>
-                    <span className="font-medium">₦100/credit</span>
+                    <span className="font-medium">₦10.60/credit (₦10 + 6% spread)</span>
                   </div>
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2 flex justify-between">
+                  <div className="border-t border-[rgba(201,168,76,0.18)] pt-2 mt-2 flex justify-between">
                     <span className="font-medium">Total</span>
-                    <span className="font-bold text-lg text-primary-600">
-                      {formatCurrency((selectedPackage || parseInt(customCredits)) * 100)}
+                    <span className="font-bold text-lg text-[#c9a84c]">
+                      {formatCurrency(Math.ceil((selectedPackage || parseInt(customCredits)) * CREDIT_PURCHASE_PRICE))}
                     </span>
                   </div>
                 </div>
@@ -360,11 +362,11 @@ export default function CreditsPage() {
 
         {/* Verifying Payment Overlay */}
         {isVerifying && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.75)]">
             <div className="glass-card rounded-2xl p-8 text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary-500 mx-auto mb-4" />
-              <p className="text-lg font-medium text-slate-900 dark:text-white">Verifying payment...</p>
-              <p className="text-sm text-slate-500">Please wait while we confirm your purchase</p>
+              <p className="text-lg font-medium text-[#f5f0e8]">Verifying payment...</p>
+              <p className="text-sm text-[#7a8fa6]">Please wait while we confirm your purchase</p>
             </div>
           </div>
         )}

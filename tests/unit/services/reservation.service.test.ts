@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  calculateCreditsForPartySize,
+  calculateReservationDeposit,
   calculateShowupBonus,
   calculateCancellationRefund,
 } from '@/services/credit.service';
@@ -28,11 +28,12 @@ vi.mock('@/lib/db', () => {
     count: vi.fn().mockResolvedValue(0),
   };
   const mockUser = {
-    findUnique: vi.fn().mockResolvedValue({ id: 'user-1', creditsBalance: 500 }),
+    // Balance must exceed the flat per-reservation deposit (≥ ₦10,000 = 1000 credits)
+    findUnique: vi.fn().mockResolvedValue({ id: 'user-1', creditsBalance: 5000 }),
     update: vi.fn().mockResolvedValue({}),
   };
   const mockVendor = {
-    findUnique: vi.fn().mockResolvedValue({ id: 'vendor-1', totalBookings: 10, noShowCount: 0, businessName: 'Test Restaurant' }),
+    findUnique: vi.fn().mockResolvedValue({ id: 'vendor-1', totalBookings: 10, noShowCount: 0, businessName: 'Test Restaurant', venueType: 'upscale_casual', customDepositCredits: null }),
     update: vi.fn().mockResolvedValue({}),
   };
   const mockCreditTransaction = {
@@ -81,6 +82,10 @@ vi.mock('@/services/notification.service', () => ({
   notifyCheckInBonus: vi.fn().mockResolvedValue(undefined),
   notifyReservationConfirmation: vi.fn().mockResolvedValue(undefined),
   notifyReservationCancellation: vi.fn().mockResolvedValue(undefined),
+  notifyVendorNewReservation: vi.fn().mockResolvedValue(undefined),
+  notifyVendorCancellation: vi.fn().mockResolvedValue(undefined),
+  notifyVendorNewOrder: vi.fn().mockResolvedValue(undefined),
+  notifyVendorNewReview: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/services/email.service', () => ({
@@ -109,13 +114,14 @@ describe('Reservation Service - Unit Tests with Mocked DB', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset default mock returns
-    (db.user.findUnique as any).mockResolvedValue({ id: 'user-1', creditsBalance: 500, email: 'test@test.com' });
-    (db.vendor.findUnique as any).mockResolvedValue({ id: 'vendor-1', totalBookings: 10, noShowCount: 0, businessName: 'Test Restaurant' });
+    // Balance must exceed the flat per-reservation deposit (₦10,000+ = 1000+ credits)
+    (db.user.findUnique as any).mockResolvedValue({ id: 'user-1', creditsBalance: 5000, email: 'test@test.com' });
+    (db.vendor.findUnique as any).mockResolvedValue({ id: 'vendor-1', totalBookings: 10, noShowCount: 0, businessName: 'Test Restaurant', venueType: 'upscale_casual', customDepositCredits: null });
     (db.reservation.findUnique as any).mockResolvedValue(null);
     (db.reservation.create as any).mockResolvedValue({
       id: 'res-1', userId: 'user-1', vendorId: 'vendor-1', branchId: 'branch-1',
       partySize: 2, status: 'confirmed', pin: '1234', qrCode: 'data:image/png;base64,test',
-      creditsDeposited: 50, date: new Date(), time: '19:00',
+      creditsDeposited: 1500, date: new Date(), time: '19:00',
     });
   });
 
@@ -235,44 +241,55 @@ describe('Reservation Service - Unit Tests with Mocked DB', () => {
   });
 });
 
+// Import ECONOMICS so tier assertions are always in sync with config
+import { ECONOMICS } from '@/lib/config/economics';
+
 describe('Reservation Service - Credit Calculations', () => {
-  describe('calculateCreditsForPartySize (via credit service)', () => {
-    it('should calculate standard tier for 1-2 guests', () => {
-      expect(calculateCreditsForPartySize(1)).toBe(50);
-      expect(calculateCreditsForPartySize(2)).toBe(50);
+  describe('calculateReservationDeposit (flat per reservation, by venue type)', () => {
+    it('each venue type returns its configured flat deposit', () => {
+      for (const [venue, credits] of Object.entries(ECONOMICS.DEPOSIT_BY_VENUE_TYPE)) {
+        expect(calculateReservationDeposit(venue)).toBe(credits);
+      }
     });
 
-    it('should calculate group tier for 3-6 guests', () => {
-      expect(calculateCreditsForPartySize(3)).toBe(100);
-      expect(calculateCreditsForPartySize(6)).toBe(100);
+    it('party size is irrelevant — same deposit regardless of guests', () => {
+      // Deposit no longer takes party size; it is flat per venue type.
+      expect(calculateReservationDeposit('casual')).toBe(ECONOMICS.DEPOSIT_BY_VENUE_TYPE.casual);
+      expect(calculateReservationDeposit('fine_dining')).toBe(ECONOMICS.DEPOSIT_BY_VENUE_TYPE.fine_dining);
     });
 
-    it('should calculate large party tier for 7+ guests', () => {
-      expect(calculateCreditsForPartySize(7)).toBe(200);
-      expect(calculateCreditsForPartySize(10)).toBe(200);
+    it('vendor custom override takes precedence over venue default', () => {
+      expect(calculateReservationDeposit('casual', 5000)).toBe(5000);
+    });
+
+    it('unknown venue falls back to DEPOSIT_DEFAULT', () => {
+      expect(calculateReservationDeposit(undefined)).toBe(ECONOMICS.DEPOSIT_DEFAULT);
     });
   });
 
   describe('Cancellation refund calculations', () => {
     it('should give 100% refund for 24+ hours', () => {
-      expect(calculateCancellationRefund(50, 25)).toBe(50);
+      expect(calculateCancellationRefund(100, ECONOMICS.CANCEL_FULL_REFUND_HOURS + 1)).toBe(100);
       expect(calculateCancellationRefund(100, 48)).toBe(100);
     });
 
-    it('should give 50% refund for 12-24 hours', () => {
-      expect(calculateCancellationRefund(100, 18)).toBe(50);
+    it('should give partial refund in the partial window', () => {
+      const midpoint = (ECONOMICS.CANCEL_FULL_REFUND_HOURS + ECONOMICS.CANCEL_PARTIAL_REFUND_HOURS) / 2;
+      const expected = Math.floor(100 * ECONOMICS.CANCEL_PARTIAL_REFUND_PCT);
+      expect(calculateCancellationRefund(100, midpoint)).toBe(expected);
     });
 
     it('should give 0% refund for <12 hours', () => {
-      expect(calculateCancellationRefund(100, 6)).toBe(0);
+      expect(calculateCancellationRefund(100, ECONOMICS.CANCEL_PARTIAL_REFUND_HOURS - 1)).toBe(0);
     });
   });
 
   describe('Show-up bonus calculations', () => {
-    it('should calculate 5% bonus on deposited credits', () => {
-      expect(calculateShowupBonus(50)).toBe(2);
-      expect(calculateShowupBonus(100)).toBe(5);
-      expect(calculateShowupBonus(200)).toBe(10);
+    it('should calculate SHOWUP_BONUS_PCT on deposited credits', () => {
+      for (const credits of [40, 80, 120, 200]) {
+        const expected = Math.floor(credits * ECONOMICS.SHOWUP_BONUS_PCT);
+        expect(calculateShowupBonus(credits)).toBe(expected);
+      }
     });
   });
 });

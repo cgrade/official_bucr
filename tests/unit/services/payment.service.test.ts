@@ -6,7 +6,7 @@ import {
   getPaymentByReference,
   cancelPayment,
 } from '@/services/payment.service';
-import { config } from '@/lib/config';
+import { ECONOMICS } from '@/lib/config/economics';
 
 // Mock DB for DB-dependent tests
 vi.mock('@/lib/db', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/lib/db', () => ({
     payment: {
       findUnique: vi.fn().mockResolvedValue(null),
       findFirst: vi.fn().mockResolvedValue(null),
-      create: vi.fn().mockResolvedValue({ id: 'pay-1', reference: 'ref-1', status: 'pending', amountKobo: 12000 }),
+      create: vi.fn().mockResolvedValue({ id: 'pay-1', reference: 'ref-1', status: 'pending', amountKobo: 106000 }),
       update: vi.fn().mockResolvedValue({}),
       delete: vi.fn().mockResolvedValue({}),
     },
@@ -24,60 +24,53 @@ vi.mock('@/lib/db', () => ({
 
 import { db } from '@/lib/db';
 
+// price per credit in kobo: Math.round(10 * 1.06 * 100) = 1060
+const PRICE_KOBO = Math.round(ECONOMICS.CREDIT_VALUE_NGN * (1 + ECONOMICS.CREDIT_SPREAD) * 100);
+
 describe('Payment Service - Pure Calculations', () => {
   describe('calculateCreditsFromAmount', () => {
     it('should calculate correct credits from kobo amount', () => {
-      const credits = calculateCreditsFromAmount(12000);
-      expect(credits).toBe(1);
+      expect(calculateCreditsFromAmount(PRICE_KOBO)).toBe(1);
     });
 
-    it('should floor partial credits', () => {
-      const credits = calculateCreditsFromAmount(18000);
-      expect(credits).toBe(1);
+    it('should floor partial credits (1.5 credits worth of kobo → 1)', () => {
+      expect(calculateCreditsFromAmount(Math.floor(PRICE_KOBO * 1.5))).toBe(1);
     });
 
     it('should handle zero amount', () => {
-      const credits = calculateCreditsFromAmount(0);
-      expect(credits).toBe(0);
+      expect(calculateCreditsFromAmount(0)).toBe(0);
     });
 
-    it('should calculate correct credits for larger amounts', () => {
-      const credits = calculateCreditsFromAmount(1200000);
-      expect(credits).toBe(100);
+    it('should calculate correct credits for 100-credit purchase', () => {
+      expect(calculateCreditsFromAmount(PRICE_KOBO * 100)).toBe(100);
     });
   });
 
   describe('calculateAmountForCredits', () => {
-    it('should calculate correct kobo amount for credits', () => {
-      const amount = calculateAmountForCredits(1);
-      expect(amount).toBe(config.credits.purchasePriceNgn * 100);
+    it('should calculate correct kobo amount for 1 credit', () => {
+      expect(calculateAmountForCredits(1)).toBe(PRICE_KOBO);
     });
 
     it('should handle zero credits', () => {
-      const amount = calculateAmountForCredits(0);
-      expect(amount).toBe(0);
+      expect(calculateAmountForCredits(0)).toBe(0);
     });
 
-    it('should calculate correct amount for multiple credits', () => {
-      const amount = calculateAmountForCredits(50);
-      expect(amount).toBe(50 * config.credits.purchasePriceNgn * 100);
+    it('should calculate correct amount for 50 credits', () => {
+      expect(calculateAmountForCredits(50)).toBe(PRICE_KOBO * 50);
     });
   });
 
   describe('getSubscriptionPrice', () => {
-    it('should return correct price for basic tier', () => {
-      const price = getSubscriptionPrice('basic');
-      expect(price).toBe(config.subscriptions.basic.priceNgn * 100);
+    it('should return 0 kobo for free Basic tier', () => {
+      expect(getSubscriptionPrice('basic')).toBe(0);
     });
 
-    it('should return correct price for pro tier', () => {
-      const price = getSubscriptionPrice('pro');
-      expect(price).toBe(config.subscriptions.pro.priceNgn * 100);
+    it('should return 3,000,000 kobo for Pro tier (₦30,000)', () => {
+      expect(getSubscriptionPrice('pro')).toBe(3000000);
     });
 
-    it('should return correct price for premium tier', () => {
-      const price = getSubscriptionPrice('premium');
-      expect(price).toBe(config.subscriptions.premium.priceNgn * 100);
+    it('should return 8,500,000 kobo for Elite tier (₦85,000)', () => {
+      expect(getSubscriptionPrice('elite')).toBe(8500000);
     });
   });
 });
@@ -95,7 +88,7 @@ describe('Payment Service - DB Operations (Mocked)', () => {
     });
 
     it('should find payment by reference', async () => {
-      const mockPayment = { id: 'pay-1', reference: 'ref-1', status: 'pending', amountKobo: 12000 };
+      const mockPayment = { id: 'pay-1', reference: 'ref-1', status: 'pending', amountKobo: 106000 };
       (db.payment.findUnique as any).mockResolvedValue(mockPayment);
       const payment = await getPaymentByReference('ref-1');
       expect(payment).not.toBeNull();

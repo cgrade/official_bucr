@@ -84,7 +84,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
+        <h1 className="text-2xl font-bold text-[#f5f0e8]">Reports</h1>
         <p className="text-slate-500 mt-1">Generate and export system reports</p>
       </div>
 
@@ -97,14 +97,14 @@ export default function ReportsPage() {
             className={`glass-card rounded-xl p-4 text-left transition-all duration-200 ${
               selectedReport === type.id
                 ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                : 'hover:bg-slate-50 dark:hover:bg-[rgba(255,255,255,0.04)]'
             }`}
           >
             <type.icon className={`w-6 h-6 mb-2 ${
               selectedReport === type.id ? 'text-primary-500' : 'text-slate-400'
             }`} />
             <h3 className={`font-medium text-sm ${
-              selectedReport === type.id ? 'text-primary-700 dark:text-primary-300' : 'text-slate-900 dark:text-white'
+              selectedReport === type.id ? 'text-primary-700 dark:text-primary-300' : 'text-[#f5f0e8]'
             }`}>
               {type.name}
             </h3>
@@ -117,25 +117,25 @@ export default function ReportsPage() {
       <div className="glass-card rounded-2xl p-6">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)] mb-2">
               Start Date
             </label>
             <input
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange(d => ({ ...d, start: e.target.value }))}
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+              className="w-full px-4 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)]"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)] mb-2">
               End Date
             </label>
             <input
               type="date"
               value={dateRange.end}
               onChange={(e) => setDateRange(d => ({ ...d, end: e.target.value }))}
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+              className="w-full px-4 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)]"
             />
           </div>
           <div className="flex gap-2">
@@ -162,7 +162,7 @@ export default function ReportsPage() {
       {/* Report Results */}
       {report ? (
         <div className="glass-card rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
+          <h2 className="text-lg font-semibold text-[#f5f0e8] mb-6">
             {reportTypes.find(r => r.id === selectedReport)?.name} Results
           </h2>
 
@@ -170,9 +170,9 @@ export default function ReportsPage() {
           {report.summary && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {Object.entries(report.summary).map(([key, value]) => (
-                <div key={key} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+                <div key={key} className="bg-[rgba(255,255,255,0.02)]/50 rounded-xl p-4">
                   <p className="text-sm text-slate-500 capitalize">{key.replace(/_/g, ' ')}</p>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                  <p className="text-xl font-bold text-[#f5f0e8] mt-1">
                     {typeof value === 'number' 
                       ? key.includes('revenue') || key.includes('amount') 
                         ? formatCurrency(value as number)
@@ -189,7 +189,7 @@ export default function ReportsPage() {
           {report.rows && report.rows.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-800/50">
+                <thead className="bg-[rgba(255,255,255,0.02)]/50">
                   <tr>
                     {report.headers?.map((header: string) => (
                       <th key={header} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
@@ -200,9 +200,9 @@ export default function ReportsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {report.rows.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-[rgba(255,255,255,0.02)]">
                       {Object.values(row).map((cell: any, cellIdx: number) => (
-                        <td key={cellIdx} className="px-4 py-3 text-sm text-slate-900 dark:text-white">
+                        <td key={cellIdx} className="px-4 py-3 text-sm text-[#f5f0e8]">
                           {cell}
                         </td>
                       ))}
@@ -223,8 +223,8 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div className="glass-card rounded-2xl p-12 text-center">
-          <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+          <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300 text-[#f5f0e8]" />
+          <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">
             No Report Generated
           </h3>
           <p className="text-slate-500 mb-6">

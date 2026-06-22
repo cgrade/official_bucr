@@ -51,10 +51,10 @@ export default function ReservationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reservations</h1>
-          <p className="text-slate-500 mt-1">Manage all system reservations</p>
+          <h1 className="text-2xl font-bold text-[#f5f0e8]">Reservations</h1>
+          <p className="text-[#7a8fa6] mt-1">Manage all system reservations</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-[#7a8fa6]">
           <Calendar className="w-4 h-4" />
           <span>{pagination.total} total reservations</span>
         </div>
@@ -64,7 +64,7 @@ export default function ReservationsPage() {
       <div className="glass-card rounded-2xl p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(122,143,166,0.6)]" />
             <Input
               placeholder="Search by user, vendor, or confirmation code..."
               value={search}
@@ -75,7 +75,7 @@ export default function ReservationsPage() {
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+            className="px-4 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-sm"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -91,51 +91,51 @@ export default function ReservationsPage() {
       {/* Reservations Table */}
       <div className="glass-card rounded-2xl overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading reservations...</div>
+          <div className="p-8 text-center text-[#7a8fa6]">Loading reservations...</div>
         ) : reservations.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">No reservations found</div>
+          <div className="p-8 text-center text-[#7a8fa6]">No reservations found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800/50">
+              <thead className="bg-[rgba(255,255,255,0.04)]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Reservation</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">User</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Date & Time</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Guests</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Credits</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Reservation</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">User</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Vendor</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Date & Time</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Guests</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Credits</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[#7a8fa6] uppercase">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-[#7a8fa6] uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-[rgba(201,168,76,0.08)]">
                 {reservations.map((reservation: any) => (
-                  <tr key={reservation.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                  <tr key={reservation.id} className="hover:bg-[rgba(255,255,255,0.04)]">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-mono text-sm font-medium text-slate-900 dark:text-white">
+                        <p className="font-mono text-sm font-medium text-[#f5f0e8]">
                           {reservation.confirmationCode}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[#7a8fa6]">
                           {formatDate(reservation.createdAt)}
                         </p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        <p className="text-sm font-medium text-[#f5f0e8]">
                           {reservation.user?.name || 'Unknown'}
                         </p>
-                        <p className="text-xs text-slate-500">{reservation.user?.email}</p>
+                        <p className="text-xs text-[#7a8fa6]">{reservation.user?.email}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        <p className="text-sm font-medium text-[#f5f0e8]">
                           {reservation.branch?.vendor?.businessName || 'Unknown'}
                         </p>
-                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <p className="text-xs text-[#7a8fa6] flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           {reservation.branch?.name}
                         </p>
@@ -143,23 +143,23 @@ export default function ReservationsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-400" />
+                        <Clock className="w-4 h-4 text-[rgba(122,143,166,0.6)]" />
                         <div>
-                          <p className="text-sm text-slate-900 dark:text-white">
+                          <p className="text-sm text-[#f5f0e8]">
                             {formatDate(reservation.reservationDate)}
                           </p>
-                          <p className="text-xs text-slate-500">{reservation.reservationTime}</p>
+                          <p className="text-xs text-[#7a8fa6]">{reservation.reservationTime}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-900 dark:text-white">{reservation.partySize}</span>
+                        <Users className="w-4 h-4 text-[rgba(122,143,166,0.6)]" />
+                        <span className="text-sm text-[#f5f0e8]">{reservation.partySize}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-900 dark:text-white">
+                      <span className="text-sm font-medium text-[#f5f0e8]">
                         {reservation.creditsHeld} credits
                       </span>
                     </td>
@@ -201,8 +201,8 @@ export default function ReservationsPage() {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-sm text-slate-500">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-[rgba(201,168,76,0.1)]">
+            <p className="text-sm text-[#7a8fa6]">
               Page {pagination.page} of {pagination.totalPages}
             </p>
             <div className="flex gap-2">
@@ -230,43 +230,43 @@ export default function ReservationsPage() {
       {/* Detail Modal */}
       {selectedReservation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-lg">
+          <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-2xl p-6 w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">Reservation Details</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Confirmation Code</span>
+                <span className="text-[#7a8fa6]">Confirmation Code</span>
                 <span className="font-mono font-medium">{selectedReservation.confirmationCode}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">User</span>
+                <span className="text-[#7a8fa6]">User</span>
                 <span>{selectedReservation.user?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Vendor</span>
+                <span className="text-[#7a8fa6]">Vendor</span>
                 <span>{selectedReservation.branch?.vendor?.businessName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Branch</span>
+                <span className="text-[#7a8fa6]">Branch</span>
                 <span>{selectedReservation.branch?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Date</span>
+                <span className="text-[#7a8fa6]">Date</span>
                 <span>{formatDate(selectedReservation.reservationDate)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Time</span>
+                <span className="text-[#7a8fa6]">Time</span>
                 <span>{selectedReservation.reservationTime}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Party Size</span>
+                <span className="text-[#7a8fa6]">Party Size</span>
                 <span>{selectedReservation.partySize} guests</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Credits Held</span>
+                <span className="text-[#7a8fa6]">Credits Held</span>
                 <span>{selectedReservation.creditsHeld}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Status</span>
+                <span className="text-[#7a8fa6]">Status</span>
                 <span className={cn(
                   'px-2 py-0.5 rounded-full text-xs',
                   statusColors[selectedReservation.status]
@@ -276,8 +276,8 @@ export default function ReservationsPage() {
               </div>
               {selectedReservation.specialRequests && (
                 <div>
-                  <span className="text-slate-500 block mb-1">Special Requests</span>
-                  <p className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                  <span className="text-[#7a8fa6] block mb-1">Special Requests</span>
+                  <p className="bg-[rgba(255,255,255,0.02)] p-2 rounded-lg">
                     {selectedReservation.specialRequests}
                   </p>
                 </div>

@@ -1,20 +1,11 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/credits",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/subscriptions",
-      "schedule": "0 1 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/reminders",
-      "schedule": "0 9 * * *"
-    }
+    { "path": "/api/cron/credits",          "schedule": "0 0 * * *"  },
+    { "path": "/api/cron/subscriptions",    "schedule": "0 1 * * *"  },
+    { "path": "/api/cron/cleanup",          "schedule": "0 2 * * *"  },
+    { "path": "/api/cron/reliability",      "schedule": "0 3 * * *"  },
+    { "path": "/api/cron/reminders",        "schedule": "0 9 * * *"  },
+    { "path": "/api/cron/weekly-reports",   "schedule": "0 8 * * 1"  },
+    { "path": "/api/cron/cover-fee-invoice","schedule": "0 6 1 * *"  }
   ]
 }

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       dateFilter.lte = new Date(end);
     }
 
-    let report: any = { summary: {}, headers: [], rows: [] };
+    const report: any = { summary: {}, headers: [], rows: [] };
 
     switch (type) {
       case 'users':

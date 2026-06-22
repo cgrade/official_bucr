@@ -78,6 +78,18 @@ export const authApi = {
     const { data } = await api.get<ApiResponse<any>>('/vendor/profile');
     return data;
   },
+  forgotPassword: async (email: string) => {
+    const { data } = await api.post<ApiResponse<{ message: string }>>('/auth/forgot-password', { email });
+    return data;
+  },
+  deleteAccount: async () => {
+    const { data } = await api.delete<ApiResponse<null>>('/vendor/me');
+    return data;
+  },
+  inviteTeamMember: async (email: string) => {
+    const { data } = await api.post<ApiResponse<any>>('/vendor/team/invite', { email });
+    return data;
+  },
 };
 
 // Reservations API
@@ -109,6 +121,10 @@ export const reservationsApi = {
   },
   verifyReference: async (reference: string) => {
     const { data } = await api.post<ApiResponse<any>>('/vendor/reservations/verify-reference', { reference });
+    return data;
+  },
+  cancel: async (id: string, reason?: string) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/reservations/${id}/cancel`, { reason });
     return data;
   },
 };
@@ -182,6 +198,15 @@ export const menuApi = {
   },
   deleteItem: async (id: string) => {
     const { data } = await api.delete<ApiResponse<null>>(`/vendor/menu/${id}`);
+    return data;
+  },
+  updateAvailability: async (id: string, payload: {
+    isAvailable?: boolean;
+    availableForDineIn?: boolean;
+    availableForTakeout?: boolean;
+    unavailableUntil?: string | null;
+  }) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/menu/${id}/availability`, payload);
     return data;
   },
 };
@@ -304,6 +329,33 @@ export const settingsApi = {
   },
   changePassword: async (currentPassword: string, newPassword: string) => {
     const { data } = await api.post<ApiResponse<any>>('/auth/vendor/change-password', { currentPassword, newPassword });
+    return data;
+  },
+};
+
+// Branch / Location API
+export const branchApi = {
+  getAll: async () => {
+    const { data } = await api.get<ApiResponse<any[]>>('/vendor/branches');
+    return data;
+  },
+  create: async (payload: {
+    name: string; address: string; city: string; state: string;
+    phone?: string; email?: string; latitude?: number; longitude?: number;
+  }) => {
+    const { data } = await api.post<ApiResponse<any>>('/vendor/branches', payload);
+    return data;
+  },
+  update: async (branchId: string, payload: {
+    name?: string; address?: string; city?: string; state?: string;
+    phone?: string; email?: string; latitude?: number; longitude?: number;
+    isActive?: boolean;
+  }) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/branches/${branchId}`, payload);
+    return data;
+  },
+  delete: async (branchId: string) => {
+    const { data } = await api.delete<ApiResponse<null>>(`/vendor/branches/${branchId}`);
     return data;
   },
 };

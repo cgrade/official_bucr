@@ -67,8 +67,10 @@ export async function POST(request: NextRequest) {
           role: admin.role,
           permissions: admin.permissions || [],
         },
-        token: accessToken,
-        refreshToken,
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
       },
       'Admin login successful'
     );

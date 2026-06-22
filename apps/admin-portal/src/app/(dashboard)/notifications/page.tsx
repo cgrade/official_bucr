@@ -7,14 +7,14 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Notifications</h1>
+        <h1 className="text-2xl font-bold text-[#f5f0e8]">Notifications</h1>
         <p className="text-slate-500 mt-1">System notifications and alerts</p>
       </div>
 
       {/* Empty State */}
       <div className="glass-card rounded-xl p-12 text-center">
-        <Bell className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+        <Bell className="w-12 h-12 mx-auto mb-4 text-slate-300 text-[#f5f0e8]" />
+        <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">
           No Notifications
         </h3>
         <p className="text-slate-500 text-sm">

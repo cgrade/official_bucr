@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!reservation) {
-      return notFoundResponse('Reservation not found');
+      return notFoundResponse('Reservation');
     }
 
     // Check if reservation is for today or in the past (within grace period)

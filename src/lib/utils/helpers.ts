@@ -37,10 +37,13 @@ export function formatNaira(amount: number): string {
   }).format(amount);
 }
 
-export function calculateCreditsForPartySize(partySize: number): number {
-  if (partySize <= 2) return 50;
-  if (partySize <= 6) return 100;
-  return 200;
+/**
+ * @deprecated Deposits are now FLAT per reservation (party size irrelevant).
+ * Use calculateReservationDeposit() from services/credit.service.ts which
+ * reads ECONOMICS.DEPOSIT_BY_VENUE_TYPE. This shim returns the global default.
+ */
+export function calculateCreditsForPartySize(_partySize?: number): number {
+  return 1000; // ECONOMICS.DEPOSIT_DEFAULT (₦10,000)
 }
 
 export function addMonths(date: Date, months: number): Date {

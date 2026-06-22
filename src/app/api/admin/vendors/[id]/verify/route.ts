@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { syncVendorAchievements } from '@/services/achievement.service';
 import {
   successResponse,
   errorResponse,
@@ -94,6 +95,9 @@ export async function POST(
         },
       });
     }
+
+    // Sync achievements fire-and-forget (awards/revokes Verified Business badge immediately)
+    syncVendorAchievements(params.id).catch(() => {});
 
     return successResponse(
       updatedVendor,

@@ -23,12 +23,13 @@ import {
   Bell,
 } from 'lucide-react';
 import Link from 'next/link';
+import { VendorOnboarding } from '@/components/VendorOnboarding';
 
 const statusConfig = {
-  CONFIRMED: { label: 'Confirmed', variant: 'default' as const, icon: Clock, color: 'text-primary-500', bg: 'bg-primary-500/10' },
+  CONFIRMED: { label: 'Confirmed', variant: 'default' as const, icon: Clock, color: 'text-[#c9a84c]', bg: 'bg-[rgba(201,168,76,0.1)]' },
   CHECKED_IN: { label: 'Checked In', variant: 'success' as const, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   CANCELLED: { label: 'Cancelled', variant: 'error' as const, icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
-  NO_SHOW: { label: 'No Show', variant: 'warning' as const, icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  NO_SHOW: { label: 'No Show', variant: 'warning' as const, icon: AlertCircle, color: 'text-[#c9a84c]', bg: 'bg-[#c9a84c]/10' },
   COMPLETED: { label: 'Completed', variant: 'success' as const, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
 };
 
@@ -52,29 +53,34 @@ export default function DashboardPage() {
     return 'Good evening';
   };
 
+  // All stats come from the analytics API — no hardcoded values
+  const analyticsData = analytics?.data || {};
+  const reliabilityScore   = analyticsData?.vendor?.reliabilityScore ?? null;
+  const bookWithConfidence = analyticsData?.vendor?.bookWithConfidence ?? false;
+
   const stats = [
     {
       title: "Today's Bookings",
-      value: todayReservations?.data?.length || 0,
-      change: '+12%',
+      value: analyticsData?.today?.reservations ?? 0,
+      change: analyticsData?.changes?.todayVsYesterday ?? null,
       icon: CalendarCheck,
-      gradient: 'from-primary-500 to-tertiary-500',
+      gradient: 'bg-[#0f2547]',
       lightBg: 'bg-primary-500/10 dark:bg-primary-500/20',
     },
     {
-      title: 'Weekly Guests',
-      value: analytics?.data?.weeklyReservations || 0,
-      change: '+8%',
+      title: 'Weekly Reservations',
+      value: analyticsData?.thisWeek?.reservations ?? 0,
+      change: analyticsData?.changes?.weekVsLastWeek ?? null,
       icon: Users,
-      gradient: 'from-emerald-500 to-teal-500',
+      gradient: 'bg-emerald-600',
       lightBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     },
     {
-      title: 'Monthly Revenue',
-      value: formatCurrency(analytics?.data?.monthlyRevenue || 0),
-      change: '+23%',
+      title: 'Monthly Check-ins',
+      value: analyticsData?.thisMonth?.reservations ?? 0,
+      change: analyticsData?.changes?.monthVsLastMonth ?? null,
       icon: DollarSign,
-      gradient: 'from-secondary-400 to-secondary-600',
+      gradient: 'bg-[rgba(255,255,255,0.06)]',
       lightBg: 'bg-secondary-500/10 dark:bg-secondary-500/20',
     },
   ];
@@ -82,23 +88,23 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-card border-b border-slate-200/50 dark:border-slate-800/50">
+      <header className="sticky top-0 z-10 glass-card border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)]">
         <div className="flex h-20 items-center justify-between px-8">
           <div>
             <motion.h1 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-bold text-slate-900 dark:text-white"
+              className="text-2xl font-bold text-[#f5f0e8]"
             >
-              {greeting()}, <span className="gradient-text">{vendor?.businessName || 'there'}</span>!
+              {greeting()}, <span className="text-[#c9a84c]">{vendor?.businessName || 'there'}</span>!
             </motion.h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 text-[#7a8fa6]">
               {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.05)] text-slate-500 text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 3
@@ -109,8 +115,11 @@ export default function DashboardPage() {
       </header>
 
       <div className="flex-1 p-8 space-y-8">
+        {/* First-run setup checklist (auto-hides once complete or dismissed) */}
+        <VendorOnboarding />
+
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -120,7 +129,7 @@ export default function DashboardPage() {
               className="stat-card glass-card rounded-2xl p-6"
             >
               <div className="flex items-start justify-between">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] shadow-lg`}>
                   <stat.icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
@@ -129,37 +138,63 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{stat.title}</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+                <p className="text-sm font-medium text-slate-500 text-[#7a8fa6]">{stat.title}</p>
+                <p className="mt-1 text-3xl font-bold text-[#f5f0e8]">{stat.value}</p>
               </div>
             </motion.div>
           ))}
+
+          {/* Reliability Score Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="stat-card rounded-2xl bg-[#0f2547] border border-[rgba(201,168,76,0.2)] p-6"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)]">
+                <Sparkles className="h-6 w-6 text-[#c9a84c]" />
+              </div>
+              {bookWithConfidence && (
+                <span className="flex items-center gap-1 rounded-full bg-[rgba(201,168,76,0.15)] px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] uppercase text-[#c9a84c]">
+                  ✓ Verified
+                </span>
+              )}
+            </div>
+            <div className="mt-4">
+              <p className="text-sm font-medium text-[#7a8fa6]">Reliability Score</p>
+              <p className="mt-1 text-3xl font-bold text-[#f5f0e8]">
+                {reliabilityScore != null ? `${(reliabilityScore * 100).toFixed(0)}%` : '—'}
+              </p>
+              <p className="text-[11px] text-[#7a8fa6] mt-1">
+                {bookWithConfidence
+                  ? 'Book With Confidence badge earned'
+                  : reliabilityScore != null
+                    ? `${((1 - reliabilityScore) * 100).toFixed(0)}% away from badge`
+                    : 'Score computed after first bookings'}
+              </p>
+            </div>
+          </motion.div>
 
           {/* QR Scanner CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="stat-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-tertiary-600 p-6 text-white"
+            className="stat-card relative overflow-hidden rounded-2xl bg-[#0f2547] border border-[rgba(201,168,76,0.2)] p-6 text-white"
           >
-            <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-            <div className="absolute -bottom-6 -left-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-            
             <div className="relative z-10">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                <QrCode className="h-6 w-6" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.15)]">
+                <QrCode className="h-6 w-6 text-[#c9a84c]" />
               </div>
               <div className="mt-4">
-                <p className="text-sm font-medium text-white/80">Quick Check-in</p>
+                <p className="text-sm font-medium text-[#7a8fa6]">Quick Check-in</p>
                 <p className="mt-1 text-lg font-bold">Scan Guest QR</p>
               </div>
               <Link href="/scanner">
-                <Button 
-                  size="sm" 
-                  className="mt-4 bg-white text-primary-600 hover:bg-white/90 shadow-lg group"
-                >
+                <Button size="sm" variant="outline" className="mt-4 gap-2">
                   Open Scanner
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -173,20 +208,20 @@ export default function DashboardPage() {
           transition={{ delay: 0.4 }}
           className="glass-card rounded-2xl"
         >
-          <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-5">
+          <div className="flex items-center justify-between border-b border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)] px-6 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-tertiary-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f2547]">
                 <CalendarCheck className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Today&apos;s Reservations</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <h2 className="text-lg font-semibold text-[#f5f0e8]">Today&apos;s Reservations</h2>
+                <p className="text-sm text-slate-500 text-[#7a8fa6]">
                   {todayReservations?.data?.length || 0} bookings scheduled
                 </p>
               </div>
             </div>
             <Link href="/reservations">
-              <Button variant="ghost" size="sm" className="group text-primary-600 dark:text-primary-400 hover:text-primary-700">
+              <Button variant="ghost" size="sm" className="group text-[#c9a84c] hover:text-[#f5f0e8]">
                 View All
                 <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
@@ -200,11 +235,11 @@ export default function DashboardPage() {
               </div>
             ) : todayReservations?.data?.length === 0 ? (
               <div className="flex h-48 flex-col items-center justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
                   <CalendarCheck className="h-8 w-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No reservations for today</p>
-                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">New bookings will appear here</p>
+                <p className="text-slate-500 text-[#7a8fa6] font-medium">No reservations for today</p>
+                <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">New bookings will appear here</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -217,17 +252,17 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-[rgba(255,255,255,0.02)]/50 hover:bg-[rgba(255,255,255,0.06)] transition-colors group"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 font-mono text-sm font-bold text-slate-600 dark:text-slate-300">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.06)] dark: dark: font-mono text-sm font-bold text-slate-600 text-[rgba(245,240,232,0.7)]">
                         {formatTime(reservation.time || reservation.reservationTime)}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                        <p className="font-semibold text-[#f5f0e8] truncate">
                           {reservation.user?.name || reservation.user?.fullName || 'Guest'}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-slate-500 text-[#7a8fa6]">
                           {reservation.partySize} guests • {reservation.reference}
                         </p>
                       </div>

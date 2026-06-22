@@ -145,21 +145,21 @@ export default function DocumentsPage() {
     switch (status) {
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[rgba(52,211,153,0.1)] text-emerald-400 border border-[rgba(52,211,153,0.2)]">
             <CheckCircle className="h-3.5 w-3.5" />
             Approved
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[rgba(248,113,113,0.1)] text-[#f87171] border border-[rgba(248,113,113,0.2)]">
             <XCircle className="h-3.5 w-3.5" />
             Rejected
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[rgba(201,168,76,0.1)] text-[#c9a84c] border border-[rgba(201,168,76,0.25)]">
             <Clock className="h-3.5 w-3.5" />
             Pending Review
           </span>
@@ -171,14 +171,14 @@ export default function DocumentsPage() {
     switch (verificationStatus) {
       case 'approved':
         return (
-          <div className="p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+          <div className="p-4 rounded-xl bg-[rgba(52,211,153,0.08)] border border-[rgba(52,211,153,0.2)]">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-[rgba(52,211,153,0.1)] flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <p className="font-medium text-green-800 dark:text-green-400">Account Verified</p>
-                <p className="text-sm text-green-700 dark:text-green-300">
+                <p className="text-sm text-emerald-400">
                   Your business is verified and visible to customers.
                 </p>
               </div>
@@ -187,14 +187,14 @@ export default function DocumentsPage() {
         );
       case 'rejected':
         return (
-          <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+          <div className="p-4 rounded-xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.2)]">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-[rgba(248,113,113,0.1)] flex items-center justify-center">
                 <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <p className="font-medium text-red-800 dark:text-red-400">Verification Rejected</p>
-                <p className="text-sm text-red-700 dark:text-red-300">
+                <p className="text-sm text-[#f87171]">
                   Some documents were rejected. Please review and re-upload.
                 </p>
               </div>
@@ -203,14 +203,14 @@ export default function DocumentsPage() {
         );
       default:
         return (
-          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+          <div className="p-4 rounded-xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)]">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-[rgba(201,168,76,0.1)] flex items-center justify-center">
                 <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
                 <p className="font-medium text-amber-800 dark:text-amber-400">Verification Pending</p>
-                <p className="text-sm text-amber-700 dark:text-amber-300">
+                <p className="text-sm text-[#c9a84c]">
                   Your documents are being reviewed. This usually takes 24-48 hours.
                 </p>
               </div>
@@ -249,14 +249,14 @@ export default function DocumentsPage() {
         {/* Header */}
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 KYC Documents
               </h1>
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-slate-500 text-[#7a8fa6]">
                 Manage your business verification documents
               </p>
             </div>
@@ -268,16 +268,16 @@ export default function DocumentsPage() {
 
         {/* Upload Error Alert */}
         {uploadError && (
-          <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+          <div className="p-4 rounded-xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.2)]">
             <div className="flex items-start gap-3">
               <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-red-800 dark:text-red-400">Upload Failed</p>
-                <p className="text-sm text-red-700 dark:text-red-300 mt-1">{uploadError}</p>
+                <p className="text-sm text-[#f87171] mt-1">{uploadError}</p>
               </div>
               <button 
                 onClick={() => setUploadError(null)} 
-                className="ml-auto text-red-500 hover:text-red-700"
+                className="ml-auto text-[#f87171]"
               >
                 <XCircle className="h-4 w-4" />
               </button>
@@ -294,19 +294,19 @@ export default function DocumentsPage() {
             return (
               <div 
                 key={docType.type} 
-                className="glass-card rounded-xl p-5 border border-slate-200 dark:border-slate-700"
+                className="glass-card rounded-xl p-5 border border-[rgba(201,168,76,0.18)]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-slate-900 dark:text-white">
+                      <h3 className="font-semibold text-[#f5f0e8]">
                         {docType.title}
                       </h3>
                       {docType.required && (
                         <span className="text-xs text-red-500 font-medium">Required</span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                    <p className="text-sm text-slate-500 text-[#7a8fa6] mb-3">
                       {docType.description}
                     </p>
 
@@ -320,8 +320,8 @@ export default function DocumentsPage() {
                         </div>
 
                         {document.rejectionReason && (
-                          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                            <p className="text-sm text-red-700 dark:text-red-300">
+                          <div className="p-3 rounded-lg bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.2)]">
+                            <p className="text-sm text-[#f87171]">
                               <strong>Rejection Reason:</strong> {document.rejectionReason}
                             </p>
                           </div>
@@ -332,7 +332,7 @@ export default function DocumentsPage() {
                             href={document.fileUrl?.startsWith('http') ? document.fileUrl : `${API_URL}${document.fileUrl}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-[rgba(201,168,76,0.18)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                             View Document
@@ -361,7 +361,7 @@ export default function DocumentsPage() {
                       inline-flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer
                       transition-colors
                       ${document && document.status === 'approved'
-                        ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 cursor-not-allowed'
+                        ? 'bg-slate-100 text-slate-400 bg-[#1a3c6e] cursor-not-allowed'
                         : 'bg-primary-500 text-white hover:bg-primary-600'
                       }
                       ${isUploading ? 'opacity-50 cursor-wait' : ''}
@@ -399,19 +399,19 @@ export default function DocumentsPage() {
         </div>
 
         {/* Info Card */}
-        <div className="glass-card rounded-xl p-5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <div className="glass-card rounded-xl p-5 border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.02)]/50">
           <div className="flex items-start gap-3">
             <Building2 className="h-5 w-5 text-slate-500 mt-0.5" />
             <div>
-              <h4 className="font-medium text-slate-900 dark:text-white mb-1">
+              <h4 className="font-medium text-[#f5f0e8] mb-1">
                 Why do we need these documents?
               </h4>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500 text-[#7a8fa6]">
                 We verify all vendors to ensure the safety and trust of our platform users. 
                 Once verified, your business will be visible to customers and you can start 
                 receiving reservations and orders.
               </p>
-              <ul className="mt-3 space-y-1 text-sm text-slate-500 dark:text-slate-400">
+              <ul className="mt-3 space-y-1 text-sm text-slate-500 text-[#7a8fa6]">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                   CAC and Owner ID are required for verification

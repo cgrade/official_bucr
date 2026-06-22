@@ -20,9 +20,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      {/* forcedTheme locks dark mode — brand is dark-only */}
+      <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{ className: 'bg-[#0f2547] text-[#f5f0e8] border border-[rgba(201,168,76,0.2)]' }}
+        />
       </ThemeProvider>
     </QueryClientProvider>
   );

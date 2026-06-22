@@ -11,6 +11,7 @@ import {
   notFoundResponse,
 } from '@/lib/utils/api-response';
 import { checkInReservation } from '@/services/reservation.service';
+import { syncVendorAchievements } from '@/services/achievement.service';
 
 const checkInSchema = z.object({
   pin: z.string().length(4, 'PIN must be 4 digits').optional(),
@@ -39,18 +40,18 @@ export async function POST(
       return forbiddenResponse('No vendor account found');
     }
 
-    // Check if reservation exists and belongs to this vendor
+    // Check if reservation exists and belongs to this vendor.
+    // Filter by the direct vendorId FK — branchId is nullable, so filtering
+    // through the branch relation drops reservations that have no branch.
     const reservation = await db.reservation.findFirst({
       where: {
         id: params.id,
-        branch: {
-          vendorId: vendor.id,
-        },
+        vendorId: vendor.id,
       },
     });
 
     if (!reservation) {
-      return notFoundResponse('Reservation not found');
+      return notFoundResponse('Reservation');
     }
 
     if (reservation.status === 'checked_in') {
@@ -72,6 +73,9 @@ export async function POST(
     const pin = body?.pin || reservation.pin;
 
     const result = await checkInReservation(params.id, pin, vendor.id);
+
+    // Sync achievements fire-and-forget — may unlock "Trusted Vendor" (100+ bookings)
+    syncVendorAchievements(vendor.id).catch(() => {});
 
     return successResponse(
       {

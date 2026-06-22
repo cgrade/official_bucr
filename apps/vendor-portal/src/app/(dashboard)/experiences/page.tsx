@@ -1,4 +1,5 @@
 'use client';
+import FeatureGate from '@/components/ui/FeatureGate';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -49,7 +50,7 @@ const initialFormState = {
   isActive: true,
 };
 
-export default function ExperiencesPage() {
+function ExperiencesPageInner() {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState(initialFormState);
@@ -189,16 +190,16 @@ export default function ExperiencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-tertiary-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-[#0a1d3a]">
+      <header className="sticky top-0 z-10 bg-[#0f2547] border-b border-[rgba(201,168,76,0.18)]">
         <div className="px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-tertiary-500 to-tertiary-600 shadow-lg">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#c9a84c] shadow-lg">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Experiences</h1>
-              <p className="text-slate-500 dark:text-slate-400">Create special dining experiences</p>
+              <h1 className="text-2xl font-bold text-[#f5f0e8]">Experiences</h1>
+              <p className="text-slate-500 text-[#7a8fa6]">Create special dining experiences</p>
             </div>
           </div>
           <Button onClick={openCreateModal} className="btn-gradient gap-2">
@@ -211,7 +212,7 @@ export default function ExperiencesPage() {
         {experiences.length === 0 ? (
           <div className="text-center py-16">
             <Sparkles className="h-16 w-16 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No experiences yet</h3>
+            <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">No experiences yet</h3>
             <p className="text-slate-500 mb-4">Create your first special dining experience</p>
             <Button onClick={openCreateModal} className="btn-gradient">
               <Plus className="h-4 w-4 mr-2" /> Create Experience
@@ -232,7 +233,7 @@ export default function ExperiencesPage() {
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">{exp.title}</h3>
+                      <h3 className="font-semibold text-[#f5f0e8]">{exp.title}</h3>
                       <span className="text-xs px-2 py-1 rounded-full bg-tertiary-100 dark:bg-tertiary-900/30 text-tertiary-600 dark:text-tertiary-400">
                         {EXPERIENCE_TYPES.find((t) => t.value === exp.type)?.label || exp.type}
                       </span>
@@ -242,7 +243,7 @@ export default function ExperiencesPage() {
                     </span>
                   </div>
                   {exp.description && (
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{exp.description}</p>
+                    <p className="text-sm text-slate-600 text-[#7a8fa6] mb-4 line-clamp-2">{exp.description}</p>
                   )}
                   <div className="grid grid-cols-2 gap-2 text-sm text-slate-500 mb-4">
                     <div className="flex items-center gap-1">
@@ -292,11 +293,11 @@ export default function ExperiencesPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-[rgba(255,255,255,0.03)] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
             >
-              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-6 border-b border-[rgba(201,168,76,0.18)] flex items-center justify-between">
                 <h2 className="text-lg font-semibold">{editingItem ? 'Edit Experience' : 'New Experience'}</h2>
-                <button onClick={closeModal} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <button onClick={closeModal} className="p-2 hover:bg-[rgba(255,255,255,0.06)] rounded-lg">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -316,7 +317,7 @@ export default function ExperiencesPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe the experience..."
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-sm"
                     rows={3}
                   />
                 </div>
@@ -326,7 +327,7 @@ export default function ExperiencesPage() {
                     <select
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-sm"
                     >
                       {EXPERIENCE_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -375,7 +376,7 @@ export default function ExperiencesPage() {
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           formData.availableDays.includes(index)
                             ? 'bg-tertiary-500 text-white'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            : 'bg-[rgba(255,255,255,0.05)] text-slate-600 text-[#7a8fa6]'
                         }`}
                       >
                         {day}
@@ -416,7 +417,7 @@ export default function ExperiencesPage() {
                         </button>
                       </div>
                     ))}
-                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.04)]">
                       {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5 text-slate-400" />}
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                     </label>
@@ -458,7 +459,7 @@ export default function ExperiencesPage() {
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full"
+              className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 max-w-sm w-full"
             >
               <h3 className="text-lg font-semibold mb-2">Delete Experience?</h3>
               <p className="text-slate-500 mb-4">This action cannot be undone.</p>
@@ -479,3 +480,5 @@ export default function ExperiencesPage() {
     </div>
   );
 }
+
+export default function ExperiencesPage() { return <FeatureGate feature="experiences"><ExperiencesPageInner /></FeatureGate>; }

@@ -82,7 +82,7 @@ describe('Vendor Subscription API Integration Tests', () => {
       expect(data.data.tiers).toBeDefined();
       expect(data.data.tiers.basic).toBeDefined();
       expect(data.data.tiers.pro).toBeDefined();
-      expect(data.data.tiers.premium).toBeDefined();
+      expect(data.data.tiers.elite).toBeDefined(); // tiers are basic/pro/elite (renamed from premium)
     });
 
     it('should include subscription history when requested', async () => {
