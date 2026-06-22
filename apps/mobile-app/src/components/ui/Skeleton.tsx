@@ -45,13 +45,15 @@ export function Skeleton({
   return (
     <Animated.View
       style={[
+        // animated `opacity` + dynamic width/height — cast keeps RN's Animated
+        // style union happy without losing runtime correctness
         {
           width,
           height,
           borderRadius,
           backgroundColor: isDark ? colors.border : '#E2E8F0',
           opacity,
-        },
+        } as Animated.WithAnimatedObject<ViewStyle>,
         style,
       ]}
     />

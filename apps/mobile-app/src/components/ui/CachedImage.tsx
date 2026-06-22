@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, ImageProps } from 'expo-image';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle, ImageStyle } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { config } from '../../lib/config';
 
@@ -48,7 +48,7 @@ interface VendorImageProps {
   coverImage?: string | null;
   businessName: string;
   size?: number;
-  style?: ViewStyle;
+  style?: ImageStyle;
 }
 
 export function VendorImage({

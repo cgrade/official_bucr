@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authApi, tokenStorage } from '../lib/api';
+import { loadDisplayCurrency } from '../lib/currency';
 
 interface User {
   id: string;
@@ -47,6 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
           isLoading: false,
         });
+        loadDisplayCurrency(response.data.user?.country); // fire-and-forget
       } else {
         throw new Error(response.error || 'Login failed');
       }
@@ -70,6 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
           isLoading: false,
         });
+        loadDisplayCurrency(response.data.user?.country); // fire-and-forget
       } else {
         throw new Error(response.error || 'Registration failed');
       }
@@ -107,6 +110,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
           isLoading: false,
         });
+        loadDisplayCurrency(userData?.country); // fire-and-forget
+
       } else {
         await tokenStorage.clearTokens();
         set({ isLoading: false, isAuthenticated: false });

@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         email: true,
         name: true,
         phone: true,
+        country: true,
         avatar: true,
         creditsBalance: true,
         dietaryRestrictions: true,

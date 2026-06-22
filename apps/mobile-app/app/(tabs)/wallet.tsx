@@ -19,6 +19,7 @@ import { SlideMenu } from '../../src/components/SlideMenu';
 import { GradientButton } from '../../src/components/ui';
 
 import { creditsApi, authApi, giftsApi } from '../../src/lib/api';
+import { formatMoney } from '../../src/lib/currency';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { format } from 'date-fns';
 
@@ -165,7 +166,7 @@ export default function WalletScreen() {
               <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>Bucr Credits</Text>
             </View>
             <Text style={[styles.balanceAmount, { color: colors.text }]}>{balance} credits</Text>
-            <Text style={[styles.balanceValue, { color: colors.tertiary }]}>₦{balanceValue.toLocaleString()} value</Text>
+            <Text style={[styles.balanceValue, { color: colors.tertiary }]}>{formatMoney(balanceValue)} value</Text>
 
             {expiringIn30Days > 0 && (
               <View style={[styles.expiryWarning, { backgroundColor: colors.warningLight }]}>
@@ -232,7 +233,7 @@ export default function WalletScreen() {
           <Text style={[styles.infoTitle, { color: colors.text }]}>How credits work</Text>
           <View style={styles.infoItem}>
             <Text style={[styles.infoBullet, { color: colors.primary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>1 credit = ₦{CREDIT_VALUE_NGN} value</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>1 credit = {formatMoney(CREDIT_VALUE_NGN)} value</Text>
           </View>
           <View style={styles.infoItem}>
             <Text style={[styles.infoBullet, { color: colors.primary }]}>•</Text>
@@ -262,7 +263,7 @@ export default function WalletScreen() {
                     {gift.creditAmount} credits
                   </Text>
                   <Text style={[styles.giftMeta, { color: colors.textMuted }]}>
-                    ₦{(gift.creditAmount * CREDIT_VALUE_NGN).toLocaleString()} value
+                    {formatMoney(gift.creditAmount * CREDIT_VALUE_NGN)} value
                   </Text>
                   {gift.message && (
                     <Text style={[styles.giftMessage, { color: colors.textSecondary }]} numberOfLines={1}>

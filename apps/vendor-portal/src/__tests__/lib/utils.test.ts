@@ -118,7 +118,7 @@ describe('Utils', () => {
     });
 
     it('should handle large credit amounts', () => {
-      expect(creditsToNaira(1000)).toBe(100000);
+      expect(creditsToNaira(1000)).toBe(10000); // 1 credit = ₦10
     });
   });
 });

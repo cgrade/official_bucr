@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Check, CreditCard } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { creditsApi } from '../../src/lib/api';
+import { formatMoney } from '../../src/lib/currency';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { useTheme } from '../../src/contexts/ThemeContext';
 
@@ -86,7 +87,7 @@ export default function BuyCreditsScreen() {
           <CreditCard size={24} color={colors.tertiary} />
           <View style={styles.infoText}>
             <Text style={[styles.infoTitle, { color: colors.text }]}>Bucr Credits</Text>
-            <Text style={[styles.infoSubtitle, { color: colors.textSecondary }]}>1 credit = ₦{CREDIT_VALUE_NGN} value • ₦{CREDIT_PURCHASE_PRICE_NGN.toFixed(2)} to buy</Text>
+            <Text style={[styles.infoSubtitle, { color: colors.textSecondary }]}>1 credit = {formatMoney(CREDIT_VALUE_NGN)} value • ₦{CREDIT_PURCHASE_PRICE_NGN.toFixed(2)} to buy</Text>
           </View>
         </View>
 
@@ -110,7 +111,7 @@ export default function BuyCreditsScreen() {
               )}
               <Text style={[styles.packageCredits, { color: colors.text }]}>{pkg.credits} credits</Text>
               <Text style={[styles.packagePrice, { color: colors.tertiary }]}>₦{pkg.price.toLocaleString()}</Text>
-              <Text style={[styles.packageValue, { color: colors.textMuted }]}>₦{(pkg.credits * CREDIT_VALUE_NGN).toLocaleString()} value</Text>
+              <Text style={[styles.packageValue, { color: colors.textMuted }]}>{formatMoney(pkg.credits * CREDIT_VALUE_NGN)} value</Text>
               {selectedPackage === pkg.credits && (
                 <View style={[styles.checkMark, { backgroundColor: colors.tertiary }]}>
                   <Check size={16} color={colors.primaryDark} />

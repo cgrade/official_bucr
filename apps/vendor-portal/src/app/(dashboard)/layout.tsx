@@ -7,6 +7,7 @@ import { Header } from '@/components/layout/header';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { cn } from '@/lib/utils';
+import { loadDisplayCurrency } from '@/lib/currency';
 import Cookies from 'js-cookie';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isAuthenticated, fetchProfile } = useAuthStore();
   const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Gate render until the display currency is resolved, so every page paints
+  // money in the vendor's local currency from the first frame.
+  const [currencyReady, setCurrencyReady] = useState(false);
 
   useRealtimeSync({ enabled: isAuthenticated });
 
@@ -22,11 +26,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!token) { router.push('/login'); return; }
     // Always refresh on mount — ensures subscription tier, verification status, etc.
     // reflect the latest backend state, not a stale persisted value.
-    fetchProfile().catch(() => router.push('/login'));
+    fetchProfile()
+      .then(async () => {
+        const vendor = useAuthStore.getState().vendor as any;
+        const country = vendor?.branches?.[0]?.country || vendor?.country || 'Nigeria';
+        await loadDisplayCurrency(country);
+      })
+      .catch(() => router.push('/login'))
+      .finally(() => setCurrencyReady(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !currencyReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f2547]">
         <div className="flex flex-col items-center gap-4">

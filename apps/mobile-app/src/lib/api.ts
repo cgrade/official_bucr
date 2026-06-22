@@ -163,6 +163,18 @@ export const authApi = {
   },
 };
 
+// Config API (currency + phone formats, live FX)
+export const configApi = {
+  getCurrency: async () => {
+    const response = await api.get<ApiResponse<{
+      base: string;
+      creditValueNGN: number;
+      countries: Record<string, { currency: string; symbol: string; perNGN: number; creditValueLocal: number }>;
+    }>>('/config/currency');
+    return response.data;
+  },
+};
+
 // Vendors API
 export const vendorsApi = {
   getAll: async (params?: {

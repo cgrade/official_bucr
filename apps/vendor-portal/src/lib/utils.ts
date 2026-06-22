@@ -5,12 +5,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// ── Display currency ──────────────────────────────────────────────────────────
+// All stored money is NGN (the credit base is ₦10). For Ghana/Kenya vendors we
+// DISPLAY the local-currency equivalent using a live FX rate (set once at login
+// by the dashboard's CurrencyGate). This is presentation only — nothing settles
+// in these currencies.
+let displayCurrency = { code: 'NGN', symbol: '₦', perNGN: 1 };
+
+export function setDisplayCurrency(c: { code: string; symbol: string; perNGN: number }) {
+  displayCurrency = c;
+}
+export function getDisplayCurrency() {
+  return displayCurrency;
+}
+
+/** Formats an NGN amount into the active display currency (converted via FX). */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  }).format(amount);
+  const { symbol, perNGN } = displayCurrency;
+  const local = (amount || 0) * perNGN;
+  return `${symbol}${local.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 export function formatDate(date: Date | string | null | undefined): string {

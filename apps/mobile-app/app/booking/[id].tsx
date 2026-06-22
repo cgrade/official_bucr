@@ -25,6 +25,7 @@ import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import QRCode from 'react-native-qrcode-svg';
 import { reservationsApi, reviewsApi } from '../../src/lib/api';
+import { formatMoney } from '../../src/lib/currency';
 import { format } from 'date-fns';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { config, NOSHOW_RETURN_PCT, SHOWUP_BONUS_PCT, DEPOSIT_DEFAULT } from '../../src/lib/config';
@@ -255,8 +256,8 @@ export default function BookingDetailScreen() {
             <Text style={[styles.depositValue, { color: colors.tertiary }]}>{deposit} credits</Text>
           </View>
           <View style={styles.depositRow}>
-            <Text style={[styles.depositLabel, { color: colors.textMuted }]}>₦ equivalent</Text>
-            <Text style={[styles.depositValue, { color: colors.text }]}>₦{(deposit * CREDIT_VALUE_NGN).toLocaleString()}</Text>
+            <Text style={[styles.depositLabel, { color: colors.textMuted }]}>Cash value</Text>
+            <Text style={[styles.depositValue, { color: colors.text }]}>{formatMoney(deposit * CREDIT_VALUE_NGN)}</Text>
           </View>
 
           {/* Policy pills */}

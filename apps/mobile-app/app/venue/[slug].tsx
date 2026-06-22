@@ -43,6 +43,7 @@ import { useAuthStore } from '../../src/stores/auth.store';
 import { useAuth } from '../../src/providers/AuthProvider';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { config, getReservationDeposit } from '../../src/lib/config';
+import { formatMoney } from '../../src/lib/currency';
 
 const { width } = Dimensions.get('window');
 const IMAGE_HEIGHT = width * 0.7;
@@ -668,7 +669,7 @@ export default function VenueDetailScreen() {
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Reservation Deposit</Text>
                     <View style={[styles.depositCard, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
                       <View>
-                        <Text style={[styles.depositAmount, { color: colors.text }]}>₦{(deposit * 10).toLocaleString()}</Text>
+                        <Text style={[styles.depositAmount, { color: colors.text }]}>{formatMoney(deposit * 10)}</Text>
                         <Text style={[styles.depositSub, { color: colors.textMuted }]}>{deposit.toLocaleString()} credits · flat, any party size</Text>
                       </View>
                     </View>
