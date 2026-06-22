@@ -27,23 +27,68 @@ const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+// Per-country phone format + currency. The country chosen on step 1 drives the
+// phone validation/placeholder and the currency shown for deposits.
+// NOTE: creditValue for Ghana/Kenya is provisional (set at market launch with
+// real FX); Nigeria is the locked ₦10/credit from the economics config.
+const COUNTRY_CONFIG: Record<string, {
+  dialCode: string;
+  phonePlaceholder: string;
+  phoneExample: string;
+  phoneRegex: RegExp;
+  currencySymbol: string;
+  currencyCode: string;
+  creditValue: number; // local-currency units per 1 credit
+}> = {
+  Nigeria: {
+    dialCode: '+234',
+    phonePlaceholder: '0801 234 5678',
+    phoneExample: '08012345678 or +2348012345678',
+    phoneRegex: /^(\+234|0)[789][01]\d{8}$/,
+    currencySymbol: '₦', currencyCode: 'NGN', creditValue: 10,
+  },
+  Ghana: {
+    dialCode: '+233',
+    phonePlaceholder: '024 123 4567',
+    phoneExample: '0241234567 or +233241234567',
+    phoneRegex: /^(\+233|0)[235]\d{8}$/,
+    currencySymbol: 'GH₵', currencyCode: 'GHS', creditValue: 0.1,
+  },
+  Kenya: {
+    dialCode: '+254',
+    phonePlaceholder: '0712 345 678',
+    phoneExample: '0712345678 or +254712345678',
+    phoneRegex: /^(\+254|0)[17]\d{8}$/,
+    currencySymbol: 'KSh', currencyCode: 'KES', creditValue: 1,
+  },
+};
+const COUNTRY_NAMES = Object.keys(COUNTRY_CONFIG);
+const countryCfg = (c?: string) => COUNTRY_CONFIG[c || 'Nigeria'] ?? COUNTRY_CONFIG.Nigeria;
+const formatDeposit = (credits: number, country?: string) => {
+  const cfg = countryCfg(country);
+  return `${cfg.currencySymbol}${(credits * cfg.creditValue).toLocaleString()}`;
+};
+
 // Step 1: Owner Details
 const ownerSchema = z.object({
+  country: z.string().min(2, 'Please select your country'),
   ownerName: z.string().min(2, 'Name must be at least 2 characters'),
   ownerEmail: z.string().email('Please enter a valid email'),
-  ownerPhone: z.string().regex(
-    /^(\+234|0)[789][01]\d{8}$/,
-    'Enter valid Nigerian phone (e.g., 08012345678 or +2348012345678)'
-  ),
+  ownerPhone: z.string().min(1, 'Phone number is required'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Must contain at least one number'),
   confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
+}).superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Passwords don't match", path: ['confirmPassword'] });
+  }
+  const cfg = countryCfg(data.country);
+  if (!cfg.phoneRegex.test(data.ownerPhone)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Enter a valid ${data.country} phone (e.g., ${cfg.phoneExample})`, path: ['ownerPhone'] });
+  }
 });
 
 const BUSINESS_TYPES = [
@@ -59,14 +104,15 @@ const BUSINESS_TYPES = [
   { value: 'other',      label: 'Other' },
 ];
 
-// Venue type sets the default booking DEPOSIT (the per-cover success fee is a flat
-// ₦1,500 across all venue types). You can override the deposit later in Settings.
-// Values match the VenueType enum in the database exactly.
+// Venue type sets the default booking DEPOSIT (in credits; the per-cover success
+// fee is flat across all venue types). You can override the deposit later in
+// Settings. Values match the VenueType enum in the database exactly. The deposit
+// is shown in the country's currency (see formatDeposit).
 const VENUE_TYPES = [
-  { value: 'fine_dining',    label: 'Fine Dining',    description: 'Premium tasting menus, high-end service · ₦20,000 deposit/booking' },
-  { value: 'upscale_casual', label: 'Upscale Casual', description: 'Quality dining without strict formality · ₦15,000 deposit/booking' },
-  { value: 'lounge',         label: 'Lounge',         description: 'Relaxed atmosphere, drinks & light bites · ₦10,000 deposit/booking' },
-  { value: 'casual',         label: 'Casual Dining',  description: 'Everyday dining, accessible pricing · ₦10,000 deposit/booking' },
+  { value: 'fine_dining',    label: 'Fine Dining',    blurb: 'Premium tasting menus, high-end service', depositCredits: 2000 },
+  { value: 'upscale_casual', label: 'Upscale Casual', blurb: 'Quality dining without strict formality',  depositCredits: 1500 },
+  { value: 'lounge',         label: 'Lounge',         blurb: 'Relaxed atmosphere, drinks & light bites',  depositCredits: 1000 },
+  { value: 'casual',         label: 'Casual Dining',  blurb: 'Everyday dining, accessible pricing',       depositCredits: 1000 },
 ];
 
 // Step 2: Business Details
@@ -78,14 +124,13 @@ const businessSchema = z.object({
   cuisineTypes: z.string().optional(),
 });
 
-// Step 3: Location Details
+// Step 3: Location Details (country comes from step 1)
 const locationSchema = z.object({
   address: z.string().min(5, 'Address is required'),
-  country: z.string().min(2, 'Country is required'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
   branchPhone: z.string()
-    .regex(/^(\+234|0)[789][01]\d{8}$/, 'Enter valid Nigerian phone')
+    .regex(/^[+0-9][\d\s-]{7,16}$/, 'Enter a valid phone number')
     .optional()
     .or(z.literal('')),
   branchEmail: z.string().email('Enter valid email').optional().or(z.literal('')),
@@ -132,10 +177,14 @@ export default function RegisterPage() {
     { type: 'owner_id', file: null, preview: null, uploading: false, uploaded: false, error: null },
   ]);
 
+  // Country drives the phone format + currency; chosen on step 1, used everywhere.
+  const [selectedCountry, setSelectedCountry] = useState<string>(ownerData?.country || 'Nigeria');
+  const cfg = countryCfg(selectedCountry);
+
   // Form hooks for each step
   const ownerForm = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
-    defaultValues: ownerData || {},
+    defaultValues: ownerData || { country: 'Nigeria' },
   });
 
   const businessForm = useForm<BusinessFormData>({
@@ -145,7 +194,7 @@ export default function RegisterPage() {
 
   const locationForm = useForm<LocationFormData>({
     resolver: zodResolver(locationSchema),
-    defaultValues: locationData || { country: 'Nigeria' },
+    defaultValues: locationData || {},
   });
 
   const handleOwnerSubmit = (data: OwnerFormData) => {
@@ -239,7 +288,7 @@ export default function RegisterPage() {
         password: ownerData.password,
         businessName: businessData.businessName,
         address: locationData.address,
-        country: locationData.country || 'Nigeria',
+        country: ownerData.country || selectedCountry || 'Nigeria',
         city: locationData.city,
         state: locationData.state,
       };
@@ -538,6 +587,29 @@ export default function RegisterPage() {
 
                 <form onSubmit={ownerForm.handleSubmit(handleOwnerSubmit)} className="space-y-5">
                   <div>
+                    <label className="block text-sm font-medium text-[#7a8fa6] mb-2">
+                      Country *
+                    </label>
+                    <select
+                      {...ownerForm.register('country')}
+                      value={selectedCountry}
+                      onChange={(e) => {
+                        const c = e.target.value;
+                        setSelectedCountry(c);
+                        ownerForm.setValue('country', c, { shouldValidate: true });
+                        // re-validate the phone against the new country's format
+                        if (ownerForm.getValues('ownerPhone')) ownerForm.trigger('ownerPhone');
+                      }}
+                      className="w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[#f5f0e8] focus:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.2)]"
+                    >
+                      {COUNTRY_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <p className="mt-1.5 text-[11px] text-[#7a8fa6]">
+                      Sets your phone format and currency ({cfg.currencySymbol} {cfg.currencyCode}).
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Full Name *
                     </label>
@@ -564,11 +636,19 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Phone Number *
                     </label>
-                    <Input
-                      placeholder="+234 800 000 0000"
-                      error={ownerForm.formState.errors.ownerPhone?.message}
-                      {...ownerForm.register('ownerPhone')}
-                    />
+                    <div className="flex gap-2">
+                      <span className="flex items-center px-3 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.05)] text-sm font-medium text-[#c9a84c] whitespace-nowrap">
+                        {cfg.dialCode}
+                      </span>
+                      <div className="flex-1">
+                        <Input
+                          type="tel"
+                          placeholder={cfg.phonePlaceholder}
+                          error={ownerForm.formState.errors.ownerPhone?.message}
+                          {...ownerForm.register('ownerPhone')}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -682,7 +762,9 @@ export default function RegisterPage() {
                             <input type="radio" value={v.value} {...businessForm.register('venueType')} className="mt-1 accent-[#c9a84c]" />
                             <div>
                               <p className={`text-[13px] font-semibold ${selected ? 'text-[#c9a84c]' : 'text-[#f5f0e8]'}`}>{v.label}</p>
-                              <p className="text-[11px] text-[#7a8fa6]">{v.description}</p>
+                              <p className="text-[11px] text-[#7a8fa6]">
+                                {v.blurb} · {formatDeposit(v.depositCredits, selectedCountry)} deposit/booking
+                              </p>
                             </div>
                           </label>
                         );
@@ -771,16 +853,15 @@ export default function RegisterPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-[#7a8fa6] mb-2">
-                      Country *
+                      Country
                     </label>
-                    <select
-                      {...locationForm.register('country')}
-                      className="w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[#f5f0e8] focus:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.2)]"
-                    >
-                      <option value="Nigeria">Nigeria</option>
-                      <option value="Ghana">Ghana</option>
-                      <option value="Kenya">Kenya</option>
-                    </select>
+                    <div className="flex items-center justify-between rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                      <span className="text-sm text-[#f5f0e8]">{selectedCountry}</span>
+                      <button type="button" onClick={() => setCurrentStep(1)}
+                        className="text-[11px] font-medium text-[#c9a84c] hover:underline">
+                        Change
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -810,10 +891,19 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
                       Branch Phone (optional)
                     </label>
-                    <Input
-                      placeholder="+234 800 000 0000"
-                      {...locationForm.register('branchPhone')}
-                    />
+                    <div className="flex gap-2">
+                      <span className="flex items-center px-3 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.05)] text-sm font-medium text-[#c9a84c] whitespace-nowrap">
+                        {cfg.dialCode}
+                      </span>
+                      <div className="flex-1">
+                        <Input
+                          type="tel"
+                          placeholder={cfg.phonePlaceholder}
+                          error={locationForm.formState.errors.branchPhone?.message}
+                          {...locationForm.register('branchPhone')}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div>

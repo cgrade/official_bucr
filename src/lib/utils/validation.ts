@@ -2,9 +2,14 @@ import { z } from 'zod';
 
 export const emailSchema = z.string().email('Invalid email address');
 
+// Accepts the launch markets' mobile formats (superset — every valid Nigerian
+// number still passes). NG: +234/0 7-9…, GH: +233/0 2/3/5…, KE: +254/0 1/7…
 export const phoneSchema = z
   .string()
-  .regex(/^(\+234|0)[789][01]\d{8}$/, 'Invalid Nigerian phone number');
+  .regex(
+    /^(?:\+234|0)[789][01]\d{8}$|^(?:\+233|0)[235]\d{8}$|^(?:\+254|0)[17]\d{8}$/,
+    'Invalid phone number',
+  );
 
 export const passwordSchema = z
   .string()
