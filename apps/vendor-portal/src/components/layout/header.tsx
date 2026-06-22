@@ -77,7 +77,8 @@ export function Header({ onMenuClick, isSidebarOpen }: HeaderProps) {
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link href="/dashboard" className="flex items-center gap-2">
+          {/* Logo shows on mobile only — on desktop the sidebar carries the brand (avoids a duplicated, stacked logo) */}
+          <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
             <BucrWordmark height={26} />
             <span className="hidden sm:inline-block text-[8px] font-sans font-semibold tracking-[0.18em] uppercase text-[#7a8fa6] border border-[rgba(201,168,76,0.25)] px-1.5 py-0.5 rounded">
               Vendor

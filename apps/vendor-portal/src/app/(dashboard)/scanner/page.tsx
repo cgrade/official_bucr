@@ -293,7 +293,7 @@ function ScannerPage() {
               </CardHeader>
               <CardContent className="p-6">
                 {/* Guest Info */}
-                <div className="mb-6 rounded-lg bg-gray-50 p-4">
+                <div className="mb-6 rounded-lg bg-[rgba(255,255,255,0.04)] p-4">
                   <div className="flex items-start gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(201,168,76,0.15)] text-xl font-semibold text-[#c9a84c]">
                       {(verifiedReservation.user.fullName || verifiedReservation.user.name || '?').charAt(0)}
@@ -302,8 +302,8 @@ function ScannerPage() {
                       <h3 className="text-lg font-semibold text-gray-900">
                         {verifiedReservation.user.fullName || verifiedReservation.user.name || 'Guest'}
                       </h3>
-                      <p className="text-sm text-gray-500">{verifiedReservation.user.email}</p>
-                      <p className="text-sm text-gray-500">{verifiedReservation.user.phone}</p>
+                      <p className="text-sm text-[#7a8fa6]">{verifiedReservation.user.email}</p>
+                      <p className="text-sm text-[#7a8fa6]">{verifiedReservation.user.phone}</p>
                       {verifiedReservation.guestProfile && (
                         <Badge variant="default" className="mt-2">
                           {(verifiedReservation.guestProfile.visitCount ??
@@ -327,30 +327,30 @@ function ScannerPage() {
                 {/* Reservation Details */}
                 <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-5 w-5 text-[#7a8fa6]" />
                     <div>
-                      <p className="text-xs text-gray-500">Date</p>
+                      <p className="text-xs text-[#7a8fa6]">Date</p>
                       <p className="text-sm font-medium">{formatDate(verifiedReservation.reservationDate)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-gray-400" />
+                    <Clock className="h-5 w-5 text-[#7a8fa6]" />
                     <div>
-                      <p className="text-xs text-gray-500">Time</p>
+                      <p className="text-xs text-[#7a8fa6]">Time</p>
                       <p className="text-sm font-medium">{formatTime(verifiedReservation.reservationTime)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-gray-400" />
+                    <Users className="h-5 w-5 text-[#7a8fa6]" />
                     <div>
-                      <p className="text-xs text-gray-500">Party Size</p>
+                      <p className="text-xs text-[#7a8fa6]">Party Size</p>
                       <p className="text-sm font-medium">{verifiedReservation.partySize} guests</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-gray-400" />
+                    <CreditCard className="h-5 w-5 text-[#7a8fa6]" />
                     <div>
-                      <p className="text-xs text-gray-500">Deposit</p>
+                      <p className="text-xs text-[#7a8fa6]">Deposit</p>
                       <p className="text-sm font-medium">
                         {verifiedReservation.creditsDeposited} credits
                       </p>
@@ -418,7 +418,7 @@ function ScannerPage() {
                   <XCircle className="h-8 w-8 text-error-500" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-gray-900">Verification Failed</h3>
-                <p className="mb-6 text-gray-500">{errorMessage || 'Unable to verify reservation'}</p>
+                <p className="mb-6 text-[#7a8fa6]">{errorMessage || 'Unable to verify reservation'}</p>
                 <Button onClick={handleReset}>Try Again</Button>
               </CardContent>
             </Card>
@@ -430,7 +430,7 @@ function ScannerPage() {
               <CardContent className="flex flex-col items-center p-8 text-center">
                 <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
                 <h3 className="text-lg font-semibold text-gray-900">Verifying...</h3>
-                <p className="text-gray-500">Please wait while we verify the reservation</p>
+                <p className="text-[#7a8fa6]">Please wait while we verify the reservation</p>
               </CardContent>
             </Card>
           )}
@@ -468,15 +468,15 @@ function ScannerPage() {
                       <div className="flex h-full flex-col items-center justify-center text-white">
                         {cameraError ? (
                           <>
-                            <CameraOff className="mb-4 h-12 w-12 text-gray-400" />
-                            <p className="mb-4 px-4 text-center text-sm text-gray-400">
+                            <CameraOff className="mb-4 h-12 w-12 text-[#7a8fa6]" />
+                            <p className="mb-4 px-4 text-center text-sm text-[#7a8fa6]">
                               {cameraError}
                             </p>
                           </>
                         ) : (
                           <>
-                            <Camera className="mb-4 h-12 w-12 text-gray-400" />
-                            <p className="mb-4 text-sm text-gray-400">Camera not active</p>
+                            <Camera className="mb-4 h-12 w-12 text-[#7a8fa6]" />
+                            <p className="mb-4 text-sm text-[#7a8fa6]">Camera not active</p>
                           </>
                         )}
                       </div>
@@ -506,7 +506,7 @@ function ScannerPage() {
                 <CardContent className="space-y-6">
                   {/* PIN Entry */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                    <label className="mb-2 block text-sm font-medium text-[#7a8fa6]">
                       Enter 4-Digit PIN
                     </label>
                     <div className="flex justify-center gap-3">
@@ -520,7 +520,7 @@ function ScannerPage() {
                           value={digit}
                           onChange={(e) => handlePinChange(index, e.target.value.replace(/\D/g, ''))}
                           onKeyDown={(e) => handlePinKeyDown(index, e)}
-                          className="h-14 w-14 rounded-lg border-2 border-gray-300 text-center text-2xl font-bold focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="h-14 w-14 rounded-lg border-2 border-[rgba(201,168,76,0.18)] text-center text-2xl font-bold focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
                       ))}
                     </div>
@@ -535,21 +535,21 @@ function ScannerPage() {
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300" />
+                      <div className="w-full border-t border-[rgba(201,168,76,0.18)]" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="bg-white px-2 text-gray-500">OR</span>
+                      <span className="bg-[#0f2547] px-3 text-[#7a8fa6]">OR</span>
                     </div>
                   </div>
 
                   {/* Reference Entry */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                    <label className="mb-2 block text-sm font-medium text-[#7a8fa6]">
                       Enter Reference
                     </label>
                     <div className="flex gap-2">
-                      <div className="flex items-center rounded-lg border border-gray-300 bg-gray-50 px-3">
-                        <span className="font-mono text-gray-500">BKR-</span>
+                      <div className="flex items-center rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.04)] px-3">
+                        <span className="font-mono text-[#7a8fa6]">BKR-</span>
                       </div>
                       <Input
                         placeholder="ABC123"

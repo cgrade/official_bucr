@@ -20,8 +20,7 @@ import {
   Sparkles,
   DollarSign,
   ArrowUpRight,
-  Bell,
-} from 'lucide-react';
+  } from 'lucide-react';
 import Link from 'next/link';
 import { VendorOnboarding } from '@/components/VendorOnboarding';
 
@@ -101,15 +100,6 @@ export default function DashboardPage() {
             <p className="text-sm text-[#7a8fa6]">
               {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.05)] text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                3
-              </span>
-            </button>
           </div>
         </div>
       </header>

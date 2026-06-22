@@ -9,7 +9,6 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { toast } from 'sonner';
 import { 
   Eye, EyeOff, ArrowRight, ArrowLeft, Check, Upload, 
@@ -17,7 +16,7 @@ import {
   CheckCircle, AlertCircle, XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BucrLogo } from '@/components/ui/BucrLogo';
+import { BucrWordmark } from '@/components/ui/BucrWordmark';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -405,7 +404,7 @@ export default function RegisterPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-3"
           >
-            <BucrLogo width={160} height={40} />
+            <BucrWordmark height={34} />
             <span className="text-sm text-[#7a8fa6] ml-2">Vendor Portal</span>
           </motion.div>
           
@@ -468,10 +467,6 @@ export default function RegisterPage() {
 
       {/* Right Side - Form */}
       <div className="flex w-full lg:w-3/5 flex-col items-center justify-center p-6 md:p-8 bg-[rgba(255,255,255,0.04)] overflow-y-auto">
-        <div className="absolute top-6 right-6">
-          <ThemeToggle />
-        </div>
-
         <div className="w-full max-w-xl">
           {/* Mobile Progress */}
           <div className="mb-6 lg:hidden">
