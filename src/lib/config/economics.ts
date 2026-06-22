@@ -35,6 +35,12 @@ export const ECONOMICS = {
   /** Fallback flat deposit when a venue type is not listed above. */
   DEPOSIT_DEFAULT: numEnv('DEPOSIT_DEFAULT', 1000), // ₦10,000
 
+  // ── Experiences (premium ticketed offerings, vendor-priced) ───────────────
+  /** Minimum credits a vendor may charge for an Experience (3,000 = ₦30,000). */
+  EXPERIENCE_MIN_CREDITS: numEnv('EXPERIENCE_MIN_CREDITS', 3000),
+  /** Upper guard so a typo can't create a ₦10m experience (50,000 = ₦500,000). */
+  EXPERIENCE_MAX_CREDITS: numEnv('EXPERIENCE_MAX_CREDITS', 50000),
+
   // ── Show-up bonus ─────────────────────────────────────────────────────────
   /** Fraction of deposit returned as bonus on check-in (3%). */
   SHOWUP_BONUS_PCT: numEnv('SHOWUP_BONUS_PCT', 0.03),

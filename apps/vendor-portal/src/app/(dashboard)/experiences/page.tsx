@@ -40,7 +40,7 @@ const initialFormState = {
   title: '',
   description: '',
   type: 'tasting_menu',
-  creditsRequired: 100,
+  creditsRequired: 3000,
   capacity: 10,
   duration: 120,
   availableDays: [] as number[],
@@ -112,7 +112,7 @@ function ExperiencesPageInner() {
       title: item.title || '',
       description: item.description || '',
       type: item.type || 'tasting_menu',
-      creditsRequired: item.creditsRequired || 100,
+      creditsRequired: item.creditsRequired || 3000,
       capacity: item.capacity || 10,
       duration: item.duration || 120,
       availableDays: item.availableDays || [],
@@ -340,9 +340,18 @@ function ExperiencesPageInner() {
                       type="number"
                       value={formData.creditsRequired}
                       onChange={(e) => setFormData({ ...formData, creditsRequired: Number(e.target.value) })}
-                      min={1}
+                      min={3000}
+                      step={500}
                       required
                     />
+                    <p className="mt-1 text-xs text-[#7a8fa6]">
+                      Min 3,000 credits (₦30,000).{' '}
+                      {formData.creditsRequired >= 3000 && (
+                        <span className="text-[#c9a84c] font-medium">
+                          = ₦{(Number(formData.creditsRequired) * 10).toLocaleString()} per guest
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

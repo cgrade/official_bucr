@@ -109,8 +109,8 @@ describe('Utils', () => {
   });
 
   describe('creditsToNaira', () => {
-    it('should convert credits to naira (1 credit = ₦100)', () => {
-      expect(creditsToNaira(10)).toBe(1000);
+    it('should convert credits to naira (1 credit = ₦10)', () => {
+      expect(creditsToNaira(10)).toBe(100);
     });
 
     it('should handle zero credits', () => {

@@ -9,12 +9,15 @@ import {
   validationErrorResponse,
   forbiddenResponse,
 } from '@/lib/utils/api-response';
+import { ECONOMICS } from '@/lib/config/economics';
 
 const createExperienceSchema = z.object({
   title: z.string().min(2),
   description: z.string().optional(),
   type: z.string(),
-  creditsRequired: z.number().int().positive(),
+  creditsRequired: z.number().int()
+    .min(ECONOMICS.EXPERIENCE_MIN_CREDITS, `Experiences must be at least ${ECONOMICS.EXPERIENCE_MIN_CREDITS} credits (₦${(ECONOMICS.EXPERIENCE_MIN_CREDITS * ECONOMICS.CREDIT_VALUE_NGN).toLocaleString()})`)
+    .max(ECONOMICS.EXPERIENCE_MAX_CREDITS, `Experiences cannot exceed ${ECONOMICS.EXPERIENCE_MAX_CREDITS} credits`),
   capacity: z.number().int().positive().optional(),
   duration: z.number().int().positive().optional(),
   availableDays: z.array(z.number().int().min(0).max(6)).optional(),

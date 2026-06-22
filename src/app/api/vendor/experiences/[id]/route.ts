@@ -10,12 +10,16 @@ import {
   notFoundResponse,
   validationErrorResponse,
 } from '@/lib/utils/api-response';
+import { ECONOMICS } from '@/lib/config/economics';
 
 const updateExperienceSchema = z.object({
   title: z.string().min(2).optional(),
   description: z.string().optional(),
   type: z.string().optional(),
-  creditsRequired: z.number().int().positive().optional(),
+  creditsRequired: z.number().int()
+    .min(ECONOMICS.EXPERIENCE_MIN_CREDITS, `Experiences must be at least ${ECONOMICS.EXPERIENCE_MIN_CREDITS} credits (₦${(ECONOMICS.EXPERIENCE_MIN_CREDITS * ECONOMICS.CREDIT_VALUE_NGN).toLocaleString()})`)
+    .max(ECONOMICS.EXPERIENCE_MAX_CREDITS, `Experiences cannot exceed ${ECONOMICS.EXPERIENCE_MAX_CREDITS} credits`)
+    .optional(),
   capacity: z.number().int().positive().optional(),
   duration: z.number().int().positive().optional(),
   availableDays: z.array(z.number().int().min(0).max(6)).optional(),

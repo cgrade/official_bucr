@@ -5,6 +5,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/utils/api-response';
 import { getSubscriptionTiers } from '@/services/subscription.service';
+import { ECONOMICS } from '@/lib/config/economics';
 
 // GET /api/vendor/subscription/plans - Get available subscription plans
 export async function GET(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       {
         id: 'basic',
         name: 'Basic',
-        price: 75000,
+        price: ECONOMICS.SUBSCRIPTION.basic, // free
         features: [
           'Restaurant listing',
           'Reservation management',
@@ -35,25 +36,27 @@ export async function GET(request: NextRequest) {
       {
         id: 'pro',
         name: 'Pro',
-        price: 145000,
+        price: ECONOMICS.SUBSCRIPTION.pro, // ₦30,000/mo
         features: [
           'Everything in Basic',
           'Advanced analytics',
           'Custom profile',
           'Priority support',
           'Guest CRM',
+          '50% off per-cover fees',
         ],
       },
       {
-        id: 'premium',
-        name: 'Premium',
-        price: 250000,
+        id: 'elite',
+        name: 'Elite',
+        price: ECONOMICS.SUBSCRIPTION.elite, // ₦85,000/mo
         features: [
           'Everything in Pro',
           'Marketing tools',
           'Featured spots',
           'Advanced CRM',
           'Dedicated account manager',
+          'Per-cover fees waived',
         ],
       },
     ]);

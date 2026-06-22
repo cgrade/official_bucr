@@ -282,7 +282,7 @@ async function main() {
         title: 'Chef\'s Table Experience',
         description: 'An exclusive 7-course tasting menu prepared tableside by our head chef',
         type: 'tasting_menu',
-        creditsRequired: 300,
+        creditsRequired: 5000, // ₦50,000 — premium chef's table
         capacity: 8,
         duration: 180,
         availableDays: [4, 5, 6], // Thu, Fri, Sat

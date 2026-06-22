@@ -13,6 +13,7 @@ import {
   initializePayment,
   verifyPayment,
   calculateAmountForCredits,
+  calculateCreditsFromAmount,
 } from '@/services/payment.service';
 
 // Schema for initializing a credit purchase payment
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
       }
 
       const metadata = payment.metadata as { credits?: number } | null;
-      const credits = metadata?.credits || Math.floor(payment.amountKobo / (120 * 100)); // fallback calculation
+      const credits = metadata?.credits || calculateCreditsFromAmount(payment.amountKobo);
 
       // Create credit transaction
       const transaction = await purchaseCredits({

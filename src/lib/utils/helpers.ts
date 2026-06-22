@@ -128,10 +128,11 @@ export function formatCurrency(amountKobo: number): string {
   return `₦${naira.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
 }
 
+// 1 credit = ₦10 (ECONOMICS.CREDIT_VALUE_NGN — locked).
 export function creditsToNaira(credits: number): number {
-  return credits * 100; // 1 credit = ₦100
+  return credits * 10;
 }
 
 export function nairaToCredits(naira: number): number {
-  return Math.floor(naira / 100);
+  return Math.floor(naira / 10);
 }

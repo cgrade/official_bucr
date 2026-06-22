@@ -6,6 +6,7 @@ import {
   errorResponse,
   unauthorizedResponse,
 } from '@/lib/utils/api-response';
+import { ECONOMICS } from '@/lib/config/economics';
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,8 +100,8 @@ export async function GET(request: NextRequest) {
       tierBreakdown[item.subscriptionTier] = item._count;
     });
 
-    // Calculate tier revenue (estimated monthly)
-    const tierPrices = { basic: 75000, pro: 145000, premium: 250000 };
+    // Calculate tier revenue (estimated monthly) — canonical prices from ECONOMICS
+    const tierPrices = { basic: ECONOMICS.SUBSCRIPTION.basic, pro: ECONOMICS.SUBSCRIPTION.pro, premium: ECONOMICS.SUBSCRIPTION.elite };
     const estimatedMonthlyRevenue =
       tierBreakdown.basic * tierPrices.basic +
       tierBreakdown.pro * tierPrices.pro +

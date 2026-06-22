@@ -14,6 +14,7 @@ import {
   initializePayment,
   verifyPayment,
   calculateAmountForCredits,
+  calculateCreditsFromAmount,
 } from '@/services/payment.service';
 
 const initPurchaseSchema = z.object({
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
 
       const metadata = payment.metadata as { credits?: number } | null;
-      const credits = metadata?.credits || Math.floor(payment.amountKobo / (100 * 100)); // ₦100 = 1 credit
+      const credits = metadata?.credits || calculateCreditsFromAmount(payment.amountKobo);
 
       // Create credit transaction
       const transaction = await purchaseVendorCredits({

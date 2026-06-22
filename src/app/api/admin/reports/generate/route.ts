@@ -6,6 +6,7 @@ import {
   errorResponse,
   unauthorizedResponse,
 } from '@/lib/utils/api-response';
+import { ECONOMICS } from '@/lib/config/economics';
 
 export async function POST(request: NextRequest) {
   try {
@@ -193,9 +194,9 @@ export async function POST(request: NextRequest) {
           }),
         ]);
 
-        // Estimate subscription revenue (simplified)
-        const subRevenue = subscriptions * 75000; // Basic plan average
-        const creditRevenue = (creditPurchases._sum.amount || 0) * 100; // ₦100 per credit
+        // Estimate subscription revenue (Pro tier as the paid-tier proxy) + credit face value
+        const subRevenue = subscriptions * ECONOMICS.SUBSCRIPTION.pro;
+        const creditRevenue = (creditPurchases._sum.amount || 0) * ECONOMICS.CREDIT_VALUE_NGN; // ₦10 per credit
 
         report.summary = {
           creditPurchases: creditPurchases._count,
