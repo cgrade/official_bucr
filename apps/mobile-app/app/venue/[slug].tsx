@@ -42,7 +42,7 @@ import { vendorsApi, favoritesApi, waitlistApi } from '../../src/lib/api';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { useAuth } from '../../src/providers/AuthProvider';
 import { useTheme } from '../../src/contexts/ThemeContext';
-import { config } from '../../src/lib/config';
+import { config, getReservationDeposit } from '../../src/lib/config';
 
 const { width } = Dimensions.get('window');
 const IMAGE_HEIGHT = width * 0.7;
@@ -625,53 +625,59 @@ export default function VenueDetailScreen() {
                 </View>
               )}
 
-              {/* Popular Dishes */}
-              {menuCategories && menuCategories.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Popular Dishes</Text>
-                  <View style={styles.popularDishes}>
-                    {menuCategories
-                      .flatMap((cat: any) => cat.items || [])
-                      .filter((item: any) => item.isPopular || item.isFeatured)
-                      .slice(0, 6)
-                      .map((dish: any) => (
+              {/* Popular Dishes — prefer flagged popular/featured, else first few items */}
+              {(() => {
+                const allItems = menuCategories.flatMap((cat: any) => cat.items || []);
+                const flagged = allItems.filter((item: any) => item.isPopular || item.isFeatured);
+                const dishes = (flagged.length > 0 ? flagged : allItems).slice(0, 6);
+                if (dishes.length === 0) return null;
+                return (
+                  <View style={styles.section}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Popular Dishes</Text>
+                    <View style={styles.popularDishes}>
+                      {dishes.map((dish: any) => (
                         <View key={dish.id} style={[styles.popularDishCard, { backgroundColor: colors.card }]}>
-                          <Text style={[styles.popularDishName, { color: colors.text }]}>{dish.name}</Text>
-                          {dish.description && (
-                            <Text style={[styles.popularDishDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-                              {dish.description}
-                            </Text>
+                          {dish.image && (
+                            <Image source={{ uri: getImageUrl(dish.image) }} style={styles.popularDishImage} resizeMode="cover" />
                           )}
+                          <View style={styles.popularDishBody}>
+                            <Text style={[styles.popularDishName, { color: colors.text }]} numberOfLines={1}>{dish.name}</Text>
+                            {dish.description && (
+                              <Text style={[styles.popularDishDescription, { color: colors.textSecondary }]} numberOfLines={2}>
+                                {dish.description}
+                              </Text>
+                            )}
+                            {dish.price != null && (
+                              <Text style={[styles.popularDishPrice, { color: colors.tertiary }]}>
+                                ₦{(dish.price / 100).toLocaleString()}
+                              </Text>
+                            )}
+                          </View>
                         </View>
                       ))}
-                    {menuCategories.flatMap((cat: any) => cat.items || []).length === 0 && (
-                      <Text style={[styles.emptyText, { color: colors.textMuted }]}>No dishes available yet</Text>
-                    )}
+                    </View>
                   </View>
-                </View>
-              )}
+                );
+              })()}
 
-              {/* Credit Tiers */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Reservation Credits</Text>
-                <View style={styles.creditTiers}>
-                  <View style={[styles.creditTier, { backgroundColor: colors.inputBackground }]}>
-                    <Text style={[styles.creditTierGuests, { color: colors.textSecondary }]}>1-2 guests</Text>
-                    <Text style={[styles.creditTierAmount, { color: colors.text }]}>50 credits</Text>
+              {/* Reservation Deposit — flat per reservation (party size does not change it) */}
+              {(() => {
+                const deposit = getReservationDeposit((vendor as any).venueType, (vendor as any).customDepositCredits);
+                return (
+                  <View style={styles.section}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Reservation Deposit</Text>
+                    <View style={[styles.depositCard, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+                      <View>
+                        <Text style={[styles.depositAmount, { color: colors.text }]}>₦{(deposit * 10).toLocaleString()}</Text>
+                        <Text style={[styles.depositSub, { color: colors.textMuted }]}>{deposit.toLocaleString()} credits · flat, any party size</Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.creditNote, { color: colors.tertiary }]}>
+                      ✓ Fully refunded + 3% bonus when you check in
+                    </Text>
                   </View>
-                  <View style={[styles.creditTier, { backgroundColor: colors.inputBackground }]}>
-                    <Text style={[styles.creditTierGuests, { color: colors.textSecondary }]}>3-6 guests</Text>
-                    <Text style={[styles.creditTierAmount, { color: colors.text }]}>100 credits</Text>
-                  </View>
-                  <View style={[styles.creditTier, { backgroundColor: colors.inputBackground }]}>
-                    <Text style={[styles.creditTierGuests, { color: colors.textSecondary }]}>7+ guests</Text>
-                    <Text style={[styles.creditTierAmount, { color: colors.text }]}>200 credits</Text>
-                  </View>
-                </View>
-                <Text style={[styles.creditNote, { color: colors.tertiary }]}>
-                  ✓ Credits refunded + 3% bonus when you check in
-                </Text>
-              </View>
+                );
+              })()}
             </>
           )}
 
@@ -1425,18 +1431,45 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   popularDishCard: {
-    padding: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     width: '47%',
+    overflow: 'hidden',
+  },
+  popularDishImage: {
+    width: '100%',
+    height: 96,
+  },
+  popularDishBody: {
+    padding: 12,
   },
   popularDishName: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 4,
   },
   popularDishDescription: {
     fontSize: 12,
     lineHeight: 16,
+  },
+  popularDishPrice: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  depositCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+  },
+  depositAmount: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  depositSub: {
+    fontSize: 12,
+    marginTop: 4,
   },
   authPrompt: {
     alignItems: 'center',

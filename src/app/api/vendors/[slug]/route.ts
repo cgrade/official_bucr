@@ -171,6 +171,7 @@ export async function GET(
       verificationStatus: vendor.verificationStatus,
       subscriptionTier: vendor.subscriptionTier,
       venueType: vendor.venueType,
+      customDepositCredits: (vendor as any).customDepositCredits ?? null,
       reliabilityScore: vendor.reliabilityScore,
       bookWithConfidence: vendor.bookWithConfidence,
       deliveryEnabled: vendor.deliveryEnabled,
