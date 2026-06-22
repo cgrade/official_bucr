@@ -16,7 +16,7 @@ import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search as SearchIcon, MapPin, Star, Filter, X, ChevronDown, Map, List, ShieldCheck } from 'lucide-react-native';
+import { Search as SearchIcon, MapPin, Star, X, ChevronDown, Map, List, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { Header } from '../../src/components/Header';
 import { SlideMenu } from '../../src/components/SlideMenu';
@@ -48,38 +48,34 @@ interface Vendor {
   };
 }
 
-const FILTERS = [
-  { id: 'nearby', label: '📍 Near me' },
-  { id: 'rating', label: '⭐ 4.5+' },
-  { id: 'price1', label: '💰 $' },
-  { id: 'price2', label: '💰 $$' },
-  { id: 'price3', label: '💰 $$$' },
+// Single-select sort options. 'distance' needs the device location.
+const SORT_OPTIONS = [
+  { id: 'recommended', label: 'Recommended' },
+  { id: 'distance',    label: '📍 Near me' },
+  { id: 'rating',      label: '⭐ Top rated' },
+  { id: 'price_low',   label: '💰 Price: Low → High' },
+  { id: 'price_high',  label: '💎 Price: High → Low' },
 ];
 
-const LAGOS_AREAS = [
-  'All Areas',
-  'Victoria Island',
-  'Lekki',
-  'Ikoyi',
-  'Ikeja',
-  'Surulere',
-  'Yaba',
-  'Gbagada',
-  'Maryland',
-  'Festac',
-];
-
-const ABUJA_AREAS = [
-  'All Areas',
-  'Gwarimpa',
-  'Maitama',
-  'Wuse',
-  'Garki',
-  'Asokoro',
-  'Jabi',
-  'Kubwa',
-  'Central Area',
-];
+// Launch markets — top 20 cities per country. Filter is by city name.
+const CITIES_BY_COUNTRY: Record<string, string[]> = {
+  Nigeria: [
+    'Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano', 'Benin City', 'Kaduna',
+    'Enugu', 'Abeokuta', 'Uyo', 'Owerri', 'Warri', 'Jos', 'Ilorin', 'Calabar',
+    'Onitsha', 'Asaba', 'Akure', 'Maiduguri', 'Aba',
+  ],
+  Ghana: [
+    'Accra', 'Kumasi', 'Tamale', 'Takoradi', 'Tema', 'Cape Coast', 'Kasoa',
+    'Ho', 'Koforidua', 'Sunyani', 'Sekondi', 'Obuasi', 'Madina', 'Ashaiman',
+    'Techiman', 'Wa', 'Bolgatanga', 'Tarkwa', 'Nungua', 'Teshie',
+  ],
+  Kenya: [
+    'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Malindi',
+    'Kitale', 'Nyeri', 'Machakos', 'Meru', 'Naivasha', 'Kericho', 'Kakamega',
+    'Kisii', 'Diani', 'Nanyuki', 'Embu', 'Garissa', 'Lamu',
+  ],
+};
+const COUNTRIES = Object.keys(CITIES_BY_COUNTRY);
 
 function VendorListItem({ vendor, onPress, colors, isFavorited, onToggleFavorite }: { vendor: Vendor; onPress: () => void; colors: any; isFavorited?: boolean; onToggleFavorite?: () => void }) {
   const { isAuthenticated } = useAuthStore();
@@ -174,13 +170,12 @@ export default function SearchScreen() {
   const [activeVenueType,    setActiveVenueType]    = useState<string | null>(params.venueType    as string || null);
   const [activeBusinessType, setActiveBusinessType] = useState<string | null>(params.businessType as string || null);
   const [activeFilter,       setActiveFilter]       = useState<string | null>(params.filter       as string || null);
-  const [showFilters, setShowFilters] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>('recommended');
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string>('Lagos');
-  const [selectedArea, setSelectedArea] = useState<string>('All Areas');
+  const [selectedCountry, setSelectedCountry] = useState<string>('Nigeria');
+  const [selectedCity, setSelectedCity] = useState<string>(''); // '' = all cities
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
@@ -220,30 +215,27 @@ export default function SearchScreen() {
   }, []);
 
   const { data: vendorsData, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['vendors', 'search', debouncedQuery, params.cuisine, selectedFilters, selectedCity, selectedArea, activeVenueType, activeBusinessType, activeFilter, userLocation],
+    queryKey: ['vendors', 'search', debouncedQuery, params.cuisine, sortBy, selectedCity, activeVenueType, activeBusinessType, activeFilter, userLocation],
     queryFn: async () => {
       const queryParams: any = { limit: 50 }; // fetch more for map view
 
       if (debouncedQuery) queryParams.search = debouncedQuery;
       if (params.cuisine) queryParams.cuisineType = params.cuisine;
-      if (selectedFilters.includes('rating')) queryParams.minRating = 4.5;
-      if (selectedArea && selectedArea !== 'All Areas') queryParams.city = selectedArea;
+      if (selectedCity) queryParams.city = selectedCity;
 
       // Category-driven filters from home screen
       if (activeVenueType)    queryParams.venueType    = activeVenueType;
       if (activeBusinessType) queryParams.businessType = activeBusinessType;
       if (activeFilter === 'experiences') queryParams.hasExperiences = true;
 
-      if (selectedFilters.includes('price1')) queryParams.priceRange = 'budget';
-      else if (selectedFilters.includes('price2')) queryParams.priceRange = 'moderate';
-      else if (selectedFilters.includes('price3')) queryParams.priceRange = 'premium';
-
-      // Pass device location when "Near me" is active — backend sorts by distance server-side
-      if (selectedFilters.includes('nearby') && userLocation) {
+      // Sort — near me needs device location; the rest are server-side orderings
+      if (sortBy === 'distance' && userLocation) {
         queryParams.lat      = userLocation.latitude;
         queryParams.lng      = userLocation.longitude;
-        queryParams.radiusKm = 10;
+        queryParams.radiusKm = 25;
         queryParams.sort     = 'distance';
+      } else if (sortBy === 'rating' || sortBy === 'price_low' || sortBy === 'price_high') {
+        queryParams.sort = sortBy;
       }
 
       return vendorsApi.getAll(queryParams);
@@ -275,15 +267,17 @@ export default function SearchScreen() {
     clearLocationCache();
     const loc = await getCurrentLocation();
     setUserLocation(loc);
-    if (loc && !selectedFilters.includes('nearby')) {
-      toggleFilter('nearby');
-    }
+    if (loc) setSortBy('distance');
   };
 
-  const toggleFilter = (filterId: string) => {
-    setSelectedFilters(prev =>
-      prev.includes(filterId) ? prev.filter(f => f !== filterId) : [...prev, filterId]
-    );
+  // Selecting "Near me" requests location if we don't have it yet.
+  const selectSort = async (id: string) => {
+    if (id === 'distance' && !userLocation) {
+      const loc = await getCurrentLocation();
+      setUserLocation(loc);
+      if (!loc) return; // permission denied — don't switch to a sort we can't fulfil
+    }
+    setSortBy(id);
   };
 
   const navigateToVendor = (slug: string) => {
@@ -327,22 +321,16 @@ export default function SearchScreen() {
             ? <Map size={20} color={colors.text} />
             : <List size={20} color="#ffffff" />}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, { backgroundColor: colors.surface }]}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={20} color={colors.text} />
-        </TouchableOpacity>
       </View>
 
       {/* Location Bar */}
-      <TouchableOpacity 
-        style={[styles.locationBar, { borderBottomColor: colors.border }]} 
+      <TouchableOpacity
+        style={[styles.locationBar, { borderBottomColor: colors.border }]}
         onPress={() => setShowLocationModal(true)}
       >
-        <MapPin size={16} color={colors.textSecondary} />
+        <MapPin size={16} color={colors.tertiary} />
         <Text style={[styles.locationText, { color: colors.text }]}>
-          {selectedArea !== 'All Areas' ? `${selectedArea}, ${selectedCity}` : selectedCity}
+          {selectedCity ? `${selectedCity}, ${selectedCountry}` : `All cities · ${selectedCountry}`}
         </Text>
         <ChevronDown size={16} color={colors.textSecondary} />
       </TouchableOpacity>
@@ -365,31 +353,39 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {/* Quick Filters */}
+      {/* Sort row (single-select) */}
       <View style={[styles.filtersContainer, { borderBottomColor: colors.border }]}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={FILTERS}
+          data={SORT_OPTIONS}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.filterChip,
-                { backgroundColor: selectedFilters.includes(item.id) ? colors.primary : colors.inputBackground },
-              ]}
-              onPress={() => toggleFilter(item.id)}
-            >
-              <Text
+          renderItem={({ item }) => {
+            const active = sortBy === item.id;
+            return (
+              <TouchableOpacity
                 style={[
-                  styles.filterChipText,
-                  { color: selectedFilters.includes(item.id) ? '#FFFFFF' : colors.textSecondary },
+                  styles.filterChip,
+                  {
+                    backgroundColor: active ? colors.tertiary : colors.inputBackground,
+                    borderWidth: 1,
+                    borderColor: active ? colors.tertiary : colors.border,
+                  },
                 ]}
+                onPress={() => selectSort(item.id)}
+                activeOpacity={0.8}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    { color: active ? colors.primaryDark : colors.textSecondary, fontWeight: active ? '700' : '500' },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
           contentContainerStyle={styles.filtersList}
         />
       </View>
@@ -433,7 +429,6 @@ export default function SearchScreen() {
           renderItem={({ item }) => (
             <VendorListItem vendor={item} onPress={() => navigateToVendor(item.slug)} colors={colors} isFavorited={favoriteIds.has(item.id)} onToggleFavorite={() => toggleFavorite(item.id)} />
           )}
-          estimatedItemSize={100}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListFooterComponent={
@@ -460,73 +455,50 @@ export default function SearchScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* City Selection */}
-            <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>City</Text>
+            {/* Country tabs */}
+            <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>Country</Text>
             <View style={styles.cityButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.cityButton, 
-                  { backgroundColor: selectedCity === 'Lagos' ? colors.primary : colors.inputBackground },
-                ]}
-                onPress={() => {
-                  setSelectedCity('Lagos');
-                  setSelectedArea('All Areas');
-                }}
-              >
-                <Text style={[
-                  styles.cityButtonText, 
-                  { color: selectedCity === 'Lagos' ? '#FFFFFF' : colors.textSecondary },
-                ]}>
-                  Lagos
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.cityButton, 
-                  { backgroundColor: selectedCity === 'Abuja' ? colors.primary : colors.inputBackground },
-                ]}
-                onPress={() => {
-                  setSelectedCity('Abuja');
-                  setSelectedArea('All Areas');
-                }}
-              >
-                <Text style={[
-                  styles.cityButtonText, 
-                  { color: selectedCity === 'Abuja' ? '#FFFFFF' : colors.textSecondary },
-                ]}>
-                  Abuja
-                </Text>
-              </TouchableOpacity>
+              {COUNTRIES.map((country) => {
+                const active = selectedCountry === country;
+                return (
+                  <TouchableOpacity
+                    key={country}
+                    style={[styles.cityButton, { backgroundColor: active ? colors.tertiary : colors.inputBackground }]}
+                    onPress={() => { setSelectedCountry(country); setSelectedCity(''); }}
+                  >
+                    <Text style={[styles.cityButtonText, { color: active ? colors.primaryDark : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
+                      {country}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            {/* Area Selection */}
-            <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>Area</Text>
+            {/* City list (top 20 of selected country) */}
+            <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>City</Text>
             <ScrollView style={styles.areaList}>
-              {(selectedCity === 'Lagos' ? LAGOS_AREAS : ABUJA_AREAS).map((area) => (
-                <TouchableOpacity
-                  key={area}
-                  style={[
-                    styles.areaItem, 
-                    selectedArea === area && { backgroundColor: colors.primaryLight + '20' }
-                  ]}
-                  onPress={() => setSelectedArea(area)}
-                >
-                  <Text style={[
-                    styles.areaItemText, 
-                    { color: colors.textSecondary },
-                    selectedArea === area && { color: colors.primary, fontWeight: '500' }
-                  ]}>
-                    {area}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {['', ...CITIES_BY_COUNTRY[selectedCountry]].map((city) => {
+                const active = selectedCity === city;
+                const label = city || `All cities in ${selectedCountry}`;
+                return (
+                  <TouchableOpacity
+                    key={city || 'all'}
+                    style={[styles.areaItem, active && { backgroundColor: colors.tertiaryLight }]}
+                    onPress={() => { setSelectedCity(city); setShowLocationModal(false); }}
+                  >
+                    <Text style={[styles.areaItemText, { color: active ? colors.tertiary : colors.textSecondary, fontWeight: active ? '600' : '400' }]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.modalApplyButton, { backgroundColor: colors.tertiary }]}
               onPress={() => setShowLocationModal(false)}
             >
-              <Text style={styles.modalApplyButtonText}>Apply</Text>
+              <Text style={styles.modalApplyButtonText}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>

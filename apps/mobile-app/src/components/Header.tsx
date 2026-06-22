@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuPress, variant = 'default'
 
   return (
     <View style={[styles.container, !isTransparent && { backgroundColor: colors.headerBackground }]}>
-      <BucrLogo size={26} />
+      <BucrLogo size={32} />
 
       <TouchableOpacity onPress={onMenuPress} style={styles.avatarButton} activeOpacity={0.7}>
         <View style={[styles.avatar, { backgroundColor: colors.tertiary }]}>

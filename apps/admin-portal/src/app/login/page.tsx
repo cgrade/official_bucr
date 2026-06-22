@@ -53,7 +53,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-14 border-r border-[rgba(201,168,76,0.12)]">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2">
-          <BucrWordmark height={32} />
+          <BucrWordmark height={40} />
           <span className="text-[8px] font-bold tracking-[0.22em] uppercase text-[#7a8fa6] border border-[rgba(201,168,76,0.2)] px-1.5 py-0.5 rounded ml-1">
             Admin
           </span>
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
         {/* Mobile logo */}
         <div className="flex flex-col items-center gap-2 mb-10 lg:hidden">
-          <BucrWordmark height={32} />
+          <BucrWordmark height={40} />
           <p className="text-[10px] text-[#7a8fa6] tracking-[0.2em] uppercase">Admin Portal</p>
         </div>
 

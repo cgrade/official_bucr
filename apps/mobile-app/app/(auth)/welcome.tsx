@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <BucrLogo size={38} color="#f5f0e8" />
+            <BucrLogo size={46} color="#f5f0e8" />
             <Text style={styles.tagline}>Your table, actually waiting.</Text>
           </View>
 

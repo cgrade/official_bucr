@@ -256,7 +256,7 @@ export function Sidebar({ isOpen = true, isCollapsed = false, onClose, onToggleC
             </svg>
           ) : (
             <div>
-              <BucrWordmark height={30} />
+              <BucrWordmark height={38} />
               <span className="block text-[8px] font-sans font-semibold tracking-[0.2em] uppercase text-[#7a8fa6] mt-0.5 pl-0.5">Vendor Portal</span>
             </div>
           )}

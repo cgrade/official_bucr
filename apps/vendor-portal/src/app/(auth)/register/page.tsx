@@ -417,7 +417,7 @@ export default function RegisterPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-3"
           >
-            <BucrWordmark height={34} />
+            <BucrWordmark height={40} />
             <span className="text-sm text-[#7a8fa6] ml-2">Vendor Portal</span>
           </motion.div>
           

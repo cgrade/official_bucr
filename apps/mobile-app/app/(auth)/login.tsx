@@ -73,7 +73,7 @@ export default function LoginScreen() {
 
           {/* Header */}
           <View style={styles.header}>
-            <BucrLogo width={150} height={38} />
+            <BucrLogo size={44} />
             <Text style={[styles.title, { color: colors.text, marginTop: 16 }]}>Welcome back!</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue</Text>
           </View>

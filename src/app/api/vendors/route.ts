@@ -49,13 +49,18 @@ export const GET = withRateLimit(
     const userLat  = searchParams.get('lat')      ? parseFloat(searchParams.get('lat')!)    : null;
     const userLng  = searchParams.get('lng')      ? parseFloat(searchParams.get('lng')!)    : null;
     const radiusKm = searchParams.get('radiusKm') ? parseFloat(searchParams.get('radiusKm')!) : null;
-    const sortBy   = searchParams.get('sort');     // 'distance' | undefined
+    const sortBy   = searchParams.get('sort');     // 'distance' | 'rating' | 'price_low' | 'price_high' | undefined
     const nearMode = userLat !== null && userLng !== null && !isNaN(userLat) && !isNaN(userLng);
+    // venueType is the price proxy (fine_dining most premium → casual most accessible)
+    const PRICE_RANK: Record<string, number> = { fine_dining: 4, upscale_casual: 3, lounge: 2, casual: 1 };
+    const priceMode = sortBy === 'price_low' || sortBy === 'price_high';
+    // jsMode = fetch all matching, then sort + paginate in JS (distance or price)
+    const jsMode = nearMode || priceMode;
 
     const { skip, take } = getPrismaSkipTake(page, limit);
 
-    // Only use cache when NOT doing distance-based queries (results are location-specific)
-    if (!nearMode) {
+    // Only cache plain queries — distance/price results aren't keyed by sort
+    if (!jsMode) {
       const cacheKey = getCacheKey({ page: String(page), limit: String(limit), search, city, cuisine, minRating, venueType, businessType, featured: featured ? 'true' : null });
       const cached = await vendorCache.getList(cacheKey) as { items: any[]; page: number; limit: number; total: number } | null;
       if (cached) {
@@ -109,8 +114,8 @@ export const GET = withRateLimit(
     // ── Query ─────────────────────────────────────────────────────────────
     // For near-me queries we need ALL matching vendors so we can filter/sort by distance,
     // then paginate in JS. For regular queries we push skip/take to the DB.
-    const dbSkip = nearMode ? 0   : skip;
-    const dbTake = nearMode ? 500 : take; // cap at 500 for near-me to avoid OOM
+    const dbSkip = jsMode ? 0   : skip;
+    const dbTake = jsMode ? 500 : take; // cap at 500 for JS-sorted modes to avoid OOM
 
     const [vendors, dbTotal] = await Promise.all([
       db.vendor.findMany({
@@ -142,9 +147,11 @@ export const GET = withRateLimit(
             select: { url: true },
           },
         },
-        orderBy: nearMode
-          ? [{ averageRating: 'desc' }]  // secondary sort; primary is distance below
-          : [{ subscriptionTier: 'desc' }, { averageRating: 'desc' }, { totalReviews: 'desc' }],
+        orderBy: sortBy === 'rating'
+          ? [{ averageRating: 'desc' }, { totalReviews: 'desc' }]
+          : jsMode
+            ? [{ averageRating: 'desc' }]  // secondary; primary (distance/price) applied in JS
+            : [{ subscriptionTier: 'desc' }, { averageRating: 'desc' }, { totalReviews: 'desc' }],
         skip: dbSkip,
         take: dbTake,
       }),
@@ -174,33 +181,38 @@ export const GET = withRateLimit(
       distanceKm: null as number | null,
     }));
 
-    // ── Distance filter + sort ────────────────────────────────────────────
+    // ── Distance / price sort + paginate in JS ─────────────────────────────
     let total = dbTotal;
-    if (nearMode) {
-      // Attach distance to each vendor (using main branch lat/lng)
-      formattedVendors = formattedVendors
-        .map((v) => {
-          const b = v.mainBranch;
-          if (b?.latitude != null && b?.longitude != null) {
-            v.distanceKm = haversineKm(userLat!, userLng!, b.latitude, b.longitude);
-          }
-          return v;
-        })
-        // Filter by radius when provided
-        .filter((v) => {
-          if (radiusKm && v.distanceKm !== null) return v.distanceKm <= radiusKm;
-          return true; // no radius limit — return all with coordinates
-        });
+    if (jsMode) {
+      if (nearMode) {
+        // Attach distance to each vendor (using main branch lat/lng)
+        formattedVendors = formattedVendors
+          .map((v) => {
+            const b = v.mainBranch;
+            if (b?.latitude != null && b?.longitude != null) {
+              v.distanceKm = haversineKm(userLat!, userLng!, b.latitude, b.longitude);
+            }
+            return v;
+          })
+          // Filter by radius when provided
+          .filter((v) => {
+            if (radiusKm && v.distanceKm !== null) return v.distanceKm <= radiusKm;
+            return true; // no radius limit — return all with coordinates
+          });
+      }
 
       total = formattedVendors.length;
 
-      // Sort by distance if requested
       if (sortBy === 'distance') {
         formattedVendors.sort((a, b) => {
           if (a.distanceKm === null) return 1;
           if (b.distanceKm === null) return -1;
           return a.distanceKm - b.distanceKm;
         });
+      } else if (priceMode) {
+        const dir = sortBy === 'price_low' ? 1 : -1;
+        formattedVendors.sort((a, b) =>
+          dir * ((PRICE_RANK[a.venueType] ?? 0) - (PRICE_RANK[b.venueType] ?? 0)));
       }
 
       // Paginate in JS

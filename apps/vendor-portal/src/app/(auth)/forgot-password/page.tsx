@@ -35,7 +35,7 @@ export default function VendorForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0f2547] px-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <BucrWordmark height={32} />
+          <BucrWordmark height={40} />
         </div>
 
         {sent ? (
