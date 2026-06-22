@@ -115,6 +115,48 @@ export const ECONOMICS = {
   /** Days the score must stay ≥ BADGE_THRESHOLD to award the badge. */
   BADGE_SUSTAINED_DAYS:     numEnv('BADGE_SUSTAINED_DAYS',    60),
 
+  // ── Multi-currency DISPLAY (base = NGN) ───────────────────────────────────
+  // The credit is always priced in NGN (CREDIT_VALUE_NGN = ₦10 — the locked
+  // base). For Ghana/Kenya we only DISPLAY local-currency equivalents using live
+  // FX (see fx.service.ts). Nothing settles in these currencies — the closed
+  // loop stays NGN-denominated, preserving the legal architecture.
+  CURRENCIES: {
+    NGN: { symbol: '₦',   code: 'NGN' },
+    GHS: { symbol: 'GH₵', code: 'GHS' },
+    KES: { symbol: 'KSh', code: 'KES' },
+  } as Record<string, { symbol: string; code: string }>,
+
+  /** Country → its display currency. */
+  COUNTRY_CURRENCY: {
+    Nigeria: 'NGN',
+    Ghana:   'GHS',
+    Kenya:   'KES',
+  } as Record<string, string>,
+
+  /** Country → mobile phone format. `regex` is a string (serialisable to clients). */
+  COUNTRY_PHONE: {
+    Nigeria: { dialCode: '+234', regex: '^(\\+234|0)[789][01]\\d{8}$', placeholder: '0801 234 5678', example: '08012345678' },
+    Ghana:   { dialCode: '+233', regex: '^(\\+233|0)[235]\\d{8}$',     placeholder: '024 123 4567',  example: '0241234567'  },
+    Kenya:   { dialCode: '+254', regex: '^(\\+254|0)[17]\\d{8}$',      placeholder: '0712 345 678',  example: '0712345678'  },
+  } as Record<string, { dialCode: string; regex: string; placeholder: string; example: string }>,
+
+  /** Default registration country. */
+  DEFAULT_COUNTRY: 'Nigeria',
+
+  /**
+   * Fallback FX — units of the local currency per 1 NGN. Used only when the live
+   * rate (fx.service) is unavailable. Provisional; the live feed overrides these.
+   * NGN is always exactly 1.
+   */
+  FX_FALLBACK_PER_NGN: {
+    NGN: 1,
+    GHS: numEnv('FX_FALLBACK_GHS_PER_NGN', 0.0098),
+    KES: numEnv('FX_FALLBACK_KES_PER_NGN', 0.086),
+  } as Record<string, number>,
+
+  /** How long (seconds) to cache a live FX snapshot before refetching. */
+  FX_CACHE_TTL_SECONDS: numEnv('FX_CACHE_TTL_SECONDS', 86400), // 24h
+
   // ── LEGAL GATE ────────────────────────────────────────────────────────────
   /**
    * Keep FALSE until a licensed payment partner is integrated and counsel

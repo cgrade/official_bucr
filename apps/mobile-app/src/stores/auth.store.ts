@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   phone: string;
+  country?: string;
   creditsBalance: number;
   avatar?: string;
   referralCode?: string;
@@ -20,7 +21,7 @@ interface AuthState {
   
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
+  register: (data: { name: string; email: string; phone: string; password: string; country?: string }) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;

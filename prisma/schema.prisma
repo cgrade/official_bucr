@@ -14,6 +14,8 @@ model User {
   passwordHash        String              @map("password_hash")
   name                String
   avatar              String?
+  // Home country — sets the diner's phone format + display currency (default NGN).
+  country             String              @default("Nigeria")
   role                UserRole            @default(user)
   status              UserStatus          @default(active)
   suspendedReason     String?             @map("suspended_reason")

@@ -18,6 +18,7 @@ const registerSchema = z.object({
   password: passwordSchema,
   name: nameSchema,
   phone: phoneSchema.optional(),
+  country: z.string().min(2).optional(),
   referralCode: z.string().optional(),
 });
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(errors);
     }
 
-    const { email, password, name, phone, referralCode } = validation.data;
+    const { email, password, name, phone, country, referralCode } = validation.data;
 
     // Enforce the admin-configured minimum password length (Settings → General),
     // on top of the base schema's hard floor of 8.
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
         passwordHash,
         name,
         phone,
+        country: country || 'Nigeria',
         referralCode: userReferralCode,
         referredBy: referredById,
       },
@@ -93,6 +95,7 @@ export async function POST(request: NextRequest) {
         email: true,
         name: true,
         phone: true,
+        country: true,
         creditsBalance: true,
         referralCode: true,
         createdAt: true,

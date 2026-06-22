@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -180,6 +180,20 @@ export default function RegisterPage() {
   // Country drives the phone format + currency; chosen on step 1, used everywhere.
   const [selectedCountry, setSelectedCountry] = useState<string>(ownerData?.country || 'Nigeria');
   const cfg = countryCfg(selectedCountry);
+
+  // Live currency config (real FX); falls back to the static COUNTRY_CONFIG.
+  const [liveCurrency, setLiveCurrency] = useState<Record<string, { symbol: string; creditValueLocal: number }> | null>(null);
+  useEffect(() => {
+    fetch(`${API_URL}/api/config/currency`)
+      .then((r) => r.json())
+      .then((d) => { if (d?.data?.countries) setLiveCurrency(d.data.countries); })
+      .catch(() => {});
+  }, []);
+  const fmtDeposit = (credits: number) => {
+    const live = liveCurrency?.[selectedCountry];
+    if (live) return `${live.symbol}${Math.round(credits * live.creditValueLocal).toLocaleString()}`;
+    return formatDeposit(credits, selectedCountry); // static fallback
+  };
 
   // Form hooks for each step
   const ownerForm = useForm<OwnerFormData>({
@@ -763,7 +777,7 @@ export default function RegisterPage() {
                             <div>
                               <p className={`text-[13px] font-semibold ${selected ? 'text-[#c9a84c]' : 'text-[#f5f0e8]'}`}>{v.label}</p>
                               <p className="text-[11px] text-[#7a8fa6]">
-                                {v.blurb} · {formatDeposit(v.depositCredits, selectedCountry)} deposit/booking
+                                {v.blurb} · {fmtDeposit(v.depositCredits)} deposit/booking
                               </p>
                             </div>
                           </label>

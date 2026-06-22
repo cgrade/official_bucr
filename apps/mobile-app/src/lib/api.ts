@@ -112,6 +112,7 @@ export const authApi = {
     email: string;
     phone: string;
     password: string;
+    country?: string;
   }) => {
     const response = await api.post<ApiResponse<{ user: any; tokens: { accessToken: string; refreshToken: string } }>>('/auth/register', data);
     return response.data;

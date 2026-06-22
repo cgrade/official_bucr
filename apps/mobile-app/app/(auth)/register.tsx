@@ -19,7 +19,14 @@ import { useTheme } from '../../src/contexts/ThemeContext';
 // Mirrors the backend validators exactly so users never get a server rejection
 // they couldn't see coming.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const NG_PHONE_RE = /^(\+234|0)[789][01]\d{8}$/;
+
+// Country drives the phone format + the default display currency. The credit
+// base stays ₦10 (NGN) everywhere — currency here is presentation only.
+const COUNTRY_OPTIONS = [
+  { name: 'Nigeria', dialCode: '+234', regex: /^(\+234|0)[789][01]\d{8}$/, placeholder: '0801 234 5678', currencyCode: 'NGN', symbol: '₦' },
+  { name: 'Ghana',   dialCode: '+233', regex: /^(\+233|0)[235]\d{8}$/,     placeholder: '024 123 4567',  currencyCode: 'GHS', symbol: 'GH₵' },
+  { name: 'Kenya',   dialCode: '+254', regex: /^(\+254|0)[17]\d{8}$/,      placeholder: '0712 345 678',  currencyCode: 'KES', symbol: 'KSh' },
+];
 
 type FieldKey = 'name' | 'email' | 'phone' | 'password' | 'confirm';
 
@@ -28,6 +35,8 @@ export default function RegisterScreen() {
   const { register, isLoading } = useAuthStore();
   const { colors } = useTheme();
 
+  const [country, setCountry] = useState('Nigeria');
+  const countryCfg = COUNTRY_OPTIONS.find((c) => c.name === country) ?? COUNTRY_OPTIONS[0];
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -62,7 +71,7 @@ export default function RegisterScreen() {
   if (!email.trim()) errors.email = 'Enter your email';
   else if (!EMAIL_RE.test(email.trim())) errors.email = 'Enter a valid email address';
   if (!phone.trim()) errors.phone = 'Enter your phone number';
-  else if (!NG_PHONE_RE.test(phone.trim().replace(/\s/g, ''))) errors.phone = 'Enter a valid Nigerian number (e.g. 08012345678)';
+  else if (!countryCfg.regex.test(phone.trim().replace(/\s/g, ''))) errors.phone = `Enter a valid ${country} number (e.g. ${countryCfg.placeholder.replace(/\s/g, '')})`;
   if (pwScore < 4) errors.password = 'Password does not meet all requirements';
   if (!confirm) errors.confirm = 'Re-enter your password';
   else if (confirm !== password) errors.confirm = 'Passwords do not match';
@@ -87,6 +96,7 @@ export default function RegisterScreen() {
         email: email.trim().toLowerCase(),
         phone: phone.trim().replace(/\s/g, ''),
         password,
+        country,
       });
       router.replace('/onboarding' as any);
     } catch (err: any) {
@@ -126,6 +136,34 @@ export default function RegisterScreen() {
           )}
 
           <View style={styles.form}>
+            {/* Country — drives phone format + display currency */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Country</Text>
+              <View style={styles.countryRow}>
+                {COUNTRY_OPTIONS.map((c) => {
+                  const active = country === c.name;
+                  return (
+                    <TouchableOpacity
+                      key={c.name}
+                      style={[
+                        styles.countryChip,
+                        { borderColor: active ? colors.tertiary : colors.border, backgroundColor: active ? colors.tertiaryLight : colors.inputBackground },
+                      ]}
+                      onPress={() => setCountry(c.name)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.countryChipText, { color: active ? colors.tertiary : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
+                        {c.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.countryHint, { color: colors.textMuted }]}>
+                Sets your phone format · prices shown in {countryCfg.symbol} {countryCfg.currencyCode}
+              </Text>
+            </View>
+
             {/* Name */}
             <Field label="Full Name" error={showErr('name') ? errors.name : undefined} colors={colors}>
               <TextInput
@@ -154,17 +192,22 @@ export default function RegisterScreen() {
               />
             </Field>
 
-            {/* Phone */}
+            {/* Phone — format follows the chosen country */}
             <Field label="Phone Number" error={showErr('phone') ? errors.phone : undefined} colors={colors}>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: borderFor('phone'), color: colors.text }]}
-                placeholder="08012345678"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-                onBlur={() => markTouched('phone')}
-              />
+              <View style={styles.phoneRow}>
+                <View style={[styles.dialCode, { backgroundColor: colors.inputBackground, borderColor: borderFor('phone') }]}>
+                  <Text style={[styles.dialCodeText, { color: colors.tertiary }]}>{countryCfg.dialCode}</Text>
+                </View>
+                <TextInput
+                  style={[styles.input, styles.phoneInput, { backgroundColor: colors.inputBackground, borderColor: borderFor('phone'), color: colors.text }]}
+                  placeholder={countryCfg.placeholder}
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                  onBlur={() => markTouched('phone')}
+                />
+              </View>
             </Field>
 
             {/* Password */}
@@ -294,6 +337,14 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '500', marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16 },
   fieldError: { fontSize: 12, marginTop: 6 },
+  countryRow: { flexDirection: 'row', gap: 8 },
+  countryChip: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
+  countryChipText: { fontSize: 14 },
+  countryHint: { fontSize: 11, marginTop: 8 },
+  phoneRow: { flexDirection: 'row', gap: 8 },
+  dialCode: { justifyContent: 'center', paddingHorizontal: 14, borderWidth: 1, borderRadius: 14 },
+  dialCodeText: { fontSize: 15, fontWeight: '600' },
+  phoneInput: { flex: 1 },
   passwordContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 14 },
   passwordInput: { flex: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16 },
   eyeButton: { padding: 14 },
