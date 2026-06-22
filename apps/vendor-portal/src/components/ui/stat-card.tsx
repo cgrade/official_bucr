@@ -54,14 +54,14 @@ export function StatCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-slate-500 text-[#7a8fa6]">
+          <p className="text-sm font-medium text-[#7a8fa6]">
             {title}
           </p>
-          <p className="mt-2 text-3xl font-bold text-slate-900 text-[#7a8fa6]">
+          <p className="mt-2 text-3xl font-bold text-[#f5f0e8]">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
           {subtitle && (
-            <p className="mt-1 text-sm text-slate-500 text-[#7a8fa6]">
+            <p className="mt-1 text-sm text-[#7a8fa6]">
               {subtitle}
             </p>
           )}
@@ -77,7 +77,7 @@ export function StatCard({
               >
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
-              <span className="text-xs text-slate-500 text-[#7a8fa6]">
+              <span className="text-xs text-[#7a8fa6]">
                 vs last period
               </span>
             </div>

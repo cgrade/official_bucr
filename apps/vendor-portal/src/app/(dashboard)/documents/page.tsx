@@ -256,7 +256,7 @@ export default function DocumentsPage() {
               <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 KYC Documents
               </h1>
-              <p className="text-slate-500 text-[#7a8fa6]">
+              <p className="text-[#7a8fa6]">
                 Manage your business verification documents
               </p>
             </div>
@@ -306,7 +306,7 @@ export default function DocumentsPage() {
                         <span className="text-xs text-red-500 font-medium">Required</span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-500 text-[#7a8fa6] mb-3">
+                    <p className="text-sm text-[#7a8fa6] mb-3">
                       {docType.description}
                     </p>
 
@@ -314,7 +314,7 @@ export default function DocumentsPage() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 flex-wrap">
                           {getStatusBadge(document.status)}
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-[#7a8fa6]">
                             Uploaded {formatDate(document.createdAt)}
                           </span>
                         </div>
@@ -351,7 +351,7 @@ export default function DocumentsPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-400 italic">No document uploaded</p>
+                      <p className="text-sm text-[#7a8fa6] italic">No document uploaded</p>
                     )}
                   </div>
 
@@ -361,7 +361,7 @@ export default function DocumentsPage() {
                       inline-flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer
                       transition-colors
                       ${document && document.status === 'approved'
-                        ? 'bg-slate-100 text-slate-400 bg-[#1a3c6e] cursor-not-allowed'
+                        ? 'bg-slate-100 text-[#7a8fa6] bg-[#1a3c6e] cursor-not-allowed'
                         : 'bg-primary-500 text-white hover:bg-primary-600'
                       }
                       ${isUploading ? 'opacity-50 cursor-wait' : ''}
@@ -401,17 +401,17 @@ export default function DocumentsPage() {
         {/* Info Card */}
         <div className="glass-card rounded-xl p-5 border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.02)]/50">
           <div className="flex items-start gap-3">
-            <Building2 className="h-5 w-5 text-slate-500 mt-0.5" />
+            <Building2 className="h-5 w-5 text-[#7a8fa6] mt-0.5" />
             <div>
               <h4 className="font-medium text-[#f5f0e8] mb-1">
                 Why do we need these documents?
               </h4>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">
+              <p className="text-sm text-[#7a8fa6]">
                 We verify all vendors to ensure the safety and trust of our platform users. 
                 Once verified, your business will be visible to customers and you can start 
                 receiving reservations and orders.
               </p>
-              <ul className="mt-3 space-y-1 text-sm text-slate-500 text-[#7a8fa6]">
+              <ul className="mt-3 space-y-1 text-sm text-[#7a8fa6]">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                   CAC and Owner ID are required for verification

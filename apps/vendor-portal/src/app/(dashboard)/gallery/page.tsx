@@ -144,7 +144,7 @@ export default function GalleryPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Gallery</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your restaurant photos</p>
+              <p className="text-sm text-[#7a8fa6]">Manage your restaurant photos</p>
             </div>
           </div>
           
@@ -153,7 +153,7 @@ export default function GalleryPage() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'grid' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-slate-400'
+                  viewMode === 'grid' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-[#7a8fa6]'
                 }`}
               >
                 <Grid className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function GalleryPage() {
               <button
                 onClick={() => setViewMode('large')}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'large' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-slate-400'
+                  viewMode === 'large' ? 'bg-[rgba(255,255,255,0.03)] shadow-sm' : 'text-[#7a8fa6]'
                 }`}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -188,7 +188,7 @@ export default function GalleryPage() {
                 <ImageIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Total Photos</p>
+                <p className="text-sm text-[#7a8fa6]">Total Photos</p>
                 <p className="text-2xl font-bold text-[#f5f0e8]">{images.length}</p>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function GalleryPage() {
                 <Star className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Featured</p>
+                <p className="text-sm text-[#7a8fa6]">Featured</p>
                 <p className="text-2xl font-bold text-[#f5f0e8]">
                   {images.filter((i: any) => i.isFeatured).length}
                 </p>
@@ -224,7 +224,7 @@ export default function GalleryPage() {
                 <Eye className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Total Views</p>
+                <p className="text-sm text-[#7a8fa6]">Total Views</p>
                 <p className="text-2xl font-bold text-[#f5f0e8]">0</p>
               </div>
             </div>
@@ -243,10 +243,10 @@ export default function GalleryPage() {
             className="flex h-64 flex-col items-center justify-center glass-card rounded-2xl"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
-              <ImageIcon className="h-8 w-8 text-slate-400" />
+              <ImageIcon className="h-8 w-8 text-[#7a8fa6]" />
             </div>
-            <p className="text-slate-500 text-[#7a8fa6] font-medium">No photos yet</p>
-            <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Upload photos to showcase your restaurant</p>
+            <p className="text-[#7a8fa6] font-medium">No photos yet</p>
+            <p className="text-sm text-[#7a8fa6] text-[rgba(122,143,166,0.7)] mt-1">Upload photos to showcase your restaurant</p>
             <Button className="btn-gradient mt-4 gap-2" onClick={handleUploadClick} disabled={uploadMutation.isPending}>
               {uploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               {uploadMutation.isPending ? 'Uploading...' : 'Upload First Photo'}
@@ -277,7 +277,7 @@ export default function GalleryPage() {
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-[rgba(255,255,255,0.06)] dark: dark:">
-                    <ImageIcon className="h-12 w-12 text-slate-400" />
+                    <ImageIcon className="h-12 w-12 text-[#7a8fa6]" />
                   </div>
                 )}
 
@@ -317,7 +317,7 @@ export default function GalleryPage() {
               transition={{ delay: images.length * 0.05 }}
               onClick={handleUploadClick}
               disabled={uploadMutation.isPending}
-              className={`rounded-2xl border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8] hover:border-slate-400 dark:hover:border-slate-600 transition-colors ${
+              className={`rounded-2xl border-2 border-dashed border-[rgba(201,168,76,0.18)] flex flex-col items-center justify-center gap-2 text-[#7a8fa6] hover:text-slate-600 hover:text-[#f5f0e8] hover:border-slate-400 dark:hover:border-slate-600 transition-colors ${
                 viewMode === 'grid' ? 'aspect-square' : 'aspect-video'
               }`}
             >
@@ -362,7 +362,7 @@ export default function GalleryPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <ImageIcon className="h-24 w-24 text-slate-400" />
+                  <ImageIcon className="h-24 w-24 text-[#7a8fa6]" />
                 )}
               </div>
               <div className="p-6">
@@ -430,7 +430,7 @@ export default function GalleryPage() {
                 <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-[#f5f0e8] mb-2">Delete Photo?</h3>
-              <p className="text-sm text-slate-500 text-[#7a8fa6] mb-6">
+              <p className="text-sm text-[#7a8fa6] mb-6">
                 This action cannot be undone. The photo will be permanently removed.
               </p>
               <div className="flex gap-3">

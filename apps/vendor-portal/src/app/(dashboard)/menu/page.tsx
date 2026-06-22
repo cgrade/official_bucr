@@ -311,13 +311,13 @@ export default function MenuPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Menu Management</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your restaurant menu items</p>
+              <p className="text-sm text-[#7a8fa6]">Manage your restaurant menu items</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
               <Input
                 placeholder="Search menu..."
                 value={search}
@@ -363,10 +363,10 @@ export default function MenuPage() {
             className="flex h-64 flex-col items-center justify-center glass-card rounded-2xl"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
-              <UtensilsCrossed className="h-8 w-8 text-slate-400" />
+              <UtensilsCrossed className="h-8 w-8 text-[#7a8fa6]" />
             </div>
-            <p className="text-slate-500 text-[#7a8fa6] font-medium">No menu items found</p>
-            <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Add your first menu item to get started</p>
+            <p className="text-[#7a8fa6] font-medium">No menu items found</p>
+            <p className="text-sm text-[#7a8fa6] text-[rgba(122,143,166,0.7)] mt-1">Add your first menu item to get started</p>
             <Button className="btn-gradient mt-4 gap-2" onClick={openCreateModal}>
               <Plus className="h-4 w-4" />
               Add First Item
@@ -392,7 +392,7 @@ export default function MenuPage() {
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <ImageIcon className="h-12 w-12 text-slate-400" />
+                      <ImageIcon className="h-12 w-12 text-[#7a8fa6]" />
                     </div>
                   )}
                   
@@ -429,7 +429,7 @@ export default function MenuPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-semibold text-[#f5f0e8] line-clamp-1">{item.name}</h3>
-                      <p className="text-sm text-slate-500 text-[#7a8fa6] line-clamp-2 mt-1">
+                      <p className="text-sm text-[#7a8fa6] line-clamp-2 mt-1">
                         {item.description || 'No description'}
                       </p>
                     </div>
@@ -442,7 +442,7 @@ export default function MenuPage() {
                         {formatCurrency(item.price)}
                       </span>
                     ) : (
-                      <span className="text-sm text-slate-400">Dine-in only</span>
+                      <span className="text-sm text-[#7a8fa6]">Dine-in only</span>
                     )}
 
                     <div className="flex items-center gap-1">
@@ -457,7 +457,7 @@ export default function MenuPage() {
                         </button>
                         {eightySixMenu === item.id && (
                           <div className="absolute right-0 bottom-full mb-1 z-20 w-44 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(201,168,76,0.18)] shadow-xl overflow-hidden">
-                            <p className="px-3 py-2 text-xs font-semibold text-slate-500 text-[#7a8fa6] border-b border-[rgba(201,168,76,0.1)]">
+                            <p className="px-3 py-2 text-xs font-semibold text-[#7a8fa6] border-b border-[rgba(201,168,76,0.1)]">
                               Mark unavailable for…
                             </p>
                             {[
@@ -486,7 +486,7 @@ export default function MenuPage() {
                         className={`p-2 rounded-lg transition-colors ${
                           item.isAvailable
                             ? 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20'
-                            : 'text-slate-400 bg-[rgba(255,255,255,0.05)] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)]'
+                            : 'text-[#7a8fa6] bg-[rgba(255,255,255,0.05)] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)]'
                         }`}
                         title={item.isAvailable ? 'Mark unavailable' : 'Mark available'}
                       >
@@ -527,7 +527,7 @@ export default function MenuPage() {
                   {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
                 </h2>
                 <button onClick={closeModal} className="p-2 hover:bg-[rgba(255,255,255,0.06)] rounded-lg">
-                  <X className="h-5 w-5 text-slate-500" />
+                  <X className="h-5 w-5 text-[#7a8fa6]" />
                 </button>
               </div>
 
@@ -566,7 +566,7 @@ export default function MenuPage() {
                           className="w-full h-full object-cover" 
                         />
                       ) : (
-                        <ImageIcon className="h-8 w-8 text-slate-400" />
+                        <ImageIcon className="h-8 w-8 text-[#7a8fa6]" />
                       )}
                     </div>
                     <div>
@@ -588,7 +588,7 @@ export default function MenuPage() {
                         {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                         {uploadingImage ? 'Uploading...' : 'Upload Image'}
                       </Button>
-                      <p className="text-xs text-slate-500 text-[#7a8fa6] mt-1">PNG, JPG up to 5MB</p>
+                      <p className="text-xs text-[#7a8fa6] mt-1">PNG, JPG up to 5MB</p>
                     </div>
                   </div>
                 </div>
@@ -732,7 +732,7 @@ export default function MenuPage() {
                 <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-[#f5f0e8] mb-2">Delete Menu Item?</h3>
-              <p className="text-sm text-slate-500 text-[#7a8fa6] mb-6">
+              <p className="text-sm text-[#7a8fa6] mb-6">
                 This action cannot be undone. The item will be permanently removed.
               </p>
               <div className="flex gap-3">

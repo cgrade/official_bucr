@@ -84,13 +84,13 @@ export default function ReservationsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Reservations</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage all your restaurant bookings</p>
+              <p className="text-sm text-[#7a8fa6]">Manage all your restaurant bookings</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a8fa6]" />
               <Input
                 placeholder="Search by name or reference..."
                 value={search}
@@ -147,8 +147,8 @@ export default function ReservationsPage() {
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
                 <CalendarCheck className="h-8 w-8 text-[rgba(201,168,76,0.4)]" />
               </div>
-              <p className="text-slate-500 text-[#7a8fa6] font-medium">No reservations found</p>
-              <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Bookings will appear here</p>
+              <p className="text-[#7a8fa6] font-medium">No reservations found</p>
+              <p className="text-sm text-[#7a8fa6] text-[rgba(122,143,166,0.7)] mt-1">Bookings will appear here</p>
             </div>
           ) : (
             <div className="divide-y divide-[rgba(201,168,76,0.08)]">
@@ -177,11 +177,11 @@ export default function ReservationsPage() {
                         <p className="font-semibold text-[#f5f0e8]">
                           {reservation.user?.name || reservation.user?.fullName || 'Guest'}
                         </p>
-                        <span className="font-mono text-xs text-slate-500 text-[#7a8fa6] bg-[rgba(255,255,255,0.05)] px-2 py-0.5 rounded">
+                        <span className="font-mono text-xs text-[#7a8fa6] bg-[rgba(255,255,255,0.05)] px-2 py-0.5 rounded">
                           {reservation.reference}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500 text-[#7a8fa6]">
+                      <div className="flex items-center gap-4 mt-1 text-sm text-[#7a8fa6]">
                         {reservation.user?.phone && (
                           <span className="flex items-center gap-1">
                             <Phone className="h-3.5 w-3.5" />
@@ -243,7 +243,7 @@ export default function ReservationsPage() {
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-[rgba(201,168,76,0.18)] dark:border-[rgba(201,168,76,0.12)] px-6 py-4">
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">
+              <p className="text-sm text-[#7a8fa6]">
                 Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} results

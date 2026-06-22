@@ -132,7 +132,7 @@ export default function DocumentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#f5f0e8]">Document Review</h1>
-          <p className="text-slate-500 text-[#7a8fa6]">Review and verify vendor documents</p>
+          <p className="text-[#7a8fa6]">Review and verify vendor documents</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export default function DocumentsPage() {
               <p className="text-2xl font-bold text-[#f5f0e8]">
                 {documents.filter(d => d.status === 'pending').length || '—'}
               </p>
-              <p className="text-sm text-slate-500">Pending Review</p>
+              <p className="text-sm text-[#7a8fa6]">Pending Review</p>
             </div>
           </div>
         </button>
@@ -175,7 +175,7 @@ export default function DocumentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-[#f5f0e8]">—</p>
-              <p className="text-sm text-slate-500">Approved</p>
+              <p className="text-sm text-[#7a8fa6]">Approved</p>
             </div>
           </div>
         </button>
@@ -195,7 +195,7 @@ export default function DocumentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-[#f5f0e8]">—</p>
-              <p className="text-sm text-slate-500">Rejected</p>
+              <p className="text-sm text-[#7a8fa6]">Rejected</p>
             </div>
           </div>
         </button>
@@ -206,7 +206,7 @@ export default function DocumentsPage() {
         {/* Search Bar */}
         <div className="p-4 border-b border-[rgba(201,168,76,0.18)]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
             <input
               type="text"
               placeholder="Search by vendor name..."
@@ -221,31 +221,31 @@ export default function DocumentsPage() {
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
-            <p className="mt-2 text-slate-500">Loading documents...</p>
+            <p className="mt-2 text-[#7a8fa6]">Loading documents...</p>
           </div>
         ) : documents.length === 0 ? (
           <div className="p-8 text-center">
             <FileText className="h-12 w-12 text-slate-300 text-[#f5f0e8] mx-auto mb-3" />
-            <p className="text-slate-500 text-[#7a8fa6]">No documents found</p>
+            <p className="text-[#7a8fa6]">No documents found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[rgba(255,255,255,0.02)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase tracking-wider">
                     Vendor
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase tracking-wider">
                     Document Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase tracking-wider">
                     Submitted
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-[#7a8fa6] uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -256,19 +256,19 @@ export default function DocumentsPage() {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-lg bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
-                          <Building2 className="h-5 w-5 text-slate-500" />
+                          <Building2 className="h-5 w-5 text-[#7a8fa6]" />
                         </div>
                         <div>
                           <p className="font-medium text-[#f5f0e8]">
                             {doc.vendor?.businessName || 'Unknown Vendor'}
                           </p>
-                          <p className="text-sm text-slate-500">{doc.vendor?.email}</p>
+                          <p className="text-sm text-[#7a8fa6]">{doc.vendor?.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-slate-400" />
+                        <FileText className="h-4 w-4 text-[#7a8fa6]" />
                         <span className="text-[#f5f0e8]">
                           {documentTypeLabels[doc.type] || doc.type}
                         </span>
@@ -277,7 +277,7 @@ export default function DocumentsPage() {
                         )}
                       </div>
                       {doc.fileName && (
-                        <p className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">
+                        <p className="text-xs text-[#7a8fa6] mt-1 truncate max-w-[200px]">
                           {doc.fileName}
                         </p>
                       )}
@@ -290,7 +290,7 @@ export default function DocumentsPage() {
                         </p>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-500">
+                    <td className="px-4 py-4 text-sm text-[#7a8fa6]">
                       {formatDate(doc.createdAt)}
                     </td>
                     <td className="px-4 py-4">
@@ -342,7 +342,7 @@ export default function DocumentsPage() {
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="p-4 border-t border-[rgba(201,168,76,0.18)] flex items-center justify-between">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[#7a8fa6]">
               Page {pagination.page} of {pagination.totalPages}
             </p>
             <div className="flex gap-2">
@@ -423,7 +423,7 @@ export default function DocumentsPage() {
                 <h3 className="text-lg font-semibold text-[#f5f0e8]">
                   {documentTypeLabels[selectedDoc.type]}
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#7a8fa6]">
                   {selectedDoc.vendor?.businessName} • {selectedDoc.fileName}
                 </p>
               </div>

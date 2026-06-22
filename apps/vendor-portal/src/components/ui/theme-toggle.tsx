@@ -33,8 +33,8 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('light')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'light'
-            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-amber-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
+            ? 'bg-[rgba(255,255,255,0.04)] text-amber-500 shadow-md'
+            : 'text-[#7a8fa6] hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="Light mode"
         aria-label="Switch to light mode"
@@ -46,8 +46,8 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('dark')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'dark'
-            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-primary-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
+            ? 'bg-[rgba(255,255,255,0.04)] text-primary-500 shadow-md'
+            : 'text-[#7a8fa6] hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="Dark mode"
         aria-label="Switch to dark mode"
@@ -59,8 +59,8 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('system')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'system'
-            ? 'bg-white bg-[rgba(255,255,255,0.04)] text-tertiary-500 shadow-md'
-            : 'text-slate-400 hover:text-slate-600 hover:text-[#f5f0e8]'
+            ? 'bg-[rgba(255,255,255,0.04)] text-tertiary-500 shadow-md'
+            : 'text-[#7a8fa6] hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="System theme"
         aria-label="Use system theme"

@@ -136,14 +136,14 @@ export default function MapPicker({ lat, lng, address, onChange, className = '' 
       {/* Address search row */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
           <input
             type="text"
             value={addressInput}
             onChange={(e) => setAddressInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && geocodeAddress()}
             placeholder="Enter address to geocode…"
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 border-[rgba(201,168,76,0.18)] rounded-xl bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/30"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-[rgba(201,168,76,0.18)] rounded-xl bg-[rgba(255,255,255,0.04)] text-[#f5f0e8] placeholder:text-[#7a8fa6] focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/30"
           />
         </div>
         <button
@@ -160,7 +160,7 @@ export default function MapPicker({ lat, lng, address, onChange, className = '' 
       {/* Map container */}
       <div
         ref={mapContainerRef}
-        className="relative w-full h-64 rounded-xl overflow-hidden border border-slate-200 border-[rgba(201,168,76,0.18)] bg-slate-100 bg-[rgba(255,255,255,0.04)]"
+        className="relative w-full h-64 rounded-xl overflow-hidden border border-[rgba(201,168,76,0.18)] bg-slate-100 bg-[rgba(255,255,255,0.04)]"
       >
         {!mapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -169,12 +169,12 @@ export default function MapPicker({ lat, lng, address, onChange, className = '' 
         )}
         {!token && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-100 bg-[rgba(255,255,255,0.04)]">
-            <p className="text-sm text-slate-500">Set NEXT_PUBLIC_MAPBOX_TOKEN to enable map</p>
+            <p className="text-sm text-[#7a8fa6]">Set NEXT_PUBLIC_MAPBOX_TOKEN to enable map</p>
           </div>
         )}
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-[#7a8fa6]">
         Drag the pin to adjust position precisely, or type an address and click Find.
       </p>
     </div>

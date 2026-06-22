@@ -142,7 +142,7 @@ export default function SubscriptionPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Subscription</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your plan and billing</p>
+              <p className="text-sm text-[#7a8fa6]">Manage your plan and billing</p>
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function SubscriptionPage() {
                     Active
                   </span>
                 </div>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">
+                <p className="text-sm text-[#7a8fa6]">
                   {currentPlan.free ? 'Free forever' : `${formatCurrency(currentPlan.price)}/month`}
                   {!currentPlan.free && vendor?.subscriptionExpiresAt
                     ? ` • Renews on ${new Date(vendor.subscriptionExpiresAt).toLocaleDateString()}`
@@ -300,7 +300,7 @@ export default function SubscriptionPage() {
         >
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-[#f5f0e8]">Why Upgrade?</h2>
-            <p className="text-slate-500 text-[#7a8fa6] mt-2">Unlock powerful features to grow your business</p>
+            <p className="text-[#7a8fa6] mt-2">Unlock powerful features to grow your business</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -316,7 +316,7 @@ export default function SubscriptionPage() {
                   <benefit.icon className="h-6 w-6 text-[#c9a84c]" />
                 </div>
                 <h3 className="font-semibold text-[#f5f0e8]">{benefit.title}</h3>
-                <p className="text-sm text-slate-500 text-[#7a8fa6] mt-1">{benefit.desc}</p>
+                <p className="text-sm text-[#7a8fa6] mt-1">{benefit.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -324,7 +324,7 @@ export default function SubscriptionPage() {
 
         {/* FAQ or Support */}
         <div className="text-center py-8">
-          <p className="text-slate-500 text-[#7a8fa6]">
+          <p className="text-[#7a8fa6]">
             Have questions about our plans?{' '}
             <button className="text-[#c9a84c] font-medium hover:text-[#f5f0e8]">
               Contact our sales team

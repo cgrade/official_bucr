@@ -199,7 +199,7 @@ function ExperiencesPageInner() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Experiences</h1>
-              <p className="text-slate-500 text-[#7a8fa6]">Create special dining experiences</p>
+              <p className="text-[#7a8fa6]">Create special dining experiences</p>
             </div>
           </div>
           <Button onClick={openCreateModal} className="btn-gradient gap-2">
@@ -213,7 +213,7 @@ function ExperiencesPageInner() {
           <div className="text-center py-16">
             <Sparkles className="h-16 w-16 mx-auto text-slate-300 mb-4" />
             <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">No experiences yet</h3>
-            <p className="text-slate-500 mb-4">Create your first special dining experience</p>
+            <p className="text-[#7a8fa6] mb-4">Create your first special dining experience</p>
             <Button onClick={openCreateModal} className="btn-gradient">
               <Plus className="h-4 w-4 mr-2" /> Create Experience
             </Button>
@@ -238,14 +238,14 @@ function ExperiencesPageInner() {
                         {EXPERIENCE_TYPES.find((t) => t.value === exp.type)?.label || exp.type}
                       </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs ${exp.isActive ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${exp.isActive ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-[#7a8fa6]'}`}>
                       {exp.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                   {exp.description && (
                     <p className="text-sm text-slate-600 text-[#7a8fa6] mb-4 line-clamp-2">{exp.description}</p>
                   )}
-                  <div className="grid grid-cols-2 gap-2 text-sm text-slate-500 mb-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm text-[#7a8fa6] mb-4">
                     <div className="flex items-center gap-1">
                       <CreditCard className="h-4 w-4" />
                       <span>{exp.creditsRequired} credits</span>
@@ -417,8 +417,8 @@ function ExperiencesPageInner() {
                         </button>
                       </div>
                     ))}
-                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.04)]">
-                      {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5 text-slate-400" />}
+                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-[rgba(201,168,76,0.18)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.04)]">
+                      {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5 text-[#7a8fa6]" />}
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                     </label>
                   </div>
@@ -462,7 +462,7 @@ function ExperiencesPageInner() {
               className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 max-w-sm w-full"
             >
               <h3 className="text-lg font-semibold mb-2">Delete Experience?</h3>
-              <p className="text-slate-500 mb-4">This action cannot be undone.</p>
+              <p className="text-[#7a8fa6] mb-4">This action cannot be undone.</p>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="flex-1">Cancel</Button>
                 <Button

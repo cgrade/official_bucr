@@ -8,7 +8,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#f5f0e8]">Notifications</h1>
-        <p className="text-slate-500 mt-1">System notifications and alerts</p>
+        <p className="text-[#7a8fa6] mt-1">System notifications and alerts</p>
       </div>
 
       {/* Empty State */}
@@ -17,7 +17,7 @@ export default function NotificationsPage() {
         <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">
           No Notifications
         </h3>
-        <p className="text-slate-500 text-sm">
+        <p className="text-[#7a8fa6] text-sm">
           System notifications will appear here when there are important events.
         </p>
       </div>

@@ -127,7 +127,7 @@ function FeaturedPageInner() {
               <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 Featured Spots
               </h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">
+              <p className="text-sm text-[#7a8fa6]">
                 Get more visibility with featured placements
               </p>
             </div>
@@ -168,11 +168,11 @@ function FeaturedPageInner() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500 text-[#7a8fa6] mb-2">
+                  <div className="flex items-center gap-2 text-sm text-[#7a8fa6] mb-2">
                     <Calendar className="h-4 w-4" />
                     <span>Ends {formatDistanceToNow(new Date(spot.endDate), { addSuffix: true })}</span>
                   </div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-[#7a8fa6]">
                     {format(new Date(spot.startDate), 'MMM d')} - {format(new Date(spot.endDate), 'MMM d, yyyy')}
                   </div>
                 </div>
@@ -203,7 +203,7 @@ function FeaturedPageInner() {
                   {pkg.type}
                 </span>
                 {pkg.description && (
-                  <p className="text-sm text-slate-500 text-[#7a8fa6] mb-4">
+                  <p className="text-sm text-[#7a8fa6] mb-4">
                     {pkg.description}
                   </p>
                 )}
@@ -228,7 +228,7 @@ function FeaturedPageInner() {
             ))}
           </div>
           {availablePackages.length === 0 && (
-            <div className="text-center py-12 text-slate-500 text-[#7a8fa6]">
+            <div className="text-center py-12 text-[#7a8fa6]">
               <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No featured packages available at the moment</p>
             </div>
@@ -239,17 +239,17 @@ function FeaturedPageInner() {
         {pastSpots.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold text-[#f5f0e8] mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-slate-400" />
+              <Clock className="h-5 w-5 text-[#7a8fa6]" />
               Past Featured Spots
             </h2>
             <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl border border-[rgba(201,168,76,0.18)] overflow-hidden">
               <table className="w-full">
                 <thead className="bg-[rgba(255,255,255,0.02)]/50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Package</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Period</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 text-[#7a8fa6] uppercase">Credits</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase">Package</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase">Period</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase">Credits</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -258,13 +258,13 @@ function FeaturedPageInner() {
                       <td className="px-4 py-3 text-sm text-[#f5f0e8] font-medium">
                         {spot.package?.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6] capitalize">
+                      <td className="px-4 py-3 text-sm text-[#7a8fa6] capitalize">
                         {spot.type}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6]">
+                      <td className="px-4 py-3 text-sm text-[#7a8fa6]">
                         {format(new Date(spot.startDate), 'MMM d')} - {format(new Date(spot.endDate), 'MMM d, yyyy')}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 text-[#7a8fa6]">
+                      <td className="px-4 py-3 text-sm text-[#7a8fa6]">
                         {spot.creditsPaid}
                       </td>
                     </tr>
@@ -291,7 +291,7 @@ function FeaturedPageInner() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-[#f5f0e8]">{selectedPackage.name}</h4>
-                  <span className="text-xs text-slate-500 uppercase">{selectedPackage.type}</span>
+                  <span className="text-xs text-[#7a8fa6] uppercase">{selectedPackage.type}</span>
                 </div>
               </div>
               <div className="flex items-center gap-4 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
@@ -309,7 +309,7 @@ function FeaturedPageInner() {
                 <select
                   value={selectedExperience}
                   onChange={(e) => setSelectedExperience(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
+                  className="w-full px-3 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
                 >
                   <option value="">Choose an experience...</option>
                   {experiences.map((exp: any) => (
@@ -328,7 +328,7 @@ function FeaturedPageInner() {
                 <select
                   value={selectedOffer}
                   onChange={(e) => setSelectedOffer(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
+                  className="w-full px-3 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[#f5f0e8]"
                 >
                   <option value="">Choose an offer...</option>
                   {offers.map((offer: any) => (

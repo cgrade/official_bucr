@@ -98,13 +98,13 @@ export default function DashboardPage() {
             >
               {greeting()}, <span className="text-[#c9a84c]">{vendor?.businessName || 'there'}</span>!
             </motion.h1>
-            <p className="text-sm text-slate-500 text-[#7a8fa6]">
+            <p className="text-sm text-[#7a8fa6]">
               {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.05)] text-slate-500 text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(255,255,255,0.05)] text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 3
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <p className="text-sm font-medium text-slate-500 text-[#7a8fa6]">{stat.title}</p>
+                <p className="text-sm font-medium text-[#7a8fa6]">{stat.title}</p>
                 <p className="mt-1 text-3xl font-bold text-[#f5f0e8]">{stat.value}</p>
               </div>
             </motion.div>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-[#f5f0e8]">Today&apos;s Reservations</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">
+                <p className="text-sm text-[#7a8fa6]">
                   {todayReservations?.data?.length || 0} bookings scheduled
                 </p>
               </div>
@@ -236,10 +236,10 @@ export default function DashboardPage() {
             ) : todayReservations?.data?.length === 0 ? (
               <div className="flex h-48 flex-col items-center justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.05)] mb-4">
-                  <CalendarCheck className="h-8 w-8 text-slate-400" />
+                  <CalendarCheck className="h-8 w-8 text-[#7a8fa6]" />
                 </div>
-                <p className="text-slate-500 text-[#7a8fa6] font-medium">No reservations for today</p>
-                <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">New bookings will appear here</p>
+                <p className="text-[#7a8fa6] font-medium">No reservations for today</p>
+                <p className="text-sm text-[#7a8fa6] text-[rgba(122,143,166,0.7)] mt-1">New bookings will appear here</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                         <p className="font-semibold text-[#f5f0e8] truncate">
                           {reservation.user?.name || reservation.user?.fullName || 'Guest'}
                         </p>
-                        <p className="text-sm text-slate-500 text-[#7a8fa6]">
+                        <p className="text-sm text-[#7a8fa6]">
                           {reservation.partySize} guests • {reservation.reference}
                         </p>
                       </div>

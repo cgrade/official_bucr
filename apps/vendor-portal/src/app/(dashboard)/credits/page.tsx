@@ -107,7 +107,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-[#f5f0e8]">Bucr Credits</h1>
-            <p className="text-slate-500 text-[#7a8fa6] mt-1">Purchase, earn, and spend credits on the platform</p>
+            <p className="text-[#7a8fa6] mt-1">Purchase, earn, and spend credits on the platform</p>
           </div>
           <Button onClick={() => setShowPurchaseModal(true)} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />Buy Credits
@@ -235,7 +235,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
         <div className="glass-card rounded-2xl p-6">
           <h2 className="text-xl font-semibold text-[#f5f0e8] mb-4">Recent Transactions</h2>
           {transactions.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">No transactions yet. Purchase or earn credits to see them here.</p>
+            <p className="text-[#7a8fa6] text-center py-8">No transactions yet. Purchase or earn credits to see them here.</p>
           ) : (
             <div className="space-y-3">
               {transactions.map((tx: any) => (
@@ -264,7 +264,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
             <div className="glass-card rounded-2xl p-6 w-full max-w-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-[#f5f0e8]">Buy Bucr Credits</h3>
-                <button onClick={() => setShowPurchaseModal(false)} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => setShowPurchaseModal(false)} className="text-[#7a8fa6] hover:text-slate-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -325,11 +325,11 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
               {(selectedPackage || (customCredits && parseInt(customCredits) >= 10)) && (
                 <div className="bg-[rgba(255,255,255,0.04)] rounded-xl p-4 mb-6">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">Credits</span>
+                    <span className="text-[#7a8fa6]">Credits</span>
                     <span className="font-medium">{selectedPackage || parseInt(customCredits)}</span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">Rate</span>
+                    <span className="text-[#7a8fa6]">Rate</span>
                     <span className="font-medium">₦10.60/credit (₦10 + 6% spread)</span>
                   </div>
                   <div className="border-t border-[rgba(201,168,76,0.18)] pt-2 mt-2 flex justify-between">
@@ -353,7 +353,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
                 )}
               </Button>
 
-              <p className="text-xs text-slate-400 text-center mt-3">
+              <p className="text-xs text-[#7a8fa6] text-center mt-3">
                 Secure payment via Paystack. Card, Bank Transfer, USSD supported.
               </p>
             </div>

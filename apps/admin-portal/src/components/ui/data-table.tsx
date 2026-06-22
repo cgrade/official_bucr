@@ -87,24 +87,24 @@ export function DataTable<T extends Record<string, any>>({
     <div className={cn('glass-card rounded-2xl overflow-hidden', className)}>
       {/* Header */}
       {showSearch && (
-        <div className="p-4 border-b border-slate-200 border-[rgba(201,168,76,0.18)]">
+        <div className="p-4 border-b border-[rgba(201,168,76,0.18)]">
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 text-[#7a8fa6] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.04)] text-[#f5f0e8] placeholder-[#7a8fa6] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
               />
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                 <Filter className="h-4 w-4" />
                 <span className="text-sm font-medium">Filter</span>
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                 <Download className="h-4 w-4" />
                 <span className="text-sm font-medium">Export</span>
               </button>
@@ -116,13 +116,13 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50 bg-[rgba(255,255,255,0.04)]/50">
+          <thead className="bg-[rgba(255,255,255,0.04)]/50">
             <tr>
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
                   className={cn(
-                    'px-4 py-4 text-left text-sm font-semibold text-slate-900 text-[#7a8fa6]',
+                    'px-4 py-4 text-left text-sm font-semibold text-[#f5f0e8]',
                     column.sortable && 'cursor-pointer hover:bg-slate-100 hover:bg-[rgba(255,255,255,0.06)] transition-colors',
                     column.className
                   )}
@@ -150,7 +150,7 @@ export function DataTable<T extends Record<string, any>>({
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center">
-                  <div className="text-slate-500 text-[#7a8fa6]">
+                  <div className="text-[#7a8fa6]">
                     <p className="text-lg font-medium">No data found</p>
                     <p className="text-sm mt-1">Try adjusting your search or filters</p>
                   </div>
@@ -163,7 +163,7 @@ export function DataTable<T extends Record<string, any>>({
                     <td
                       key={String(column.key)}
                       className={cn(
-                        'px-4 py-4 text-sm text-slate-900 text-[#7a8fa6]',
+                        'px-4 py-4 text-sm text-[#f5f0e8]',
                         column.className
                       )}
                     >
@@ -184,9 +184,9 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Pagination */}
       {showPagination && totalPages > 1 && (
-        <div className="px-4 py-4 border-t border-slate-200 border-[rgba(201,168,76,0.18)]">
+        <div className="px-4 py-4 border-t border-[rgba(201,168,76,0.18)]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-500 text-[#7a8fa6]">
+            <div className="text-sm text-[#7a8fa6]">
               Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, data.length)} of {data.length} results
             </div>
             
@@ -194,7 +194,7 @@ export function DataTable<T extends Record<string, any>>({
               <button
                 onClick={() => onPageChange?.(1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronsLeft className="h-4 w-4" />
               </button>
@@ -202,7 +202,7 @@ export function DataTable<T extends Record<string, any>>({
               <button
                 onClick={() => onPageChange?.(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -218,7 +218,7 @@ export function DataTable<T extends Record<string, any>>({
                         'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                         currentPage === pageNum
                           ? 'bg-primary-500 text-white'
-                          : 'border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)]'
+                          : 'border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)]'
                       )}
                     >
                       {pageNum}
@@ -230,7 +230,7 @@ export function DataTable<T extends Record<string, any>>({
               <button
                 onClick={() => onPageChange?.(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -238,7 +238,7 @@ export function DataTable<T extends Record<string, any>>({
               <button
                 onClick={() => onPageChange?.(totalPages)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[rgba(201,168,76,0.18)] hover:bg-slate-50 hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronsRight className="h-4 w-4" />
               </button>

@@ -153,7 +153,7 @@ function DisplaySettingsPageInner() {
               <h1 className="text-2xl font-bold text-[#f5f0e8]">
                 Display Settings
               </h1>
-              <p className="text-slate-500 text-[#7a8fa6]">
+              <p className="text-[#7a8fa6]">
                 Control what mobile app users can see on your venue page
               </p>
             </div>
@@ -190,7 +190,7 @@ function DisplaySettingsPageInner() {
                   </div>
                   <div>
                     <p className="font-medium text-[#f5f0e8]">{item.label}</p>
-                    <p className="text-sm text-slate-500 text-[#7a8fa6]">{item.description}</p>
+                    <p className="text-sm text-[#7a8fa6]">{item.description}</p>
                   </div>
                 </div>
                 <button
@@ -231,7 +231,7 @@ function DisplaySettingsPageInner() {
             <div className="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
               <div>
                 <p className="font-medium text-[#f5f0e8]">Enable Promo Banner</p>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">
+                <p className="text-sm text-[#7a8fa6]">
                   Show a promotional message at the top of your venue page
                 </p>
               </div>
@@ -272,7 +272,7 @@ function DisplaySettingsPageInner() {
                   maxLength={500}
                 />
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[#7a8fa6]">
                     {(settings.promoMessage || '').length}/500 characters
                   </span>
                   <Button
@@ -350,7 +350,7 @@ function DisplaySettingsPageInner() {
             </div>
             {!settings.showMenu && !settings.showGallery && !settings.showExperiences && 
              !settings.showAchievements && !settings.showReviews && !settings.showSpecialOffers && (
-              <p className="text-sm text-slate-500 text-[#7a8fa6] mt-2">
+              <p className="text-sm text-[#7a8fa6] mt-2">
                 ⚠️ All sections are hidden. Users will only see basic venue info.
               </p>
             )}

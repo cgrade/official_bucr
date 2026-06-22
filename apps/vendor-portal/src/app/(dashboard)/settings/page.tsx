@@ -35,7 +35,7 @@ const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), {
   ssr: false,
   loading: () => (
     <div className="h-64 w-full rounded-xl bg-[rgba(255,255,255,0.05)] animate-pulse flex items-center justify-center">
-      <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+      <Loader2 className="h-5 w-5 animate-spin text-[#7a8fa6]" />
     </div>
   ),
 });
@@ -311,7 +311,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Settings</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your restaurant settings</p>
+              <p className="text-sm text-[#7a8fa6]">Manage your restaurant settings</p>
             </div>
           </div>
           
@@ -354,7 +354,7 @@ export default function SettingsPage() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Business Information</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Update your restaurant details</p>
+                <p className="text-sm text-[#7a8fa6]">Update your restaurant details</p>
               </div>
 
               {/* Logo Upload */}
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                       {uploadLogoMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                       {uploadLogoMutation.isPending ? 'Uploading...' : 'Upload Logo'}
                     </Button>
-                    <p className="text-xs text-slate-500 text-[#7a8fa6] mt-2">PNG, JPG, SVG up to 2MB</p>
+                    <p className="text-xs text-[#7a8fa6] mt-2">PNG, JPG, SVG up to 2MB</p>
                   </div>
                 </div>
               </div>
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                   <div>
                     <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Email</label>
                     <div className="relative mt-1.5">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
                       <Input 
                         value={profileForm.email}
                         onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
@@ -421,7 +421,7 @@ export default function SettingsPage() {
                   <div>
                     <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Phone</label>
                     <div className="relative mt-1.5">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
                       <Input 
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
@@ -434,7 +434,7 @@ export default function SettingsPage() {
                 <div>
                   <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Website</label>
                   <div className="relative mt-1.5">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8fa6]" />
                     <Input 
                       value={profileForm.website}
                       onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                 <div>
                   <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Address</label>
                   <div className="relative mt-1.5">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-[#7a8fa6]" />
                     <textarea 
                       rows={3}
                       value={profileForm.address}
@@ -612,7 +612,7 @@ export default function SettingsPage() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Business Hours</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Set your operating hours</p>
+                <p className="text-sm text-[#7a8fa6]">Set your operating hours</p>
               </div>
 
               <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -636,7 +636,7 @@ export default function SettingsPage() {
                         disabled={!hoursForm[day]?.isOpen}
                         className="h-9 rounded-lg w-28" 
                       />
-                      <span className="text-slate-400">to</span>
+                      <span className="text-[#7a8fa6]">to</span>
                       <Input 
                         type="time" 
                         value={hoursForm[day]?.close ?? '22:00'}
@@ -670,7 +670,7 @@ export default function SettingsPage() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Notification Preferences</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Choose how you want to be notified</p>
+                <p className="text-sm text-[#7a8fa6]">Choose how you want to be notified</p>
               </div>
 
               <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -684,7 +684,7 @@ export default function SettingsPage() {
                   <div key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
                     <div>
                       <p className="font-medium text-[#f5f0e8]">{item.label}</p>
-                      <p className="text-sm text-slate-500 text-[#7a8fa6]">{item.desc}</p>
+                      <p className="text-sm text-[#7a8fa6]">{item.desc}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input 
@@ -717,7 +717,7 @@ export default function SettingsPage() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Payment Settings</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage your payment information</p>
+                <p className="text-sm text-[#7a8fa6]">Manage your payment information</p>
               </div>
 
               <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -768,7 +768,7 @@ export default function SettingsPage() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Security Settings</h2>
-                <p className="text-sm text-slate-500 text-[#7a8fa6]">Protect your account</p>
+                <p className="text-sm text-[#7a8fa6]">Protect your account</p>
               </div>
 
               <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -811,7 +811,7 @@ export default function SettingsPage() {
 
               <div className="glass-card rounded-2xl p-6 border border-red-200 dark:border-red-500/20">
                 <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h3>
-                <p className="text-sm text-slate-500 text-[#7a8fa6] mb-4">
+                <p className="text-sm text-[#7a8fa6] mb-4">
                   Once you delete your account, there is no going back.
                 </p>
                 <Button variant="destructive" className="gap-2" onClick={handleDeleteAccount}>
@@ -835,7 +835,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Team Members</h2>
-                  <p className="text-sm text-slate-500 text-[#7a8fa6]">Manage staff access</p>
+                  <p className="text-sm text-[#7a8fa6]">Manage staff access</p>
                 </div>
                 <Button className="gap-2" onClick={() => setShowInviteModal(true)}>
                   <Users className="h-4 w-4" />
@@ -846,8 +846,8 @@ export default function SettingsPage() {
               <div className="glass-card rounded-2xl p-6">
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-slate-300 text-[#f5f0e8] mx-auto mb-3" />
-                  <p className="text-slate-500 text-[#7a8fa6]">No team members yet</p>
-                  <p className="text-sm text-slate-400 text-[rgba(122,143,166,0.7)] mt-1">Invite staff to help manage your restaurant</p>
+                  <p className="text-[#7a8fa6]">No team members yet</p>
+                  <p className="text-sm text-[#7a8fa6] text-[rgba(122,143,166,0.7)] mt-1">Invite staff to help manage your restaurant</p>
                 </div>
               </div>
             </motion.div>
@@ -948,7 +948,7 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Locations &amp; Map</h2>
-          <p className="text-sm text-slate-500 text-[#7a8fa6]">
+          <p className="text-sm text-[#7a8fa6]">
             Manage branch addresses. Coordinates are geocoded automatically by the server.
           </p>
         </div>
@@ -964,7 +964,7 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
       ) : branches.length === 0 ? (
         <div className="glass-card rounded-2xl p-8 text-center">
           <MapPin className="h-10 w-10 text-slate-300 text-[#f5f0e8] mx-auto mb-3" />
-          <p className="text-slate-500 text-[#7a8fa6]">No branches yet — add your first location above.</p>
+          <p className="text-[#7a8fa6]">No branches yet — add your first location above.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -990,14 +990,14 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
                     {b.latitude && b.longitude ? (
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs">📍 Geocoded</span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-[rgba(255,255,255,0.05)] text-slate-500 text-xs">No coordinates</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[rgba(255,255,255,0.05)] text-[#7a8fa6] text-xs">No coordinates</span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 text-[#7a8fa6] mt-0.5">
+                  <p className="text-sm text-[#7a8fa6] mt-0.5">
                     {b.address}, {b.city}, {b.state}
                   </p>
                 </div>
-                <Navigation className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                <Navigation className="h-4 w-4 text-[#7a8fa6] flex-shrink-0" />
               </div>
             </button>
           ))}
@@ -1024,7 +1024,7 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
               });
             }}
           />
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#7a8fa6]">
             Dragging the pin or clicking Find updates the branch coordinates immediately.
           </p>
         </div>

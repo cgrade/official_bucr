@@ -184,7 +184,7 @@ function SpecialOffersPageInner() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Special Offers</h1>
-              <p className="text-slate-500 text-[#7a8fa6]">Create promos and special deals</p>
+              <p className="text-[#7a8fa6]">Create promos and special deals</p>
             </div>
           </div>
           <Button onClick={openCreateModal} className="btn-gradient gap-2">
@@ -198,7 +198,7 @@ function SpecialOffersPageInner() {
           <div className="text-center py-16">
             <Tag className="h-16 w-16 mx-auto text-slate-300 mb-4" />
             <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">No special offers yet</h3>
-            <p className="text-slate-500 mb-4">Create your first promotional offer</p>
+            <p className="text-[#7a8fa6] mb-4">Create your first promotional offer</p>
             <Button onClick={openCreateModal} className="btn-gradient">
               <Plus className="h-4 w-4 mr-2" /> Create Offer
             </Button>
@@ -232,7 +232,7 @@ function SpecialOffersPageInner() {
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       isExpired(offer) ? 'bg-red-100 text-red-600' :
-                      offer.isActive ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'
+                      offer.isActive ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-[#7a8fa6]'
                     }`}>
                       {isExpired(offer) ? 'Expired' : offer.isActive ? 'Active' : 'Inactive'}
                     </span>
@@ -241,7 +241,7 @@ function SpecialOffersPageInner() {
                     <p className="text-sm text-slate-600 text-[#7a8fa6] mb-3 line-clamp-2">{offer.description}</p>
                   )}
                   {(offer.validFrom || offer.validUntil) && (
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
+                    <div className="flex items-center gap-1 text-xs text-[#7a8fa6] mb-3">
                       <Calendar className="h-3 w-3" />
                       <span>
                         {offer.validFrom && new Date(offer.validFrom).toLocaleDateString()}
@@ -251,7 +251,7 @@ function SpecialOffersPageInner() {
                     </div>
                   )}
                   {offer.terms && (
-                    <p className="text-xs text-slate-400 mb-4 line-clamp-1">Terms: {offer.terms}</p>
+                    <p className="text-xs text-[#7a8fa6] mb-4 line-clamp-1">Terms: {offer.terms}</p>
                   )}
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEditModal(offer)} className="flex-1">
@@ -380,13 +380,13 @@ function SpecialOffersPageInner() {
                       </button>
                     </div>
                   ) : (
-                    <label className="w-full h-24 rounded-lg border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.04)]">
+                    <label className="w-full h-24 rounded-lg border-2 border-dashed border-[rgba(201,168,76,0.18)] flex items-center justify-center cursor-pointer hover:bg-[rgba(255,255,255,0.04)]">
                       {uploadingImage ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                        <Loader2 className="h-6 w-6 animate-spin text-[#7a8fa6]" />
                       ) : (
                         <div className="text-center">
-                          <Upload className="h-6 w-6 mx-auto text-slate-400 mb-1" />
-                          <span className="text-sm text-slate-500">Upload image</span>
+                          <Upload className="h-6 w-6 mx-auto text-[#7a8fa6] mb-1" />
+                          <span className="text-sm text-[#7a8fa6]">Upload image</span>
                         </div>
                       )}
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -440,7 +440,7 @@ function SpecialOffersPageInner() {
               className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 max-w-sm w-full"
             >
               <h3 className="text-lg font-semibold mb-2">Delete Offer?</h3>
-              <p className="text-slate-500 mb-4">This action cannot be undone.</p>
+              <p className="text-[#7a8fa6] mb-4">This action cannot be undone.</p>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="flex-1">Cancel</Button>
                 <Button

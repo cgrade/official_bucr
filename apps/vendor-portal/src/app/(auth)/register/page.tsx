@@ -406,13 +406,13 @@ export default function RegisterPage() {
             className="flex items-center gap-3"
           >
             <BucrLogo width={160} height={40} />
-            <span className="text-sm text-slate-400 ml-2">Vendor Portal</span>
+            <span className="text-sm text-[#7a8fa6] ml-2">Vendor Portal</span>
           </motion.div>
           
           {/* Progress Steps */}
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-white">Join Bucr Today</h2>
-            <p className="text-slate-400">Complete these steps to register your restaurant</p>
+            <p className="text-[#7a8fa6]">Complete these steps to register your restaurant</p>
             
             <div className="space-y-4 mt-8">
               {steps.map((step, index) => {
@@ -447,11 +447,11 @@ export default function RegisterPage() {
                     <div>
                       <p className={cn(
                         'font-medium',
-                        isCurrent ? 'text-white' : 'text-slate-400'
+                        isCurrent ? 'text-white' : 'text-[#7a8fa6]'
                       )}>
                         {step.name}
                       </p>
-                      <p className="text-sm text-slate-500">Step {step.id} of 4</p>
+                      <p className="text-sm text-[#7a8fa6]">Step {step.id} of 4</p>
                     </div>
                   </motion.div>
                 );
@@ -460,14 +460,14 @@ export default function RegisterPage() {
           </div>
           
           {/* Footer */}
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[#7a8fa6]">
             © 2026 Bucr. All rights reserved.
           </p>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex w-full lg:w-3/5 flex-col items-center justify-center p-6 md:p-8 bg-slate-50 bg-[rgba(255,255,255,0.04)] overflow-y-auto">
+      <div className="flex w-full lg:w-3/5 flex-col items-center justify-center p-6 md:p-8 bg-[rgba(255,255,255,0.04)] overflow-y-auto">
         <div className="absolute top-6 right-6">
           <ThemeToggle />
         </div>
@@ -482,7 +482,7 @@ export default function RegisterPage() {
                     'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium',
                     currentStep > step.id && 'bg-green-500 text-white',
                     currentStep === step.id && 'bg-primary-500 text-white',
-                    currentStep < step.id && 'bg-slate-200 bg-[rgba(255,255,255,0.04)] text-slate-500'
+                    currentStep < step.id && 'bg-slate-200 bg-[rgba(255,255,255,0.04)] text-[#7a8fa6]'
                   )}>
                     {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
                   </div>
@@ -495,7 +495,7 @@ export default function RegisterPage() {
                 </div>
               ))}
             </div>
-            <p className="text-center text-sm text-slate-500">
+            <p className="text-center text-sm text-[#7a8fa6]">
               Step {currentStep}: {steps[currentStep - 1].name}
             </p>
           </div>
@@ -510,10 +510,10 @@ export default function RegisterPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="glass-card rounded-3xl p-8"
               >
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#f5f0e8] mb-2">
                   Owner Details
                 </h2>
-                <p className="text-slate-500 text-[#7a8fa6] mb-6">
+                <p className="text-[#7a8fa6] mb-6">
                   Tell us about the business owner
                 </p>
 
@@ -566,7 +566,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a8fa6] hover:text-slate-600"
                       >
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -588,7 +588,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a8fa6] hover:text-slate-600"
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -601,7 +601,7 @@ export default function RegisterPage() {
                   </Button>
                 </form>
 
-                <p className="mt-6 text-center text-sm text-slate-500">
+                <p className="mt-6 text-center text-sm text-[#7a8fa6]">
                   Already have an account?{' '}
                   <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">
                     Sign in
@@ -619,10 +619,10 @@ export default function RegisterPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="glass-card rounded-3xl p-8"
               >
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#f5f0e8] mb-2">
                   Business Information
                 </h2>
-                <p className="text-slate-500 text-[#7a8fa6] mb-6">
+                <p className="text-[#7a8fa6] mb-6">
                   Tell us about your business
                 </p>
 
@@ -632,7 +632,7 @@ export default function RegisterPage() {
                       Business Type *
                     </label>
                     <select
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.04)] text-[#f5f0e8] focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       {...businessForm.register('businessType')}
                     >
                       <option value="">Select business type...</option>
@@ -691,7 +691,7 @@ export default function RegisterPage() {
                     </label>
                     <textarea
                       placeholder="Tell customers about your restaurant..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 border-[rgba(201,168,76,0.18)] bg-white bg-[rgba(255,255,255,0.04)] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.04)] text-[#f5f0e8] focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                       rows={3}
                       {...businessForm.register('description')}
                     />
@@ -705,7 +705,7 @@ export default function RegisterPage() {
                       placeholder="Nigerian, Continental, Chinese (comma separated)"
                       {...businessForm.register('cuisineTypes')}
                     />
-                    <p className="mt-1 text-xs text-slate-500">Separate multiple cuisines with commas</p>
+                    <p className="mt-1 text-xs text-[#7a8fa6]">Separate multiple cuisines with commas</p>
                   </div>
 
                   <div className="flex gap-3">
@@ -731,10 +731,10 @@ export default function RegisterPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="glass-card rounded-3xl p-8"
               >
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#f5f0e8] mb-2">
                   Location Details
                 </h2>
-                <p className="text-slate-500 text-[#7a8fa6] mb-6">
+                <p className="text-[#7a8fa6] mb-6">
                   Where is your main branch located?
                 </p>
 
@@ -817,10 +817,10 @@ export default function RegisterPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="glass-card rounded-3xl p-8"
               >
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#f5f0e8] mb-2">
                   Verification Documents
                 </h2>
-                <p className="text-slate-500 text-[#7a8fa6] mb-6">
+                <p className="text-[#7a8fa6] mb-6">
                   Upload required documents for verification
                 </p>
 
@@ -943,7 +943,7 @@ function PasswordStrength({ value }: { value: string }) {
     : { label: 'Strong', color: '#22c55e', pct: 100 };
 
   if (!value) {
-    return <p className="mt-1 text-xs text-slate-500">Min 8 chars, 1 uppercase, 1 lowercase, 1 number</p>;
+    return <p className="mt-1 text-xs text-[#7a8fa6]">Min 8 chars, 1 uppercase, 1 lowercase, 1 number</p>;
   }
 
   return (
@@ -996,14 +996,14 @@ function DocumentUploadCard({
   };
 
   return (
-    <div className="border border-slate-200 border-[rgba(201,168,76,0.18)] rounded-xl p-4">
+    <div className="border border-[rgba(201,168,76,0.18)] rounded-xl p-4">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-medium text-slate-900 dark:text-white">
+          <h3 className="font-medium text-[#f5f0e8]">
             {title}
             {required && <span className="text-red-500 ml-1">*</span>}
           </h3>
-          <p className="text-sm text-slate-500">{description}</p>
+          <p className="text-sm text-[#7a8fa6]">{description}</p>
         </div>
         {document.uploaded && (
           <CheckCircle className="h-5 w-5 text-green-500" />
@@ -1011,7 +1011,7 @@ function DocumentUploadCard({
       </div>
 
       {document.file ? (
-        <div className="flex items-center gap-3 p-3 bg-slate-50 bg-[rgba(255,255,255,0.04)] rounded-lg">
+        <div className="flex items-center gap-3 p-3 bg-[rgba(255,255,255,0.04)] rounded-lg">
           {document.preview ? (
             <img 
               src={document.preview} 
@@ -1020,14 +1020,14 @@ function DocumentUploadCard({
             />
           ) : (
             <div className="h-12 w-12 flex items-center justify-center bg-slate-200 bg-[rgba(255,255,255,0.04)] rounded-lg">
-              <FileText className="h-6 w-6 text-slate-500" />
+              <FileText className="h-6 w-6 text-[#7a8fa6]" />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+            <p className="text-sm font-medium text-[#f5f0e8] truncate">
               {document.file.name}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#7a8fa6]">
               {(document.file.size / 1024 / 1024).toFixed(2)} MB
             </p>
           </div>
@@ -1038,7 +1038,7 @@ function DocumentUploadCard({
               onClick={onRemove}
               className="p-1 hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)] rounded"
             >
-              <X className="h-5 w-5 text-slate-500" />
+              <X className="h-5 w-5 text-[#7a8fa6]" />
             </button>
           )}
         </div>
@@ -1046,14 +1046,14 @@ function DocumentUploadCard({
         <label
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 border-[rgba(201,168,76,0.18)] rounded-xl cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
+          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[rgba(201,168,76,0.18)] rounded-xl cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
         >
-          <Upload className="h-8 w-8 text-slate-400 mb-2" />
+          <Upload className="h-8 w-8 text-[#7a8fa6] mb-2" />
           <p className="text-sm text-slate-600 text-[#7a8fa6] text-center">
             <span className="font-medium text-primary-600 dark:text-primary-400">Click to upload</span>
             {' '}or drag and drop
           </p>
-          <p className="text-xs text-slate-500 mt-1">PNG, JPG or PDF (max 5MB)</p>
+          <p className="text-xs text-[#7a8fa6] mt-1">PNG, JPG or PDF (max 5MB)</p>
           <input
             type="file"
             className="hidden"

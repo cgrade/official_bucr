@@ -149,7 +149,7 @@ export default function VendorMapPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Vendor Map</h1>
-              <p className="text-sm text-slate-500 text-[#7a8fa6]">
+              <p className="text-sm text-[#7a8fa6]">
                 {isLoading ? 'Loading…' : `${geojson.total ?? geojson.features.length} approved branch locations`}
               </p>
             </div>
@@ -173,8 +173,8 @@ export default function VendorMapPage() {
           <div className="absolute inset-0 flex items-center justify-center bg-[rgba(255,255,255,0.05)]">
             {!token ? (
               <div className="text-center space-y-2">
-                <Store className="h-10 w-10 text-slate-400 mx-auto" />
-                <p className="text-slate-500 text-[#7a8fa6] text-sm">
+                <Store className="h-10 w-10 text-[#7a8fa6] mx-auto" />
+                <p className="text-[#7a8fa6] text-sm">
                   Set <code className="bg-slate-200 bg-[#1a3c6e] px-1 rounded">NEXT_PUBLIC_MAPBOX_TOKEN</code> to enable the map.
                 </p>
               </div>
@@ -196,8 +196,8 @@ export default function VendorMapPage() {
                 ×
               </button>
             </div>
-            <p className="text-xs text-slate-500 text-[#7a8fa6] mb-1">{popupInfo.branchName}</p>
-            <p className="text-xs text-slate-500 text-[#7a8fa6] mb-3">{popupInfo.address}</p>
+            <p className="text-xs text-[#7a8fa6] mb-1">{popupInfo.branchName}</p>
+            <p className="text-xs text-[#7a8fa6] mb-3">{popupInfo.address}</p>
             <div className="flex gap-2 flex-wrap">
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium capitalize">
                 {popupInfo.status}

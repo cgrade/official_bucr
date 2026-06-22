@@ -85,7 +85,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#f5f0e8]">Reports</h1>
-        <p className="text-slate-500 mt-1">Generate and export system reports</p>
+        <p className="text-[#7a8fa6] mt-1">Generate and export system reports</p>
       </div>
 
       {/* Report Type Selection */}
@@ -101,14 +101,14 @@ export default function ReportsPage() {
             }`}
           >
             <type.icon className={`w-6 h-6 mb-2 ${
-              selectedReport === type.id ? 'text-primary-500' : 'text-slate-400'
+              selectedReport === type.id ? 'text-primary-500' : 'text-[#7a8fa6]'
             }`} />
             <h3 className={`font-medium text-sm ${
               selectedReport === type.id ? 'text-primary-700 dark:text-primary-300' : 'text-[#f5f0e8]'
             }`}>
               {type.name}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 line-clamp-2">{type.description}</p>
+            <p className="text-xs text-[#7a8fa6] mt-1 line-clamp-2">{type.description}</p>
           </button>
         ))}
       </div>
@@ -171,7 +171,7 @@ export default function ReportsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {Object.entries(report.summary).map(([key, value]) => (
                 <div key={key} className="bg-[rgba(255,255,255,0.02)]/50 rounded-xl p-4">
-                  <p className="text-sm text-slate-500 capitalize">{key.replace(/_/g, ' ')}</p>
+                  <p className="text-sm text-[#7a8fa6] capitalize">{key.replace(/_/g, ' ')}</p>
                   <p className="text-xl font-bold text-[#f5f0e8] mt-1">
                     {typeof value === 'number' 
                       ? key.includes('revenue') || key.includes('amount') 
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                 <thead className="bg-[rgba(255,255,255,0.02)]/50">
                   <tr>
                     {report.headers?.map((header: string) => (
-                      <th key={header} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+                      <th key={header} className="px-4 py-3 text-left text-xs font-medium text-[#7a8fa6] uppercase">
                         {header}
                       </th>
                     ))}
@@ -215,7 +215,7 @@ export default function ReportsPage() {
 
           {/* Empty State */}
           {(!report.rows || report.rows.length === 0) && !report.summary && (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-[#7a8fa6]">
               <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>No data available for the selected period</p>
             </div>
@@ -227,7 +227,7 @@ export default function ReportsPage() {
           <h3 className="text-lg font-medium text-[#f5f0e8] mb-2">
             No Report Generated
           </h3>
-          <p className="text-slate-500 mb-6">
+          <p className="text-[#7a8fa6] mb-6">
             Select a report type, choose a date range, and click &quot;Generate Report&quot; to view data
           </p>
         </div>
