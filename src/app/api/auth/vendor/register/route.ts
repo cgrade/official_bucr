@@ -11,6 +11,7 @@ import {
 import { emailSchema, passwordSchema, nameSchema, phoneSchema } from '@/lib/utils/validation';
 import { slugify } from '@/lib/utils/helpers';
 import { getOperationalSettings } from '@/lib/config/system-settings';
+import { getLatLng } from '@/services/geocoding.service';
 
 const vendorRegisterSchema = z.object({
   // Owner details
@@ -31,6 +32,9 @@ const vendorRegisterSchema = z.object({
   state: z.string().min(2, 'State is required'),
   branchPhone: phoneSchema.optional(),
   branchEmail: emailSchema.optional(),
+  // Optional precise coordinates from the map picker; auto-geocoded if omitted.
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -57,6 +61,8 @@ export async function POST(request: NextRequest) {
       state,
       branchPhone,
       branchEmail,
+      latitude,
+      longitude,
     } = validation.data;
 
     // Check if email already exists (as user or vendor)
@@ -100,6 +106,15 @@ export async function POST(request: NextRequest) {
     // new vendors are auto-approved instead of starting in 'pending'.
     const { vendorVerificationRequired } = await getOperationalSettings();
 
+    // Geocode the branch so it's on the map + directable from day one. Use the
+    // map-picker coordinates if the vendor pinned them, else geocode the address.
+    let branchLat = latitude;
+    let branchLng = longitude;
+    if (branchLat == null || branchLng == null) {
+      const coords = await getLatLng(address, city, state).catch(() => null);
+      if (coords) { branchLat = coords.lat; branchLng = coords.lng; }
+    }
+
     const vendor = await db.vendor.create({
       data: {
         ownerId: user.id,
@@ -117,6 +132,8 @@ export async function POST(request: NextRequest) {
             address,
             city,
             state,
+            latitude: branchLat,
+            longitude: branchLng,
             phone: branchPhone || ownerPhone,
             email: branchEmail || ownerEmail,
             isMainBranch: true,

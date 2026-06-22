@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -10,13 +11,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { 
-  Eye, EyeOff, ArrowRight, ArrowLeft, Check, Upload, 
+import {
+  Eye, EyeOff, ArrowRight, ArrowLeft, Check, Upload,
   Building2, User, MapPin, FileText, Loader2, X,
   CheckCircle, AlertCircle, XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BucrWordmark } from '@/components/ui/BucrWordmark';
+
+// Mapbox GL is browser-only — load it client-side
+const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), {
+  ssr: false,
+  loading: () => <div className="h-64 rounded-xl bg-[rgba(255,255,255,0.04)] animate-pulse" />,
+});
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -111,6 +118,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   
   // Form data storage
   const [ownerData, setOwnerData] = useState<OwnerFormData | null>(null);
@@ -252,6 +260,11 @@ export default function RegisterPage() {
       }
       if (locationData.branchEmail?.trim()) {
         registrationData.branchEmail = locationData.branchEmail.trim();
+      }
+      // Pinned map coordinates (the backend auto-geocodes the address if absent).
+      if (coords) {
+        registrationData.latitude = coords.lat;
+        registrationData.longitude = coords.lng;
       }
 
       let registerResponse;
@@ -786,6 +799,27 @@ export default function RegisterPage() {
                       type="email"
                       placeholder="branch@restaurant.com"
                       {...locationForm.register('branchEmail')}
+                    />
+                  </div>
+
+                  {/* Map: pin your exact location so guests can find + get directions */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#7a8fa6] mb-2">
+                      Pin your location on the map
+                      {coords
+                        ? <span className="ml-2 text-[10px] text-[#22c55e] font-medium">✓ Location set</span>
+                        : <span className="ml-2 text-[10px] text-[rgba(122,143,166,0.6)]">(search your address, then drag the pin to be exact)</span>}
+                    </label>
+                    <MapPicker
+                      address={locationForm.watch('address')}
+                      lat={coords?.lat}
+                      lng={coords?.lng}
+                      onChange={({ lat, lng, formattedAddress }) => {
+                        setCoords({ lat, lng });
+                        if (formattedAddress && !locationForm.getValues('address')) {
+                          locationForm.setValue('address', formattedAddress);
+                        }
+                      }}
                     />
                   </div>
 
