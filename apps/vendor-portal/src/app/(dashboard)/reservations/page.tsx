@@ -164,12 +164,23 @@ export default function ReservationsPage() {
                     transition={{ delay: index * 0.03 }}
                     className="flex items-center gap-6 p-5 hover:bg-[rgba(255,255,255,0.04)] transition-colors group"
                   >
-                    {/* Time */}
-                    <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.2)]">
-                      <span className="text-lg font-bold text-[#f5f0e8]">
-                        {formatTime(reservation.time || reservation.reservationTime)}
-                      </span>
-                    </div>
+                    {/* Diner avatar (image if available, else initials) */}
+                    {(() => {
+                      const name = reservation.user?.name || reservation.user?.fullName || 'Guest';
+                      const avatar = reservation.user?.avatar;
+                      const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+                      return avatar ? (
+                        <img
+                          src={avatar.startsWith('http') ? avatar : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${avatar}`}
+                          alt={name}
+                          className="h-14 w-14 flex-shrink-0 rounded-full object-cover border border-[rgba(201,168,76,0.3)]"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[#0f2547] border border-[rgba(201,168,76,0.3)] text-base font-bold text-[#c9a84c]">
+                          {initials}
+                        </div>
+                      );
+                    })()}
 
                     {/* Guest Info */}
                     <div className="flex-1 min-w-0">
@@ -182,6 +193,10 @@ export default function ReservationsPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-[#7a8fa6]">
+                        <span className="flex items-center gap-1 font-medium text-[#c9a84c]">
+                          <Clock className="h-3.5 w-3.5" />
+                          {formatTime(reservation.time || reservation.reservationTime)}
+                        </span>
                         {reservation.user?.phone && (
                           <span className="flex items-center gap-1">
                             <Phone className="h-3.5 w-3.5" />
@@ -200,8 +215,8 @@ export default function ReservationsPage() {
                     {/* Party Size */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.05)]">
                       <Users className="h-4 w-4 text-[#7a8fa6]" />
-                      <span className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">
-                        {reservation.partySize} guests
+                      <span className="text-sm font-medium text-[rgba(245,240,232,0.7)]">
+                        {reservation.partySize} {reservation.partySize === 1 ? 'guest' : 'guests'}
                       </span>
                     </div>
 
