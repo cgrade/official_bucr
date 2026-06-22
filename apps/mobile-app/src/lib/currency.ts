@@ -17,10 +17,20 @@ export function getDisplayCurrency() {
   return display;
 }
 
-/** Convert an NGN amount to the active display currency and format it. */
+/** True when money is shown in a converted (non-NGN) currency. */
+export function isLocalized(): boolean {
+  return display.code !== 'NGN';
+}
+
+/**
+ * Convert an NGN amount to the active display currency and format it. Converted
+ * (non-NGN) amounts are prefixed with "≈" — they're indicative; the diner is
+ * always charged in Naira.
+ */
 export function formatMoney(naira: number): string {
   const local = (naira || 0) * display.perNGN;
-  return `${display.symbol}${local.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  const prefix = display.code !== 'NGN' ? '≈ ' : '';
+  return `${prefix}${display.symbol}${local.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 /**

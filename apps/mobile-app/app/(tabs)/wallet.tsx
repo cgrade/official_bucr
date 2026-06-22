@@ -19,7 +19,7 @@ import { SlideMenu } from '../../src/components/SlideMenu';
 import { GradientButton } from '../../src/components/ui';
 
 import { creditsApi, authApi, giftsApi } from '../../src/lib/api';
-import { formatMoney } from '../../src/lib/currency';
+import { formatMoney, isLocalized } from '../../src/lib/currency';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { format } from 'date-fns';
 
@@ -167,6 +167,11 @@ export default function WalletScreen() {
             </View>
             <Text style={[styles.balanceAmount, { color: colors.text }]}>{balance} credits</Text>
             <Text style={[styles.balanceValue, { color: colors.tertiary }]}>{formatMoney(balanceValue)} value</Text>
+            {isLocalized() && (
+              <Text style={[styles.localityNote, { color: colors.textMuted }]}>
+                Indicative; you’re charged in Naira (₦)
+              </Text>
+            )}
 
             {expiringIn30Days > 0 && (
               <View style={[styles.expiryWarning, { backgroundColor: colors.warningLight }]}>
@@ -347,6 +352,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#070f1e',
     opacity: 0.8,
+  },
+  localityNote: {
+    fontSize: 11,
+    marginTop: 4,
   },
   expiryWarning: {
     flexDirection: 'row',

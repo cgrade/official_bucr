@@ -19,11 +19,21 @@ export function getDisplayCurrency() {
   return displayCurrency;
 }
 
-/** Formats an NGN amount into the active display currency (converted via FX). */
+/** True when money is being shown in a converted (non-NGN) currency. */
+export function isLocalizedCurrency(): boolean {
+  return displayCurrency.code !== 'NGN';
+}
+
+/**
+ * Formats an NGN amount into the active display currency. When the currency is a
+ * converted one (Ghana/Kenya), the value is prefixed with "≈" to flag it as an
+ * indicative equivalent — actual billing/settlement is always in Naira.
+ */
 export function formatCurrency(amount: number): string {
-  const { symbol, perNGN } = displayCurrency;
+  const { symbol, perNGN, code } = displayCurrency;
   const local = (amount || 0) * perNGN;
-  return `${symbol}${local.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  const prefix = code !== 'NGN' ? '≈ ' : '';
+  return `${prefix}${symbol}${local.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 export function formatDate(date: Date | string | null | undefined): string {

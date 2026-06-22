@@ -14,21 +14,30 @@ import { getFxRates } from '@/services/fx.service';
  */
 export const GET = withRateLimit(
   withErrorHandler(async (_request: NextRequest) => {
-    const fx = await getFxRates();
+    const localized = ECONOMICS.MULTI_CURRENCY_DISPLAY_ENABLED;
+    // Only hit the FX feed when local-currency display is actually enabled.
+    const fx = localized ? await getFxRates() : null;
+
+    const ngnSymbol = ECONOMICS.CURRENCIES.NGN?.symbol ?? '₦';
 
     const countries: Record<string, any> = {};
     for (const [country, currency] of Object.entries(ECONOMICS.COUNTRY_CURRENCY)) {
       const phone = ECONOMICS.COUNTRY_PHONE[country];
-      const perNGN = fx.perNGN[currency] ?? ECONOMICS.FX_FALLBACK_PER_NGN[currency] ?? 1;
+      // When localisation is OFF, every country resolves to NGN at 1:1 so all
+      // clients display ₦. Phone formats stay country-specific regardless.
+      const useCurrency = localized ? currency : 'NGN';
+      const perNGN = localized
+        ? (fx!.perNGN[currency] ?? ECONOMICS.FX_FALLBACK_PER_NGN[currency] ?? 1)
+        : 1;
       countries[country] = {
-        currency,
-        symbol: ECONOMICS.CURRENCIES[currency]?.symbol ?? '₦',
+        currency: useCurrency,
+        symbol: localized ? (ECONOMICS.CURRENCIES[currency]?.symbol ?? '₦') : ngnSymbol,
         dialCode: phone?.dialCode ?? '+234',
         phonePlaceholder: phone?.placeholder ?? '',
         phoneRegex: phone?.regex ?? '',
         phoneExample: phone?.example ?? '',
         perNGN,
-        // Local value of one credit (e.g. Nigeria 10, Ghana ~0.098).
+        // Local value of one credit (e.g. Nigeria 10, Ghana ~0.098 when on).
         creditValueLocal: ECONOMICS.CREDIT_VALUE_NGN * perNGN,
       };
     }
@@ -37,8 +46,9 @@ export const GET = withRateLimit(
       base: 'NGN',
       creditValueNGN: ECONOMICS.CREDIT_VALUE_NGN,
       defaultCountry: ECONOMICS.DEFAULT_COUNTRY,
-      fxSource: fx.source,
-      fxUpdatedAt: fx.updatedAt,
+      multiCurrencyDisplay: localized,
+      fxSource: fx?.source ?? 'disabled',
+      fxUpdatedAt: fx?.updatedAt ?? null,
       countries,
     });
   }),

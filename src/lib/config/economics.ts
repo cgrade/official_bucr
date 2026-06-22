@@ -157,6 +157,14 @@ export const ECONOMICS = {
   /** How long (seconds) to cache a live FX snapshot before refetching. */
   FX_CACHE_TTL_SECONDS: numEnv('FX_CACHE_TTL_SECONDS', 86400), // 24h
 
+  /**
+   * Master switch for showing non-NGN local-currency equivalents (GH₵, KSh).
+   * Keep FALSE for the Nigeria launch — everyone sees ₦. Flip per market only
+   * after counsel sign-off + real approved vendors exist there. Phone-format
+   * localisation is independent of this and stays on.
+   */
+  MULTI_CURRENCY_DISPLAY_ENABLED: boolEnv('MULTI_CURRENCY_DISPLAY_ENABLED', false),
+
   // ── LEGAL GATE ────────────────────────────────────────────────────────────
   /**
    * Keep FALSE until a licensed payment partner is integrated and counsel

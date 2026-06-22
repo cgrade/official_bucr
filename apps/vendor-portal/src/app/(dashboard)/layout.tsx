@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { cn } from '@/lib/utils';
+import { cn, isLocalizedCurrency, getDisplayCurrency } from '@/lib/utils';
 import { loadDisplayCurrency } from '@/lib/currency';
 import Cookies from 'js-cookie';
 
@@ -64,6 +64,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
         {/* Main content — slightly lighter navy so cards stand out */}
         <main className="flex-1 p-4 md:p-6 overflow-auto bg-[#0a1d3a]">
+          {isLocalizedCurrency() && (() => {
+            const c = getDisplayCurrency();
+            return (
+              <div className="mb-4 rounded-xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.08)] px-4 py-2.5 text-[12px] text-[rgba(245,240,232,0.85)]">
+                Amounts are shown in <span className="font-semibold text-[#c9a84c]">{c.symbol} {c.code}</span> as an indicative guide. Billing and settlement are always in Naira (₦).
+              </div>
+            );
+          })()}
           {children}
         </main>
       </div>
