@@ -14,6 +14,9 @@ import {
   Modal,
   StatusBar,
   Alert,
+  Share,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -29,6 +32,7 @@ import {
   BadgeCheck,
   Award,
   Share2,
+  Navigation,
   Users,
   ShieldCheck,
   CalendarClock,
@@ -188,6 +192,46 @@ export default function VenueDetailScreen() {
   }
 
   const mainBranch = vendor.branches?.[0];
+  const hasCoords = mainBranch?.latitude != null && mainBranch?.longitude != null;
+
+  // Static Mapbox map preview (dark style + gold pin) — lightweight, no native
+  // map module needed on the detail page; tapping it opens turn-by-turn directions.
+  const staticMapUrl = hasCoords && config.mapboxPublicToken
+    ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l+c9a84c(${mainBranch.longitude},${mainBranch.latitude})/${mainBranch.longitude},${mainBranch.latitude},14.5,0/640x320@2x?access_token=${config.mapboxPublicToken}`
+    : null;
+
+  // Share the venue via the native share sheet.
+  const handleShare = async () => {
+    try {
+      const where = mainBranch?.address ? `${mainBranch.address}, ${mainBranch.city}` : 'Abuja';
+      const link = `https://bucr.ng/venue/${slug}`;
+      await Share.share({
+        title: vendor.businessName,
+        message: `Check out ${vendor.businessName} on Bucr — ${where}.\nReserve your table: ${link}`,
+      });
+    } catch {
+      // user dismissed — no-op
+    }
+  };
+
+  // Open turn-by-turn directions in the device's maps app (Apple Maps on iOS,
+  // Google Maps on Android), falling back to the universal Google Maps URL.
+  const openDirections = () => {
+    if (!mainBranch) return;
+    const { latitude, longitude, address, city } = mainBranch;
+    const universal = hasCoords
+      ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${address}, ${city}`)}`;
+    const native = hasCoords
+      ? Platform.select({
+          ios: `maps://?daddr=${latitude},${longitude}`,
+          android: `google.navigation:q=${latitude},${longitude}`,
+          default: universal,
+        })!
+      : universal;
+    Linking.openURL(native).catch(() => Linking.openURL(universal).catch(() => {}));
+  };
+
   // Helper to get full image URL
   const getImageUrl = (url: string | null | undefined): string | undefined => {
     if (!url) return undefined;
@@ -271,7 +315,7 @@ export default function VenueDetailScreen() {
                   fill={isFavorite ? colors.error : "none"}
                 />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.headerButton, { backgroundColor: colors.surface }]}>
+              <TouchableOpacity style={[styles.headerButton, { backgroundColor: colors.surface }]} onPress={handleShare}>
                 <Share2 size={22} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -357,7 +401,7 @@ export default function VenueDetailScreen() {
           {/* Quick Info */}
           <View style={styles.quickInfo}>
             {mainBranch && (
-              <TouchableOpacity style={styles.quickInfoItem}>
+              <TouchableOpacity style={styles.quickInfoItem} onPress={openDirections}>
                 <MapPin size={18} color={colors.textMuted} />
                 <Text style={[styles.quickInfoText, { color: colors.textSecondary }]} numberOfLines={1}>
                   {mainBranch.address}, {mainBranch.city}
@@ -432,6 +476,32 @@ export default function VenueDetailScreen() {
                   </View>
                 )}
               </View>
+
+              {/* Location */}
+              {mainBranch && (
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Location</Text>
+                  {staticMapUrl && (
+                    <TouchableOpacity activeOpacity={0.9} onPress={openDirections} style={styles.mapCard}>
+                      <Image source={{ uri: staticMapUrl }} style={styles.mapImage} resizeMode="cover" />
+                    </TouchableOpacity>
+                  )}
+                  <View style={styles.addressRow}>
+                    <MapPin size={18} color={colors.tertiary} />
+                    <Text style={[styles.addressText, { color: colors.textSecondary }]}>
+                      {mainBranch.address}, {mainBranch.city}{mainBranch.state ? `, ${mainBranch.state}` : ''}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.directionsButton, { backgroundColor: colors.tertiary }]}
+                    onPress={openDirections}
+                    activeOpacity={0.85}
+                  >
+                    <Navigation size={18} color={colors.primaryDark} />
+                    <Text style={[styles.directionsButtonText, { color: colors.primaryDark }]}>Get Directions</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Special Offers - Full Width */}
               {specialOffers && specialOffers.length > 0 && (
@@ -1099,6 +1169,40 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     lineHeight: 24,
+  },
+  mapCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(201,168,76,0.2)',
+  },
+  mapImage: {
+    width: '100%',
+    height: 160,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 12,
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  directionsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginTop: 14,
+  },
+  directionsButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   creditTiers: {
     flexDirection: 'row',
