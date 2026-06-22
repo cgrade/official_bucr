@@ -47,6 +47,8 @@ export async function GET(
             address: true,
             city: true,
             phone: true,
+            latitude: true,
+            longitude: true,
           },
         },
         experience: {

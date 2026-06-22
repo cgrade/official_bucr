@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Alert,
   Linking,
   Share,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -20,6 +21,9 @@ import {
   Info, MessageSquare, X,
 } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import QRCode from 'react-native-qrcode-svg';
 import { reservationsApi, reviewsApi } from '../../src/lib/api';
 import { format } from 'date-fns';
 import { useTheme } from '../../src/contexts/ThemeContext';
@@ -38,6 +42,8 @@ export default function BookingDetailScreen() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating,    setReviewRating]    = useState(0);
   const [reviewText,      setReviewText]      = useState('');
+  const [sharing,         setSharing]         = useState(false);
+  const receiptRef = useRef<View>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['reservation', id],
@@ -95,15 +101,46 @@ export default function BookingDetailScreen() {
 
   const handleGetDirections = () => {
     const branch = reservation.branch;
-    if (!branch?.address) return;
-    const q = encodeURIComponent(`${branch.address}, ${branch.city}`);
-    Linking.openURL(`https://maps.google.com/?q=${q}`);
+    if (!branch) return;
+    const hasCoords = branch.latitude != null && branch.longitude != null;
+    const universal = hasCoords
+      ? `https://www.google.com/maps/dir/?api=1&destination=${branch.latitude},${branch.longitude}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${branch.address}, ${branch.city}`)}`;
+    const native = hasCoords
+      ? Platform.select({
+          ios: `maps://?daddr=${branch.latitude},${branch.longitude}`,
+          android: `google.navigation:q=${branch.latitude},${branch.longitude}`,
+          default: universal,
+        })!
+      : universal;
+    Linking.openURL(native).catch(() => Linking.openURL(universal).catch(() => {}));
   };
 
-  const handleShare = () => {
+  // Fallback text share (used if the OS image share sheet isn't available).
+  const shareText = () => {
     Share.share({
-      message: `I have a reservation at ${reservation.vendor?.businessName} on ${format(new Date(reservation.date), 'MMM d')} at ${reservation.time}. Ref: ${reservation.reference}`,
+      message: `I've got a table at ${reservation.vendor?.businessName} on ${format(new Date(reservation.date), 'MMM d')} at ${reservation.time} — booked on Bucr. Ref: ${reservation.reference}`,
     });
+  };
+
+  // Visual share — capture the branded receipt card as an image and share it,
+  // so it looks great on WhatsApp status / IG stories and drives awareness.
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const available = await Sharing.isAvailableAsync().catch(() => false);
+      const uri = await captureRef(receiptRef, { format: 'png', quality: 1, result: 'tmpfile' });
+      if (available && uri) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share your reservation' });
+      } else {
+        shareText();
+      }
+    } catch {
+      shareText();
+    } finally {
+      setSharing(false);
+    }
   };
 
   return (
@@ -336,11 +373,74 @@ export default function BookingDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Off-screen branded receipt — captured as an image for visual sharing */}
+      <View collapsable={false} style={styles.shareCanvas} pointerEvents="none">
+        <View ref={receiptRef} collapsable={false} style={styles.receipt}>
+          <View style={styles.receiptHeader}>
+            <Text style={styles.receiptWordmark}>
+              <Text style={{ color: '#c9a84c' }}>B</Text>
+              <Text style={{ color: '#f5f0e8' }}>ucr</Text>
+            </Text>
+            <Text style={styles.receiptBadge}>RESERVATION CONFIRMED</Text>
+          </View>
+
+          <Text style={styles.receiptVenue} numberOfLines={2}>{reservation.vendor?.businessName}</Text>
+
+          <View style={styles.receiptMetaRow}>
+            <Text style={styles.receiptMeta}>{format(new Date(reservation.date), 'EEE, MMM d, yyyy')}</Text>
+            <Text style={styles.receiptDot}>•</Text>
+            <Text style={styles.receiptMeta}>{reservation.time}</Text>
+            <Text style={styles.receiptDot}>•</Text>
+            <Text style={styles.receiptMeta}>{reservation.partySize} {reservation.partySize === 1 ? 'guest' : 'guests'}</Text>
+          </View>
+
+          <View style={styles.receiptQrCard}>
+            <QRCode
+              value={JSON.stringify({ type: 'reservation', id: reservation.id, reference: reservation.reference, pin: reservation.pin })}
+              size={150}
+              color="#070f1e"
+              backgroundColor="#ffffff"
+            />
+          </View>
+
+          <Text style={styles.receiptRef}>{reservation.reference}</Text>
+
+          <View style={styles.receiptDivider} />
+          <Text style={styles.receiptTagline}>Your table, actually waiting.</Text>
+          <Text style={styles.receiptFoot}>Reserved on Bucr · bucr.ng</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Off-screen canvas for the shareable receipt (rendered but not visible)
+  shareCanvas:     { position: 'absolute', left: -10000, top: 0 },
+  receipt: {
+    width: 360,
+    backgroundColor: '#070f1e',
+    paddingHorizontal: 28,
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  receiptHeader:   { alignItems: 'center', gap: 12, marginBottom: 20 },
+  receiptWordmark: { fontSize: 40, fontWeight: '700', fontFamily: 'Cormorant_600SemiBold' },
+  receiptBadge: {
+    fontSize: 11, fontWeight: '700', letterSpacing: 2, color: '#c9a84c',
+    borderWidth: 1, borderColor: 'rgba(201,168,76,0.4)', borderRadius: 999,
+    paddingHorizontal: 14, paddingVertical: 6, overflow: 'hidden',
+  },
+  receiptVenue:    { fontSize: 26, fontWeight: '800', color: '#f5f0e8', textAlign: 'center', marginBottom: 12 },
+  receiptMetaRow:  { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: 24 },
+  receiptMeta:     { fontSize: 13, color: '#7a8fa6', fontWeight: '500' },
+  receiptDot:      { fontSize: 13, color: 'rgba(201,168,76,0.5)' },
+  receiptQrCard:   { backgroundColor: '#ffffff', padding: 16, borderRadius: 20 },
+  receiptRef:      { fontSize: 15, fontWeight: '700', letterSpacing: 2, color: '#c9a84c', marginTop: 18 },
+  receiptDivider:  { width: 60, height: 1, backgroundColor: 'rgba(201,168,76,0.3)', marginVertical: 20 },
+  receiptTagline:  { fontSize: 16, fontStyle: 'italic', color: '#f5f0e8', fontFamily: 'Cormorant_600SemiBold', marginBottom: 6 },
+  receiptFoot:     { fontSize: 11, color: '#7a8fa6', letterSpacing: 1 },
   container:       { flex: 1 },
   loadingContainer:{ flex: 1, alignItems: 'center', justifyContent: 'center' },
   errorContainer:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
