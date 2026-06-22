@@ -170,15 +170,26 @@ export const vendorsApi = {
     search?: string;
     cuisineType?: string;
     city?: string;
+    country?: string;
     lat?: number;
     lng?: number;
+    radiusKm?: number;
     minRating?: number;
+    priceLevel?: string;     // comma-separated 1–4
+    hasExperiences?: boolean;
+    openNow?: boolean;
+    sort?: string;           // distance | rating | price_low | price_high
     featured?: boolean;
   }) => {
     const response = await api.get<ApiResponse<any[]>>('/vendors', { params });
     return response.data;
   },
-  
+
+  getLocations: async () => {
+    const response = await api.get<ApiResponse<{ countries: Array<{ country: string; vendorCount: number; cities: Array<{ city: string; count: number }> }> }>>('/vendors/locations');
+    return response.data;
+  },
+
   getBySlug: async (slug: string, context?: 'dineIn' | 'takeout') => {
     const response = await api.get<ApiResponse<any>>(`/vendors/${slug}`, {
       params: context ? { context } : undefined,

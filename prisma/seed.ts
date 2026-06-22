@@ -67,6 +67,7 @@ async function main() {
       slug: 'zuma-grill',
       description: 'Premium Nigerian cuisine with a modern twist. Experience the best of Lagos dining.',
       cuisineTypes: ['Nigerian', 'African', 'Continental'],
+      priceLevel: 3, // ₦₦₦ upscale
       email: 'info@zumagrill.com',
       phone: '+2348098765432',
       website: 'https://zumagrill.com',
@@ -98,6 +99,7 @@ async function main() {
       address: '15 Adeola Odeku Street, Victoria Island',
       city: 'Lagos',
       state: 'Lagos',
+      country: 'Nigeria',
       phone: '+2348098765432',
       email: 'vi@zumagrill.com',
       latitude: 6.4281,

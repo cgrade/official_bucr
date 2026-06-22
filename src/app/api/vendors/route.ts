@@ -20,6 +20,36 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ── Open-now check ──────────────────────────────────────────────────────────
+// Evaluated in the venue's local time. These launch markets don't observe DST,
+// so a fixed UTC offset per country is accurate.
+const COUNTRY_UTC_OFFSET: Record<string, number> = { nigeria: 1, ghana: 0, kenya: 3 };
+
+function isOpenNow(operatingHours: unknown, country?: string | null): boolean {
+  if (!Array.isArray(operatingHours)) return false;
+  const offset = COUNTRY_UTC_OFFSET[(country || 'nigeria').toLowerCase()] ?? 1;
+
+  // Current wall-clock in the venue's timezone, derived from UTC + offset.
+  const now = new Date();
+  let mins = now.getUTCHours() * 60 + now.getUTCMinutes() + offset * 60;
+  let day  = now.getUTCDay(); // 0 = Sunday
+  if (mins >= 1440) { mins -= 1440; day = (day + 1) % 7; }
+  if (mins < 0)     { mins += 1440; day = (day + 6) % 7; }
+
+  const entry = (operatingHours as Array<any>).find((h) => h && h.dayOfWeek === day);
+  if (!entry || entry.isClosed) return false;
+
+  const toMins = (t: string) => {
+    const [h, m] = String(t).split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const open = toMins(entry.openTime);
+  let close = toMins(entry.closeTime);
+  if (close === 0) close = 1440;          // '00:00' close means midnight
+  if (close <= open) return mins >= open || mins < close; // spans midnight
+  return mins >= open && mins < close;
+}
+
 // ── Cache key ─────────────────────────────────────────────────────────────
 function getCacheKey(params: Record<string, string | null>): string {
   const sorted = Object.entries(params)
@@ -37,6 +67,7 @@ export const GET = withRateLimit(
 
     const search    = searchParams.get('search');
     const city      = searchParams.get('city');
+    const country   = searchParams.get('country');
     const cuisine   = searchParams.get('cuisine') || searchParams.get('cuisineType');
     const minRating = searchParams.get('minRating');
     const featured  = searchParams.get('featured') === 'true';
@@ -44,6 +75,11 @@ export const GET = withRateLimit(
     const venueType = searchParams.get('venueType');
     // businessType filter: bars, cafes, etc.
     const businessType = searchParams.get('businessType');
+    // priceLevel filter: multi-select, e.g. "1,2" → ₦ or ₦₦ venues (1–4)
+    const priceLevels = (searchParams.get('priceLevel') || '')
+      .split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= 4);
+    const hasExperiences = searchParams.get('hasExperiences') === 'true';
+    const openNow        = searchParams.get('openNow') === 'true';
 
     // Distance params — when provided, skip the DB cache and sort by proximity
     const userLat  = searchParams.get('lat')      ? parseFloat(searchParams.get('lat')!)    : null;
@@ -51,17 +87,22 @@ export const GET = withRateLimit(
     const radiusKm = searchParams.get('radiusKm') ? parseFloat(searchParams.get('radiusKm')!) : null;
     const sortBy   = searchParams.get('sort');     // 'distance' | 'rating' | 'price_low' | 'price_high' | undefined
     const nearMode = userLat !== null && userLng !== null && !isNaN(userLat) && !isNaN(userLng);
-    // venueType is the price proxy (fine_dining most premium → casual most accessible)
-    const PRICE_RANK: Record<string, number> = { fine_dining: 4, upscale_casual: 3, lounge: 2, casual: 1 };
-    const priceMode = sortBy === 'price_low' || sortBy === 'price_high';
-    // jsMode = fetch all matching, then sort + paginate in JS (distance or price)
-    const jsMode = nearMode || priceMode;
+    // jsMode = fetch all matching, then filter/sort + paginate in JS.
+    // Distance (proximity) and open-now both need row-level JS evaluation.
+    const jsMode = nearMode || openNow;
 
     const { skip, take } = getPrismaSkipTake(page, limit);
 
-    // Only cache plain queries — distance/price results aren't keyed by sort
+    // Cache key — must capture every parameter that changes the result set
+    const cacheKey = getCacheKey({
+      page: String(page), limit: String(limit), search, city, country, cuisine, minRating,
+      venueType, businessType, sort: sortBy,
+      priceLevel: priceLevels.length ? priceLevels.join(',') : null,
+      hasExperiences: hasExperiences ? 'true' : null,
+      featured: featured ? 'true' : null,
+    });
+    // Only cache deterministic queries — distance/open-now depend on caller location/time
     if (!jsMode) {
-      const cacheKey = getCacheKey({ page: String(page), limit: String(limit), search, city, cuisine, minRating, venueType, businessType, featured: featured ? 'true' : null });
       const cached = await vendorCache.getList(cacheKey) as { items: any[]; page: number; limit: number; total: number } | null;
       if (cached) {
         return paginatedResponse(cached.items, cached.page, cached.limit, cached.total);
@@ -106,10 +147,21 @@ export const GET = withRateLimit(
       where.businessType = businessType;
     }
 
-    const branchWhere: Record<string, unknown> = { deletedAt: null, isActive: true };
-    if (city) branchWhere.city = { contains: city, mode: 'insensitive' };
+    if (priceLevels.length) {
+      where.priceLevel = { in: priceLevels };
+    }
 
-    const vendorWhere = city ? { ...where, branches: { some: branchWhere } } : where;
+    if (hasExperiences) {
+      where.experiences = { some: { isActive: true } };
+    }
+
+    const branchWhere: Record<string, unknown> = { deletedAt: null, isActive: true };
+    if (city)    branchWhere.city    = { contains: city, mode: 'insensitive' };
+    if (country) branchWhere.country = { equals: country, mode: 'insensitive' };
+
+    const vendorWhere = (city || country)
+      ? { ...where, branches: { some: branchWhere } }
+      : where;
 
     // ── Query ─────────────────────────────────────────────────────────────
     // For near-me queries we need ALL matching vendors so we can filter/sort by distance,
@@ -128,6 +180,7 @@ export const GET = withRateLimit(
           description: true,
           cuisineTypes: true,
           venueType: true,
+          priceLevel: true,
           businessType: true,
           averageRating: true,
           totalReviews: true,
@@ -138,7 +191,7 @@ export const GET = withRateLimit(
           bookWithConfidence: true,
           branches: {
             where: { ...branchWhere, isMainBranch: true },
-            select: { id: true, name: true, address: true, city: true, state: true, latitude: true, longitude: true },
+            select: { id: true, name: true, address: true, city: true, state: true, country: true, latitude: true, longitude: true, operatingHours: true },
             take: 1,
           },
           galleryImages: {
@@ -147,10 +200,12 @@ export const GET = withRateLimit(
             select: { url: true },
           },
         },
-        orderBy: sortBy === 'rating'
-          ? [{ averageRating: 'desc' }, { totalReviews: 'desc' }]
+        orderBy:
+          sortBy === 'rating'     ? [{ averageRating: 'desc' }, { totalReviews: 'desc' }]
+          : sortBy === 'price_low'  ? [{ priceLevel: 'asc' },  { averageRating: 'desc' }]
+          : sortBy === 'price_high' ? [{ priceLevel: 'desc' }, { averageRating: 'desc' }]
           : jsMode
-            ? [{ averageRating: 'desc' }]  // secondary; primary (distance/price) applied in JS
+            ? [{ averageRating: 'desc' }]  // secondary; primary (distance) applied in JS
             : [{ subscriptionTier: 'desc' }, { averageRating: 'desc' }, { totalReviews: 'desc' }],
         skip: dbSkip,
         take: dbTake,
@@ -166,6 +221,7 @@ export const GET = withRateLimit(
       description: v.description,
       cuisineTypes: v.cuisineTypes,
       venueType: v.venueType,
+      priceLevel: v.priceLevel ?? null,
       businessType: v.businessType,
       averageRating: v.averageRating,
       totalReviews: v.totalReviews,
@@ -181,9 +237,14 @@ export const GET = withRateLimit(
       distanceKm: null as number | null,
     }));
 
-    // ── Distance / price sort + paginate in JS ─────────────────────────────
+    // ── Open-now + distance filter/sort, then paginate in JS ───────────────
     let total = dbTotal;
     if (jsMode) {
+      if (openNow) {
+        formattedVendors = formattedVendors.filter((v) =>
+          isOpenNow(v.mainBranch?.operatingHours, v.mainBranch?.country));
+      }
+
       if (nearMode) {
         // Attach distance to each vendor (using main branch lat/lng)
         formattedVendors = formattedVendors
@@ -209,17 +270,12 @@ export const GET = withRateLimit(
           if (b.distanceKm === null) return -1;
           return a.distanceKm - b.distanceKm;
         });
-      } else if (priceMode) {
-        const dir = sortBy === 'price_low' ? 1 : -1;
-        formattedVendors.sort((a, b) =>
-          dir * ((PRICE_RANK[a.venueType] ?? 0) - (PRICE_RANK[b.venueType] ?? 0)));
       }
 
       // Paginate in JS
       formattedVendors = formattedVendors.slice(skip, skip + take);
     } else {
-      // Cache non-distance results
-      const cacheKey = getCacheKey({ page: String(page), limit: String(limit), search, city, cuisine, minRating, venueType, businessType, featured: featured ? 'true' : null });
+      // Cache deterministic results under the same key built above
       await vendorCache.setList(cacheKey, { items: formattedVendors, page, limit, total });
     }
 

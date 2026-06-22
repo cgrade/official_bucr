@@ -98,6 +98,7 @@ export default function SettingsPage() {
     website: '',
     address: '',
     description: '',
+    priceLevel: 2, // 1=₦ … 4=₦₦₦₦
   });
 
   // Reservation settings state
@@ -148,6 +149,9 @@ export default function SettingsPage() {
         setCustomDepositCredits(String(data.data.customDepositCredits));
       } else {
         setDepositMode('global');
+      }
+      if (data?.data?.priceLevel) {
+        setProfileForm((f) => ({ ...f, priceLevel: data.data.priceLevel }));
       }
     },
   } as any);
@@ -269,7 +273,8 @@ export default function SettingsPage() {
     if (profileForm.phone) payload.phone = profileForm.phone;
     if (profileForm.website) payload.website = profileForm.website;
     if (profileForm.description) payload.description = profileForm.description;
-    
+    if (profileForm.priceLevel) payload.priceLevel = profileForm.priceLevel;
+
     updateProfileMutation.mutate(payload);
   }, [profileForm, updateProfileMutation]);
 
@@ -460,13 +465,46 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Description</label>
-                  <textarea 
+                  <textarea
                     rows={4}
                     value={profileForm.description}
                     onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
                     className="mt-1.5 w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     placeholder="Tell customers about your restaurant..."
                   />
+                </div>
+
+                {/* Price level — diner-facing budget signal */}
+                <div>
+                  <label className="text-sm font-medium text-[rgba(245,240,232,0.7)]">Price Level</label>
+                  <p className="text-[12px] text-[#7a8fa6] mt-0.5 mb-2">
+                    Helps diners gauge your typical spend. Shown on your listing and used for budget filtering &amp; sorting.
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { level: 1, label: '₦',    hint: 'Budget' },
+                      { level: 2, label: '₦₦',   hint: 'Moderate' },
+                      { level: 3, label: '₦₦₦',  hint: 'Upscale' },
+                      { level: 4, label: '₦₦₦₦', hint: 'Fine dining' },
+                    ].map((p) => {
+                      const active = profileForm.priceLevel === p.level;
+                      return (
+                        <button
+                          key={p.level}
+                          type="button"
+                          onClick={() => setProfileForm({ ...profileForm, priceLevel: p.level })}
+                          className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 transition-colors ${
+                            active
+                              ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)]'
+                              : 'border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] hover:border-[rgba(201,168,76,0.4)]'
+                          }`}
+                        >
+                          <span className={`text-base font-bold ${active ? 'text-[#c9a84c]' : 'text-[#f5f0e8]'}`}>{p.label}</span>
+                          <span className="text-[10px] text-[#7a8fa6]">{p.hint}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>

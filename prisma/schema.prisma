@@ -71,6 +71,8 @@ model Vendor {
   logo                  String?
   businessType          BusinessType       @default(restaurant) @map("business_type")
   venueType             VenueType          @default(upscale_casual) @map("venue_type")
+  // Diner-facing price level (OpenTable/Google standard): 1=₦ … 4=₦₦₦₦
+  priceLevel            Int                @default(2) @map("price_level")
   cuisineTypes          String[]           @default([]) @map("cuisine_types")
   subscriptionTier      SubscriptionTier   @default(basic) @map("subscription_tier")
   subscriptionExpiresAt DateTime?          @map("subscription_expires_at")
@@ -138,6 +140,7 @@ model Vendor {
   @@index([verificationStatus, deletedAt])
   @@index([slug])
   @@index([venueType])
+  @@index([priceLevel])
   @@map("vendors")
 }
 
@@ -148,6 +151,7 @@ model VendorBranch {
   address         String
   city            String
   state           String
+  country         String         @default("Nigeria")
   latitude        Float?
   longitude       Float?
   operatingHours  Json?          @map("operating_hours")
@@ -164,6 +168,7 @@ model VendorBranch {
   waitlistEntries Waitlist[]
 
   @@index([vendorId])
+  @@index([country, city])
   @@map("vendor_branches")
 }
 

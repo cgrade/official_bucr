@@ -24,6 +24,16 @@ export interface ReverseGeocodingResult {
 
 const MAPBOX_BASE = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
 
+// Per-country ISO code + a proximity centre to bias forward-geocoding results.
+const COUNTRY_GEO: Record<string, { iso: string; lng: number; lat: number }> = {
+  nigeria: { iso: 'ng', lng: 7.4951, lat: 9.0579 }, // Abuja (launch market)
+  ghana:   { iso: 'gh', lng: -0.1870, lat: 5.6037 }, // Accra
+  kenya:   { iso: 'ke', lng: 36.8219, lat: -1.2921 }, // Nairobi
+};
+function countryGeo(country?: string) {
+  return COUNTRY_GEO[(country || 'nigeria').toLowerCase()] ?? COUNTRY_GEO.nigeria;
+}
+
 function getToken(): string {
   const token = process.env.MAPBOX_ACCESS_TOKEN;
   if (!token) throw new Error('MAPBOX_ACCESS_TOKEN is not configured');
@@ -38,17 +48,18 @@ function normalizeAddress(address: string): string {
  * Forward geocode: address string → { lat, lng, formattedAddress }.
  * Results cached in Redis for 30 days.
  */
-export async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
+export async function geocodeAddress(address: string, country?: string): Promise<GeocodingResult | null> {
   const normalised = normalizeAddress(address);
-  const cacheKey = `${CACHE_KEYS.GEOCODE}${Buffer.from(normalised).toString('base64')}`;
+  const geo = countryGeo(country);
+  const cacheKey = `${CACHE_KEYS.GEOCODE}${geo.iso}:${Buffer.from(normalised).toString('base64')}`;
 
   const cached = await cache.get<GeocodingResult>(cacheKey) as GeocodingResult | null;
   if (cached) return cached;
 
   try {
     const encoded = encodeURIComponent(address);
-    // Bias results toward Nigeria (Lagos area)
-    const url = `${MAPBOX_BASE}/${encoded}.json?access_token=${getToken()}&country=NG&types=address,place&proximity=3.3792,6.5244&limit=1`;
+    // Restrict + bias results toward the target country
+    const url = `${MAPBOX_BASE}/${encoded}.json?access_token=${getToken()}&country=${geo.iso}&types=address,place&proximity=${geo.lng},${geo.lat}&limit=1`;
 
     const res = await fetch(url);
     if (!res.ok) {
@@ -124,9 +135,14 @@ export async function reverseGeocode(lat: number, lng: number): Promise<ReverseG
  * Helper: geocode an address and return only {lat, lng}, or null.
  * Used when creating/updating a VendorBranch.
  */
-export async function getLatLng(address: string, city: string, state: string): Promise<{ lat: number; lng: number } | null> {
-  const fullAddress = `${address}, ${city}, ${state}, Nigeria`;
-  const result = await geocodeAddress(fullAddress);
+export async function getLatLng(
+  address: string,
+  city: string,
+  state: string,
+  country: string = 'Nigeria',
+): Promise<{ lat: number; lng: number } | null> {
+  const fullAddress = `${address}, ${city}, ${state}, ${country}`;
+  const result = await geocodeAddress(fullAddress, country);
   if (!result) return null;
   return { lat: result.lat, lng: result.lng };
 }

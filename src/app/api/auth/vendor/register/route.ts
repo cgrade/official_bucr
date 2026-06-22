@@ -26,10 +26,14 @@ const vendorRegisterSchema = z.object({
   businessType: z.enum(['restaurant', 'bar', 'cafe', 'lounge', 'hotel', 'club', 'bakery', 'food_truck', 'catering', 'other']).optional(),
   cuisineTypes: z.array(z.string()).optional(),
 
+  // Diner-facing price level (1=₦ … 4=₦₦₦₦). Defaults to 2 (₦₦) if omitted.
+  priceLevel: z.number().int().min(1).max(4).optional(),
+
   // Main branch details
   address: z.string().min(5, 'Address is required'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
+  country: z.string().min(2).optional(),
   branchPhone: phoneSchema.optional(),
   branchEmail: emailSchema.optional(),
   // Optional precise coordinates from the map picker; auto-geocoded if omitted.
@@ -56,14 +60,18 @@ export async function POST(request: NextRequest) {
       description,
       businessType,
       cuisineTypes,
+      priceLevel,
       address,
       city,
       state,
+      country,
       branchPhone,
       branchEmail,
       latitude,
       longitude,
     } = validation.data;
+
+    const branchCountry = country || 'Nigeria';
 
     // Check if email already exists (as user or vendor)
     const existingUser = await db.user.findFirst({
@@ -111,7 +119,7 @@ export async function POST(request: NextRequest) {
     let branchLat = latitude;
     let branchLng = longitude;
     if (branchLat == null || branchLng == null) {
-      const coords = await getLatLng(address, city, state).catch(() => null);
+      const coords = await getLatLng(address, city, state, branchCountry).catch(() => null);
       if (coords) { branchLat = coords.lat; branchLng = coords.lng; }
     }
 
@@ -123,6 +131,7 @@ export async function POST(request: NextRequest) {
         description,
         businessType: businessType || 'restaurant',
         cuisineTypes: cuisineTypes || [],
+        ...(priceLevel !== undefined && { priceLevel }),
         email: ownerEmail,
         phone: ownerPhone,
         verificationStatus: vendorVerificationRequired ? 'pending' : 'approved',
@@ -132,6 +141,7 @@ export async function POST(request: NextRequest) {
             address,
             city,
             state,
+            country: branchCountry,
             latitude: branchLat,
             longitude: branchLng,
             phone: branchPhone || ownerPhone,

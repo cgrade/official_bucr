@@ -81,6 +81,7 @@ const businessSchema = z.object({
 // Step 3: Location Details
 const locationSchema = z.object({
   address: z.string().min(5, 'Address is required'),
+  country: z.string().min(2, 'Country is required'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
   branchPhone: z.string()
@@ -144,7 +145,7 @@ export default function RegisterPage() {
 
   const locationForm = useForm<LocationFormData>({
     resolver: zodResolver(locationSchema),
-    defaultValues: locationData || {},
+    defaultValues: locationData || { country: 'Nigeria' },
   });
 
   const handleOwnerSubmit = (data: OwnerFormData) => {
@@ -238,10 +239,20 @@ export default function RegisterPage() {
         password: ownerData.password,
         businessName: businessData.businessName,
         address: locationData.address,
+        country: locationData.country || 'Nigeria',
         city: locationData.city,
         state: locationData.state,
       };
-      
+
+      // Seed the diner-facing price level from the chosen venue type
+      // (vendor can fine-tune it later in Settings).
+      const PRICE_BY_VENUE: Record<string, number> = {
+        fine_dining: 4, upscale_casual: 3, lounge: 2, casual: 1,
+      };
+      if (businessData.venueType && PRICE_BY_VENUE[businessData.venueType]) {
+        registrationData.priceLevel = PRICE_BY_VENUE[businessData.venueType];
+      }
+
       // Only add optional fields if they have values
       if (businessData.description?.trim()) {
         registrationData.description = businessData.description.trim();
@@ -756,6 +767,20 @@ export default function RegisterPage() {
                       error={locationForm.formState.errors.address?.message}
                       {...locationForm.register('address')}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#7a8fa6] mb-2">
+                      Country *
+                    </label>
+                    <select
+                      {...locationForm.register('country')}
+                      className="w-full rounded-xl border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[#f5f0e8] focus:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.2)]"
+                    >
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Ghana">Ghana</option>
+                      <option value="Kenya">Kenya</option>
+                    </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

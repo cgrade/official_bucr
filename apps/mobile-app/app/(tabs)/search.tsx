@@ -16,7 +16,7 @@ import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search as SearchIcon, MapPin, Star, X, ChevronDown, Map, List, ShieldCheck } from 'lucide-react-native';
+import { Search as SearchIcon, MapPin, Star, X, ChevronDown, Map, List, ShieldCheck, SlidersHorizontal, Check } from 'lucide-react-native';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { Header } from '../../src/components/Header';
 import { SlideMenu } from '../../src/components/SlideMenu';
@@ -76,6 +76,39 @@ const CITIES_BY_COUNTRY: Record<string, string[]> = {
   ],
 };
 const COUNTRIES = Object.keys(CITIES_BY_COUNTRY);
+
+// Fallback city list (used only until the locations endpoint returns real data).
+const FALLBACK_CITIES: Record<string, Array<{ city: string; count: number }>> =
+  Object.fromEntries(
+    Object.entries(CITIES_BY_COUNTRY).map(([country, cities]) => [
+      country, cities.map((city) => ({ city, count: 0 })),
+    ]),
+  );
+
+const PRICE_LEVELS = [
+  { level: 1, label: '₦',    hint: 'Budget' },
+  { level: 2, label: '₦₦',   hint: 'Moderate' },
+  { level: 3, label: '₦₦₦',  hint: 'Upscale' },
+  { level: 4, label: '₦₦₦₦', hint: 'Fine dining' },
+];
+
+const RADIUS_OPTIONS = [5, 10, 25, 50]; // km, for the "Near me" sort
+
+const CUISINES = [
+  'Nigerian', 'African', 'Continental', 'Chinese', 'Italian', 'Lebanese',
+  'Indian', 'Seafood', 'Grill & BBQ', 'Fast Food', 'Pastries', 'Vegetarian',
+];
+
+interface CityCount { city: string; count: number }
+interface CountryGroup { country: string; vendorCount: number; cities: CityCount[] }
+
+const DEFAULT_FILTERS = {
+  minRating: false,         // ⭐ 4.5+
+  openNow: false,
+  onlyExperiences: false,
+  priceLevels: [] as number[],
+  cuisine: null as string | null,
+};
 
 function VendorListItem({ vendor, onPress, colors, isFavorited, onToggleFavorite }: { vendor: Vendor; onPress: () => void; colors: any; isFavorited?: boolean; onToggleFavorite?: () => void }) {
   const { isAuthenticated } = useAuthStore();
@@ -163,28 +196,34 @@ export default function SearchScreen() {
   const params = useLocalSearchParams();
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(
-    params.cuisine as string || null
-  );
   // venueType + businessType come from category navigation on the home screen
   const [activeVenueType,    setActiveVenueType]    = useState<string | null>(params.venueType    as string || null);
   const [activeBusinessType, setActiveBusinessType] = useState<string | null>(params.businessType as string || null);
   const [activeFilter,       setActiveFilter]       = useState<string | null>(params.filter       as string || null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [sortBy, setSortBy] = useState<string>('recommended');
+  const [radiusKm, setRadiusKm] = useState<number>(25); // near-me radius
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('Nigeria');
   const [selectedCity, setSelectedCity] = useState<string>(''); // '' = all cities
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, cuisine: (params.cuisine as string) || null });
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+
+  const activeFilterCount =
+    (filters.minRating ? 1 : 0) + (filters.openNow ? 1 : 0) +
+    (filters.onlyExperiences ? 1 : 0) + (filters.priceLevels.length ? 1 : 0) +
+    (filters.cuisine ? 1 : 0);
 
   // When params change (e.g. from category tap), update active filters
   useEffect(() => {
     setActiveVenueType(params.venueType    as string || null);
     setActiveBusinessType(params.businessType as string || null);
     setActiveFilter(params.filter       as string || null);
-  }, [params.venueType, params.businessType, params.filter]);
+    if (params.cuisine) setFilters((f) => ({ ...f, cuisine: params.cuisine as string }));
+  }, [params.venueType, params.businessType, params.filter, params.cuisine]);
   const { isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
 
@@ -194,6 +233,19 @@ export default function SearchScreen() {
     enabled: isAuthenticated,
   });
   const favoriteIds = new Set((favoritesData?.data || []).map((f: any) => f.vendor?.id || f.vendorId));
+
+  // Drive the location picker from cities that actually have venues.
+  const { data: locationsData } = useQuery({
+    queryKey: ['vendor-locations'],
+    queryFn: () => vendorsApi.getLocations(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const apiCountries: CountryGroup[] = (locationsData?.data as any)?.countries ?? [];
+  const countryNames = apiCountries.length ? apiCountries.map((c) => c.country) : COUNTRIES;
+  const citiesForCountry = (country: string): CityCount[] => {
+    const found = apiCountries.find((c) => c.country === country);
+    return found ? found.cities : (FALLBACK_CITIES[country] || []);
+  };
 
   const addFav = useMutation({ mutationFn: (id: string) => favoritesApi.add(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }) });
   const removeFav = useMutation({ mutationFn: (id: string) => favoritesApi.remove(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }) });
@@ -215,24 +267,32 @@ export default function SearchScreen() {
   }, []);
 
   const { data: vendorsData, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['vendors', 'search', debouncedQuery, params.cuisine, sortBy, selectedCity, activeVenueType, activeBusinessType, activeFilter, userLocation],
+    queryKey: ['vendors', 'search', debouncedQuery, sortBy, radiusKm, selectedCity, selectedCountry, filters, activeVenueType, activeBusinessType, activeFilter, userLocation],
     queryFn: async () => {
       const queryParams: any = { limit: 50 }; // fetch more for map view
 
       if (debouncedQuery) queryParams.search = debouncedQuery;
-      if (params.cuisine) queryParams.cuisineType = params.cuisine;
-      if (selectedCity) queryParams.city = selectedCity;
+
+      // Location — a chosen city narrows to that city, otherwise the whole country
+      if (selectedCity)         queryParams.city    = selectedCity;
+      else if (selectedCountry) queryParams.country = selectedCountry;
+
+      // Filters (from the Filters sheet)
+      if (filters.cuisine)         queryParams.cuisineType = filters.cuisine;
+      if (filters.minRating)       queryParams.minRating   = 4.5;
+      if (filters.openNow)         queryParams.openNow     = true;
+      if (filters.priceLevels.length) queryParams.priceLevel = [...filters.priceLevels].sort().join(',');
+      if (filters.onlyExperiences || activeFilter === 'experiences') queryParams.hasExperiences = true;
 
       // Category-driven filters from home screen
       if (activeVenueType)    queryParams.venueType    = activeVenueType;
       if (activeBusinessType) queryParams.businessType = activeBusinessType;
-      if (activeFilter === 'experiences') queryParams.hasExperiences = true;
 
       // Sort — near me needs device location; the rest are server-side orderings
       if (sortBy === 'distance' && userLocation) {
         queryParams.lat      = userLocation.latitude;
         queryParams.lng      = userLocation.longitude;
-        queryParams.radiusKm = 25;
+        queryParams.radiusKm = radiusKm;
         queryParams.sort     = 'distance';
       } else if (sortBy === 'rating' || sortBy === 'price_low' || sortBy === 'price_high') {
         queryParams.sort = sortBy;
@@ -312,6 +372,19 @@ export default function SearchScreen() {
             </TouchableOpacity>
           )}
         </View>
+        {/* Filters */}
+        <TouchableOpacity
+          style={[styles.filterButton, { backgroundColor: activeFilterCount ? colors.tertiary : colors.surface }]}
+          onPress={() => setShowFilters(true)}
+          activeOpacity={0.8}
+        >
+          <SlidersHorizontal size={20} color={activeFilterCount ? colors.primaryDark : colors.text} />
+          {activeFilterCount > 0 && (
+            <View style={[styles.filterBadge, { backgroundColor: colors.primaryDark }]}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
         {/* Map / List toggle */}
         <TouchableOpacity
           style={[styles.filterButton, { backgroundColor: viewMode === 'map' ? colors.primary : colors.surface }]}
@@ -390,12 +463,38 @@ export default function SearchScreen() {
         />
       </View>
 
+      {/* Radius selector — only meaningful when sorting by proximity */}
+      {sortBy === 'distance' && (
+        <View style={[styles.radiusRow, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.radiusLabel, { color: colors.textMuted }]}>Within</Text>
+          {RADIUS_OPTIONS.map((km) => {
+            const active = radiusKm === km;
+            return (
+              <TouchableOpacity
+                key={km}
+                style={[
+                  styles.radiusChip,
+                  { borderColor: active ? colors.tertiary : colors.border, backgroundColor: active ? colors.tertiaryLight : 'transparent' },
+                ]}
+                onPress={() => setRadiusKm(km)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.radiusChipText, { color: active ? colors.tertiary : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
+                  {km} km
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
       {/* Results Count */}
-      {(debouncedQuery || params.cuisine) && (
+      {!isLoading && (
         <View style={styles.resultsHeader}>
           <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
-            {total} {total === 1 ? 'result' : 'results'}
-            {debouncedQuery && ` for "${debouncedQuery}"`}
+            {total} {total === 1 ? 'place' : 'places'}
+            {debouncedQuery ? ` for "${debouncedQuery}"` : ''}
+            {selectedCity ? ` in ${selectedCity}` : ''}
           </Text>
         </View>
       )}
@@ -455,10 +554,10 @@ export default function SearchScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Country tabs */}
+            {/* Country tabs (only countries that actually have venues) */}
             <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>Country</Text>
             <View style={styles.cityButtons}>
-              {COUNTRIES.map((country) => {
+              {countryNames.map((country) => {
                 const active = selectedCountry === country;
                 return (
                   <TouchableOpacity
@@ -474,21 +573,24 @@ export default function SearchScreen() {
               })}
             </View>
 
-            {/* City list (top 20 of selected country) */}
+            {/* City list — driven by venues present in the selected country */}
             <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>City</Text>
             <ScrollView style={styles.areaList}>
-              {['', ...CITIES_BY_COUNTRY[selectedCountry]].map((city) => {
-                const active = selectedCity === city;
-                const label = city || `All cities in ${selectedCountry}`;
+              {[{ city: '', count: 0 }, ...citiesForCountry(selectedCountry)].map((entry) => {
+                const active = selectedCity === entry.city;
+                const label = entry.city || `All cities in ${selectedCountry}`;
                 return (
                   <TouchableOpacity
-                    key={city || 'all'}
+                    key={entry.city || 'all'}
                     style={[styles.areaItem, active && { backgroundColor: colors.tertiaryLight }]}
-                    onPress={() => { setSelectedCity(city); setShowLocationModal(false); }}
+                    onPress={() => { setSelectedCity(entry.city); setShowLocationModal(false); }}
                   >
                     <Text style={[styles.areaItemText, { color: active ? colors.tertiary : colors.textSecondary, fontWeight: active ? '600' : '400' }]}>
                       {label}
                     </Text>
+                    {entry.city && entry.count > 0 && (
+                      <Text style={[styles.areaItemCount, { color: colors.textMuted }]}>{entry.count}</Text>
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -500,6 +602,109 @@ export default function SearchScreen() {
             >
               <Text style={styles.modalApplyButtonText}>Done</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Filters Sheet */}
+      <Modal
+        visible={showFilters}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface, maxHeight: '85%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Filters</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)}>
+                <X size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Quick toggles */}
+              <Text style={[styles.modalSectionTitle, { color: colors.textSecondary }]}>Quick filters</Text>
+              {[
+                { key: 'minRating',       label: '⭐  Highly rated (4.5+)' },
+                { key: 'openNow',         label: '🕒  Open now' },
+                { key: 'onlyExperiences', label: '✨  Has experiences' },
+              ].map((row) => {
+                const on = (filters as any)[row.key] as boolean;
+                return (
+                  <TouchableOpacity
+                    key={row.key}
+                    style={[styles.toggleRow, { borderColor: colors.border }]}
+                    onPress={() => setFilters((f) => ({ ...f, [row.key]: !on }))}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.toggleLabel, { color: colors.text }]}>{row.label}</Text>
+                    <View style={[styles.checkbox, { borderColor: on ? colors.tertiary : colors.border, backgroundColor: on ? colors.tertiary : 'transparent' }]}>
+                      {on && <Check size={14} color={colors.primaryDark} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Price level (multi-select) */}
+              <Text style={[styles.modalSectionTitle, { color: colors.textSecondary, marginTop: 18 }]}>Price level</Text>
+              <View style={styles.priceRow}>
+                {PRICE_LEVELS.map((p) => {
+                  const on = filters.priceLevels.includes(p.level);
+                  return (
+                    <TouchableOpacity
+                      key={p.level}
+                      style={[styles.priceChip, { borderColor: on ? colors.tertiary : colors.border, backgroundColor: on ? colors.tertiaryLight : 'transparent' }]}
+                      onPress={() => setFilters((f) => ({
+                        ...f,
+                        priceLevels: on ? f.priceLevels.filter((l) => l !== p.level) : [...f.priceLevels, p.level],
+                      }))}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.priceChipLabel, { color: on ? colors.tertiary : colors.text }]}>{p.label}</Text>
+                      <Text style={[styles.priceChipHint, { color: colors.textMuted }]}>{p.hint}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Cuisine (single-select) */}
+              <Text style={[styles.modalSectionTitle, { color: colors.textSecondary, marginTop: 18 }]}>Cuisine</Text>
+              <View style={styles.cuisineWrap}>
+                {CUISINES.map((c) => {
+                  const on = filters.cuisine === c;
+                  return (
+                    <TouchableOpacity
+                      key={c}
+                      style={[styles.cuisineChip, { borderColor: on ? colors.tertiary : colors.border, backgroundColor: on ? colors.tertiaryLight : 'transparent' }]}
+                      onPress={() => setFilters((f) => ({ ...f, cuisine: on ? null : c }))}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.cuisineChipText, { color: on ? colors.tertiary : colors.textSecondary, fontWeight: on ? '700' : '500' }]}>{c}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={[styles.clearButton, { borderColor: colors.border }]}
+                onPress={() => setFilters({ ...DEFAULT_FILTERS })}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.clearButtonText, { color: colors.textSecondary }]}>Clear all</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalApplyButton, { backgroundColor: colors.tertiary, flex: 1, marginTop: 0 }]}
+                onPress={() => setShowFilters(false)}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.modalApplyButtonText}>
+                  Show {total} {total === 1 ? 'place' : 'places'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -537,6 +742,115 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    color: '#c9a84c',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  // Radius selector
+  radiusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  radiusLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  radiusChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  radiusChipText: {
+    fontSize: 12.5,
+  },
+  // Filters sheet
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  toggleLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  priceChip: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  priceChipLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  priceChipHint: {
+    fontSize: 10,
+  },
+  cuisineWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  cuisineChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  cuisineChipText: {
+    fontSize: 13,
+  },
+  filterActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingTop: 14,
+  },
+  clearButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   filtersContainer: {
     borderBottomWidth: 1,
@@ -771,10 +1085,10 @@ const styles = StyleSheet.create({
   cityButtonTextActive: {
     color: '#FFFFFF',
   },
-  areaList: {
-    maxHeight: 200,
-  },
   areaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -782,6 +1096,13 @@ const styles = StyleSheet.create({
   },
   areaItemText: {
     fontSize: 15,
+  },
+  areaItemCount: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  areaList: {
+    maxHeight: 280,
   },
   modalApplyButton: {
     paddingVertical: 16,
