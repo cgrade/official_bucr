@@ -111,10 +111,10 @@ export default function VendorMapPage() {
 
         // Zoom into cluster on click
         map.on('click', 'clusters', (e: any) => {
-          const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+          const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] }) as any[];
           const clusterId = features[0]?.properties?.cluster_id;
           (map.getSource('vendors') as any).getClusterExpansionZoom(clusterId, (_: any, zoom: number) => {
-            map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
+            map.easeTo({ center: features[0].geometry.coordinates, zoom });
           });
         });
 

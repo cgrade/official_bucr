@@ -624,7 +624,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Full Name *
                     </label>
                     <Input
@@ -635,7 +635,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Email Address *
                     </label>
                     <Input
@@ -647,7 +647,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Phone Number *
                     </label>
                     <div className="flex gap-2">
@@ -666,7 +666,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Password *
                     </label>
                     <div className="relative">
@@ -688,7 +688,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -741,7 +741,7 @@ export default function RegisterPage() {
 
                 <form onSubmit={businessForm.handleSubmit(handleBusinessSubmit)} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Business Type *
                     </label>
                     <select
@@ -790,7 +790,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Business Name *
                     </label>
                     <Input
@@ -801,7 +801,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Description
                     </label>
                     <textarea
@@ -813,7 +813,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Cuisine Types
                     </label>
                     <Input
@@ -855,7 +855,7 @@ export default function RegisterPage() {
 
                 <form onSubmit={locationForm.handleSubmit(handleLocationSubmit)} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Street Address *
                     </label>
                     <Input
@@ -880,7 +880,7 @@ export default function RegisterPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                      <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                         City *
                       </label>
                       <Input
@@ -890,7 +890,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                      <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                         State *
                       </label>
                       <Input
@@ -902,7 +902,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Branch Phone (optional)
                     </label>
                     <div className="flex gap-2">
@@ -921,7 +921,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 text-[#7a8fa6] mb-2">
+                    <label className="block text-sm font-medium text-[rgba(245,240,232,0.72)] mb-2">
                       Branch Email (optional)
                     </label>
                     <Input
