@@ -22,7 +22,8 @@ function ReviewsContent() {
   const [comment, setComment] = useState('');
 
   const { data, isLoading } = useQuery({ queryKey: ['my-reviews'], queryFn: () => reviewsApi.getMine(), enabled: isAuthenticated });
-  const reviews: any[] = (data?.data as any)?.items ?? data?.data ?? [];
+  // /users/reviews returns { reviews: [], pagination }
+  const reviews: any[] = (data?.data as any)?.reviews ?? (Array.isArray(data?.data) ? (data?.data as any) : []);
 
   const submit = useMutation({
     mutationFn: () => reviewsApi.create({ reservationId: reservationId!, rating, comment: comment.trim() || undefined }),

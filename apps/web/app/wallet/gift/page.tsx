@@ -28,7 +28,9 @@ export default function GiftPage() {
   const { data: bal } = useQuery({ queryKey: ['credits'], queryFn: () => creditsApi.getBalance(), enabled: isAuthenticated });
   const balance = (bal?.data as any)?.balance ?? 0;
   const { data: giftsData } = useQuery({ queryKey: ['gifts'], queryFn: () => giftsApi.getAll(), enabled: isAuthenticated });
-  const received: any[] = (giftsData?.data as any)?.received ?? [];
+  // /users/gifts returns { sent: {data:[]}, received: {data:[]} } (paginated objects)
+  const rawReceived = (giftsData?.data as any)?.received;
+  const received: any[] = Array.isArray(rawReceived) ? rawReceived : (rawReceived?.data ?? []);
 
   const fee = Math.ceil(amount * GIFT_FEE);
   const total = amount + fee;
