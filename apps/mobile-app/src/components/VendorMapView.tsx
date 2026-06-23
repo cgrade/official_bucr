@@ -254,7 +254,7 @@ function NearMeButton({ colors, onPress }: { colors: any; onPress?: () => void }
 function LoadingOverlay({ colors }: { colors: any }) {
   return (
     <View style={[styles.loadingOverlay, { backgroundColor: colors.background + 'CC' }]}>
-      <ActivityIndicator color={colors.primary} size="small" />
+      <ActivityIndicator color={colors.tertiary} size="small" />
     </View>
   );
 }

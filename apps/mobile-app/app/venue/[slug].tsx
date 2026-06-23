@@ -174,7 +174,7 @@ export default function VenueDetailScreen() {
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.tertiary} />
       </View>
     );
   }

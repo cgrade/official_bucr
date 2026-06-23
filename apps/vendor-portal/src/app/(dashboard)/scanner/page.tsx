@@ -299,7 +299,7 @@ function ScannerPage() {
                       {(verifiedReservation.user.fullName || verifiedReservation.user.name || '?').charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[#f5f0e8]">
                         {verifiedReservation.user.fullName || verifiedReservation.user.name || 'Guest'}
                       </h3>
                       <p className="text-sm text-[#7a8fa6]">{verifiedReservation.user.email}</p>
@@ -314,7 +314,7 @@ function ScannerPage() {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="font-mono text-sm font-medium text-gray-900">
+                      <p className="font-mono text-sm font-medium text-[#f5f0e8]">
                         {verifiedReservation.reference}
                       </p>
                       <Badge variant={verifiedReservation.status === 'checked_in' ? 'success' : 'default'}>
@@ -417,7 +417,7 @@ function ScannerPage() {
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-error-100">
                   <XCircle className="h-8 w-8 text-error-500" />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">Verification Failed</h3>
+                <h3 className="mb-2 text-lg font-semibold text-[#f5f0e8]">Verification Failed</h3>
                 <p className="mb-6 text-[#7a8fa6]">{errorMessage || 'Unable to verify reservation'}</p>
                 <Button onClick={handleReset}>Try Again</Button>
               </CardContent>
@@ -428,8 +428,8 @@ function ScannerPage() {
           {scanState === 'verifying' && (
             <Card>
               <CardContent className="flex flex-col items-center p-8 text-center">
-                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-                <h3 className="text-lg font-semibold text-gray-900">Verifying...</h3>
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#c9a84c] border-t-transparent" />
+                <h3 className="text-lg font-semibold text-[#f5f0e8]">Verifying...</h3>
                 <p className="text-[#7a8fa6]">Please wait while we verify the reservation</p>
               </CardContent>
             </Card>
@@ -520,7 +520,7 @@ function ScannerPage() {
                           value={digit}
                           onChange={(e) => handlePinChange(index, e.target.value.replace(/\D/g, ''))}
                           onKeyDown={(e) => handlePinKeyDown(index, e)}
-                          className="h-14 w-14 rounded-lg border-2 border-[rgba(201,168,76,0.18)] text-center text-2xl font-bold focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="h-14 w-14 rounded-lg border-2 border-[rgba(201,168,76,0.18)] text-center text-2xl font-bold focus:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.25)]"
                         />
                       ))}
                     </div>

@@ -511,7 +511,7 @@ export default function SearchScreen() {
         </View>
       ) : isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.tertiary} />
         </View>
       ) : vendors.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -532,7 +532,7 @@ export default function SearchScreen() {
           showsVerticalScrollIndicator={false}
           ListFooterComponent={
             isFetching ? (
-              <ActivityIndicator style={{ padding: 20 }} color={colors.primary} />
+              <ActivityIndicator style={{ padding: 20 }} color={colors.tertiary} />
             ) : null
           }
         />

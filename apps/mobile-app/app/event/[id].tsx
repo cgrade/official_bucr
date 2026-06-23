@@ -53,7 +53,7 @@ export default function EventDetailScreen() {
   if (isLoading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.tertiary} />
       </View>
     );
   }
