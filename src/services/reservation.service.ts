@@ -285,6 +285,21 @@ export async function cancelReservation(
     const user = reservation.user;
     let newBalance = user.creditsBalance;
 
+    // Vendor-initiated cancellation: the VENDOR funds the guest's compensation bonus
+    // from their (non-cashable) marketing wallet — so they must hold enough credits to cancel.
+    let vendorWallet: { id: string; balance: number } | null = null;
+    if (cancelledBy === 'vendor' && bonusAmount > 0) {
+      vendorWallet = await tx.vendorWallet.findUnique({
+        where: { vendorId: reservation.vendorId },
+        select: { id: true, balance: true },
+      });
+      if (!vendorWallet || vendorWallet.balance < bonusAmount) {
+        throw new Error(
+          `Insufficient wallet credits to cover the ${Math.round(ECONOMICS.VENDOR_CANCEL_BONUS_PCT * 100)}% cancellation compensation (${bonusAmount} credits). Top up your marketing credits, then cancel.`,
+        );
+      }
+    }
+
     if (refundAmount > 0) {
       newBalance += refundAmount;
       await tx.creditTransaction.create({
@@ -330,6 +345,26 @@ export async function cancelReservation(
     }
 
     await tx.user.update({ where: { id: user.id }, data: { creditsBalance: newBalance } });
+
+    // Debit the vendor wallet for the compensation they just paid the guest.
+    if (cancelledBy === 'vendor' && bonusAmount > 0 && vendorWallet) {
+      const newVendorBalance = vendorWallet.balance - bonusAmount;
+      await tx.vendorCreditTransaction.create({
+        data: {
+          walletId: vendorWallet.id,
+          type: 'adjustment',
+          amount: -bonusAmount,
+          balanceAfter: newVendorBalance,
+          referenceType: 'reservation',
+          referenceId: reservationId,
+          description: `Cancellation compensation paid to guest (${Math.round(ECONOMICS.VENDOR_CANCEL_BONUS_PCT * 100)}% of ${reservation.creditsDeposited}-credit deposit)`,
+        },
+      });
+      await tx.vendorWallet.update({
+        where: { id: vendorWallet.id },
+        data: { balance: newVendorBalance, totalSpent: { increment: bonusAmount } },
+      });
+    }
 
     return tx.reservation.update({
       where: { id: reservationId },

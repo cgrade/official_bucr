@@ -74,12 +74,20 @@ export const ECONOMICS = {
   CANCEL_PARTIAL_REFUND_HOURS: numEnv('CANCEL_PARTIAL_REFUND_HOURS', 12),
   /** Fraction refunded in the partial window (default 50%). */
   CANCEL_PARTIAL_REFUND_PCT:   numEnv('CANCEL_PARTIAL_REFUND_PCT',  0.50),
-  /** Extra bonus fraction given to guest when the VENDOR cancels (default 10%). */
+  /**
+   * Extra bonus fraction given to the guest when the VENDOR cancels (default 10%).
+   * This compensation is PAID BY THE VENDOR from their (non-cashable) marketing wallet —
+   * a vendor must hold at least this many credits to be able to cancel a reservation.
+   * Enforced in reservation.service.ts → cancelReservation (vendor branch).
+   */
   VENDOR_CANCEL_BONUS_PCT:     numEnv('VENDOR_CANCEL_BONUS_PCT',    0.10),
 
-  // ── Per-cover success fee (NGN, charged to vendor per checked-in seat) ────
-  // Basic-tier flat fee = ₦1,500 per cover across all venue types.
+  // ── Per-cover success fee (NGN, charged to vendor PER SEATED HEAD) ────────
+  // The fee is per diner: total = base × tierMultiplier × partySize.
+  //   e.g. a table of 1 → 1× the fee; a table of 4 → 4× the fee.
+  // Basic-tier base = ₦1,500 per head across all venue types.
   // Reduced by subscription tier via PER_COVER_TIER_MULTIPLIER below.
+  // Applied in reservation.service.ts on check-in.
   PER_COVER_FEE: {
     fine_dining:    numEnv('COVER_FEE_FINE_DINING',    1500),
     upscale_casual: numEnv('COVER_FEE_UPSCALE_CASUAL', 1500),

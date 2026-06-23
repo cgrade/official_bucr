@@ -86,7 +86,7 @@ Guest checks in (QR or PIN) -> 100% of deposit returned + **3% show-up bonus**, 
 | 24+ hours | 100% |
 | 12-24 hours | 50% |
 | Under 12 hours | 0% |
-| Vendor cancels | 100% + 10% compensation bonus to guest |
+| Vendor cancels | 100% refund + 10% compensation bonus to guest — **the 10% is paid by the vendor out of their (non-cashable) marketing wallet**. A vendor must therefore hold ≥10% of the deposit in credits to cancel; the cancel is blocked server-side if their wallet is short. Enforced atomically in `cancelReservation` (vendor branch). |
 
 ### 4.6 Vendor credit rules — the legal gate
 - Vendors **earn** credits only via no-show compensation (30% share above) and platform promotions.
@@ -109,7 +109,7 @@ The cardinal rule across the whole monetization model: **money flows only TO BUC
 
 | Line | Mechanism | Sequencing |
 |---|---|---|
-| **Per-cover success fee** | Flat fee per seated guest, billed to vendor monthly. **Basic tier = N1,500 per cover** (flat across all venue types). NEVER a percentage of the bill (a % would constitute settlement/licensing exposure). Reduced by subscription tier (Pro = 50% = N750, Elite = 0%). Triggered by guest-side check-in, not vendor self-report (prevents under-reporting). | Stage 1 — launch. Sells with zero proof since it's pay-per-result. |
+| **Per-cover success fee** | Flat fee **per seated head**, billed to vendor monthly. The fee is multiplied by party size: **total = base × tier multiplier × partySize** (a table of 1 → 1×, a table of 4 → 4×). **Basic-tier base = N1,500 per head** (flat across all venue types). NEVER a percentage of the bill (a % would constitute settlement/licensing exposure). Reduced by subscription tier (Pro = 50% = N750/head, Elite = 0%). Triggered by guest-side check-in, not vendor self-report (prevents under-reporting). | Stage 1 — launch. Sells with zero proof since it's pay-per-result. |
 | **Vendor subscriptions** | Basic = **free** (required for supply-density acquisition). Pro = **N30,000/mo**. Elite = **N85,000/mo**. Anchored on Dinesurf's verified pricing (Basic N18k, Core N50k, Pro N83-125k) — BUCR sits between/below those. | Stage 2 — growth, once per-cover has proven value. |
 | **Marketing / featured placement** | Vendors pay (naira or marketing credits) for featured carousel slots, top-of-search, promoted experiences, category sponsorship. Only works at vendor density — near-zero value with few vendors, becomes the highest-margin line at scale. | Stage 3 — scale. |
 | **BUCR+ guest membership** | N3,500/mo or ~N35,000/yr, includes a monthly credit bundle + perks (priority booking, no service fees, concierge). Highest-uncertainty line in the model — defer until genuine venue scarcity exists (3-5 exclusive premium venues). | Stage 4 — once supply is desirable. Do not rely on this for break-even. |

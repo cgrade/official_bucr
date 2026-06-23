@@ -636,6 +636,8 @@ export default function SettingsPage() {
                   <p className="text-[12px] text-[#7a8fa6] leading-relaxed">
                     Deposits are held by Bucr and returned to the diner on check-in with a 3% bonus.
                     A no-show forfeits 40% — 30% goes to you as marketing credits, 10% to Bucr.
+                    The per-cover fee is charged per seated head (× party size) on check-in.
+                    If you cancel a booking, the guest&apos;s 10% compensation is paid from your wallet credits.
                   </p>
                 </div>
               </div>

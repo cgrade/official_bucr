@@ -87,7 +87,7 @@ Target: **12% breakage** (industry standard for closed-loop systems).
 | Show-up (check-in) | 5% of deposit | `showupBonusPercent` |
 | Review (verified) | 5-10 credits | `reviewBonusMin`/`reviewBonusMax` |
 | Referral | 20 credits | `referralBonus` |
-| Vendor cancellation | 100% refund + 10% bonus | Hardcoded in `cancelReservation()` |
+| Vendor cancellation | 100% refund + 10% bonus (bonus **paid by the vendor** from their wallet; blocked if wallet < 10% of deposit) | `cancelReservation()` |
 | Event cancellation | 100% refund + 10% bonus | Hardcoded in `cancelEvent()` |
 
 **Key insight**: Bonus credits are "minted" — they cost the platform ₦0 to create but have ₦100 face value to users. This is an extremely low-cost retention mechanism.
@@ -134,7 +134,7 @@ Forfeited credits → **pure platform revenue** (vendor gets 0%).
 
 #### On Cancellation (Vendor):
 - User receives **100% refund + 10% bonus**
-- Platform absorbs the bonus cost (minimal — it's minted credits)
+- **The 10% bonus is paid by the VENDOR** from their (non-cashable) marketing wallet — not the platform. The vendor must hold ≥10% of the deposit in credits or the cancellation is blocked (enforced atomically in `cancelReservation`).
 
 #### On No-show:
 - **100% of deposit forfeited** → platform revenue

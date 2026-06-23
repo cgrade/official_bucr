@@ -122,7 +122,8 @@ Client apps additionally need `NEXT_PUBLIC_API_URL` (web/portals) and `EXPO_PUBL
 - **Deposit is flat per reservation** (not per person), set by venue type or vendor override; min ₦10,000.
 - **Show‑up:** 100% deposit returned **+ 3% bonus**.
 - **No‑show:** guest forfeits **40%** (keeps 60%); of the 40% → **30% to vendor** (non‑cashable marketing credits), **10% to Bucr**.
-- **Cancellation:** 24h+ = 100% · 12–24h = 50% · <12h = 0% · vendor‑cancel = 100% + 10% bonus to guest.
+- **Per‑cover fee:** charged **per seated head** — `base × tier multiplier × party size` (table of 1 → 1×, table of 4 → 4×). Base ₦1,500 (Basic), ₦750 (Pro), ₦0 (Elite). Never a % of the bill.
+- **Cancellation:** 24h+ = 100% · 12–24h = 50% · <12h = 0% · **vendor‑cancel = 100% refund + 10% bonus to guest, where the 10% is paid by the vendor from their marketing wallet** (vendor must hold the credits to cancel).
 
 Every credit mutation runs inside a single `db.$transaction()`. **No economic value is hardcoded** outside `economics.ts`.
 

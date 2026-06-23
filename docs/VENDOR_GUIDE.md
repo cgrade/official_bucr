@@ -34,7 +34,7 @@
 
 Bucr is built to solve **no‑shows**. When a guest books your restaurant, they place a small **refundable credit deposit**. That deposit makes the booking real:
 
-- **They show up** → their deposit is returned **plus a 3% bonus**, and you’re billed a small flat **per‑cover fee** for the seated guest.
+- **They show up** → their deposit is returned **plus a 3% bonus**, and you’re billed a small **per‑cover fee for each seated head** (so a table of 4 is 4× the fee).
 - **They don’t show up** → they forfeit **40%** of the deposit. **You receive 30% of the original deposit** as **marketing credits** (compensation for the held table), and Bucr keeps 10%.
 
 You never chase deposits, never process refunds, and never lose a fully‑prepped table for nothing. Everything is automatic.
@@ -247,9 +247,10 @@ In plain English, here’s every way money moves:
 | Event | What happens |
 |---|---|
 | Guest books | Guest’s **deposit** (credits) is held by the platform. Nothing leaves your pocket. |
-| Guest checks in | Guest gets their deposit back **+3%**. A flat **per‑cover fee** accrues to your monthly invoice (₦1,500 Basic · ₦750 Pro · ₦0 Elite). |
+| Guest checks in | Guest gets their deposit back **+3%**. A **per‑cover fee accrues per seated head × party size** (₦1,500/head Basic · ₦750 Pro · ₦0 Elite) — a table of 2 = 2× the fee. |
 | Guest no‑shows | Guest forfeits 40%. **You receive 30% of the deposit** as marketing credits. |
-| Guest cancels | Refunded per policy (24h+ 100% · 12–24h 50% · <12h 0%). |
+| Guest cancels | Refunded per policy (24h+ 100% · 12–24h 50% · <12h 0%). Nothing charged to you. |
+| **You (the vendor) cancel** | Guest gets a **100% refund + a 10% compensation bonus, and that 10% is paid from your marketing wallet.** You must hold enough credits (≥10% of the deposit) or the cancellation is blocked. Keep a small credit balance so you can always cancel if you must. |
 | The meal bill | Paid **directly to you at the venue** — Bucr never touches it. |
 | Monthly | Bucr **invoices you** for accrued per‑cover fees + your subscription. |
 
@@ -267,7 +268,11 @@ In plain English, here’s every way money moves:
 
 **How do guests pay for the food?** Directly to you at the venue, exactly as they do today. Bucr only handles the reservation deposit (in credits).
 
+**How is the per‑cover fee calculated?** It’s **per head**: base fee × your tier × the party size. A check‑in for 1 guest is 1× the fee; a table of 4 is 4×. Basic = ₦1,500/head, Pro = ₦750/head, Elite = ₦0.
+
 **When do I get the per‑cover fee invoice?** Monthly. Fees accrue automatically each time you check a guest in.
+
+**What happens if I cancel a confirmed booking?** The guest gets a full refund plus a 10% compensation bonus, and **that 10% comes out of your marketing wallet**. If your wallet doesn’t have enough credits, you won’t be able to cancel — so keep a small balance. (Guest‑side cancellations never cost you anything.)
 
 **How do I get more bookings?** Great photos + complete profile → respond to reviews → keep your reliability high (earn the badge) → run Special Offers → buy Featured Spots (Elite).
 

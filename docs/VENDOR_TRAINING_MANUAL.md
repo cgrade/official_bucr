@@ -47,7 +47,7 @@ Walk the owner through the loop:
 
 1. **The problem.** “Half of Lagos bookings no‑show. You prep, you hold the table, they don’t come, you lose the cover and the walk‑in.”
 2. **The fix — a deposit that means something.** “On Bucr the guest pays a **small refundable credit deposit** to confirm. That filters out the casual bookers.”
-3. **Guest shows up** → “They get their deposit back **+3%**. You just pay us a **flat fee per seated guest** — ₦1,500 on the free plan, less or nothing on paid plans. Never a % of the bill.”
+3. **Guest shows up** → “They get their deposit back **+3%**. You just pay us a **fee per seated guest** — ₦1,500 a head on the free plan (so a table of 4 is ₦6,000), less or nothing on paid plans. Never a % of the bill.”
 4. **Guest no‑shows** → “They lose 40% of the deposit. **You get 30% of it** as credit — compensation for the held table. We keep a little. You’re no longer losing for free.”
 5. **You keep the bill.** “Guests pay you for the food **at the venue, like always.** We never touch your money — we only handle the deposit.”
 6. **You get discovery.** “You’re listed to diners across the Bucr app and website, with reviews, photos, and a verified badge.”
@@ -108,12 +108,13 @@ Then mention the growth levers (don’t hard‑sell day one): **Pro** (analytics
 
 | They say | You say |
 |---|---|
-| **“What does it cost?”** | “Free to list. You only pay a flat **₦1,500 per guest who actually shows up** — and that drops to ₦750 or ₦0 on paid plans. Never a cut of your food bill.” |
+| **“What does it cost?”** | “Free to list. You only pay **₦1,500 per guest who actually shows up** (per head — a table of 4 is ₦6,000) — and that drops to ₦750 or ₦0 on paid plans. Never a cut of your food bill.” |
 | **“My guests won’t pay a deposit.”** | “It’s small, **fully refundable**, and they get a **3% bonus** for showing. Serious diners love it — it guarantees their table. It only filters out the people who were going to ghost you anyway.” |
 | **“I already use Instagram/phone bookings.”** | “Keep those. Bucr just adds the bookings that *hold*, plus discovery to new diners — and it does the no‑show math for you automatically.” |
 | **“Is this like the apps that take 20–30%?”** | “No. We **never** take a percentage of your bill — that’s the whole point. A flat per‑cover fee, only when they show.” |
 | **“Can I take my deposit money out as cash?”** | “Vendor credits are **marketing credits** for visibility on Bucr — they’re not cash. Your **food revenue is 100% yours**, paid at the venue. This keeps the platform simple and above‑board.” |
 | **“I’m too busy to manage another app.”** | “The only daily action is **scan to check in** — two seconds per guest. We’ll set everything else up with you now.” |
+| **“What if I have to cancel on a guest?”** | “You can — the guest gets a full refund plus a small 10% goodwill bonus, which comes from your marketing‑credit wallet. Just keep a few credits in your wallet so you’re always able to cancel. It only applies when *you* cancel; guest cancellations cost you nothing.” |
 | **“What if a guest says they came but didn’t?”** | “Check‑in is on your side — only a real scan/PIN counts. Be fair and you’ll never have disputes.” |
 
 ---
@@ -186,8 +187,8 @@ TRAINED ON THE ESSENTIAL 5
 | **Deposit** | Flat refundable credits to confirm a booking. Default by venue type (Fine ₦20k / Upscale ₦15k / Lounge·Casual ₦10k); vendor can override. |
 | **Show‑up bonus** | Guest gets deposit back **+3%** on check‑in. |
 | **No‑show split** | Guest forfeits **40%** → **30% to vendor** (credits) + **10% to Bucr**. |
-| **Per‑cover fee** | Flat fee per seated guest: **₦1,500 Basic · ₦750 Pro · ₦0 Elite.** Never a % of the bill. |
-| **Cancellation** | 24h+ 100% · 12–24h 50% · <12h 0% · vendor‑cancel 100% + 10% bonus to guest. |
+| **Per‑cover fee** | Fee **per seated head × party size**: **₦1,500 Basic · ₦750 Pro · ₦0 Elite** *per head* (table of 4 = 4×). Never a % of the bill. |
+| **Cancellation** | Guest: 24h+ 100% · 12–24h 50% · <12h 0%. **Vendor‑cancel: guest gets 100% + 10% bonus, and the vendor pays that 10% from their marketing wallet** (must hold the credits, or the cancel is blocked). |
 | **Credit expiry** | 90 days (reminder 30 days before). |
 | **Subscriptions** | Basic free · **Pro ₦30k/mo** · **Elite ₦85k/mo**. |
 | **Featured (ads)** | Elite‑only access; buy placements with credits (Spotlight/Prime/Headline…). |

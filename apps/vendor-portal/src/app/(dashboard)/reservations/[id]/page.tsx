@@ -148,7 +148,7 @@ export default function ReservationDetailPage() {
               variant="outline"
               className="gap-2 text-[#f87171] border-[rgba(248,113,113,0.3)] hover:bg-[rgba(248,113,113,0.08)]"
               onClick={() => {
-                if (window.confirm('Cancel this reservation? The guest will receive a refund per cancellation policy.')) {
+                if (window.confirm('Cancel this reservation?\n\nThe guest gets a full refund plus a 10% compensation bonus, and that 10% is deducted from your marketing-credit wallet. You need enough credits in your wallet to cancel.')) {
                   cancelMutation.mutate();
                 }
               }}
