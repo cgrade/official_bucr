@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ShieldCheck, RefreshCw, CalendarCheck, ArrowRight } from 'lucide-react';
+import { Search, ShieldCheck, RefreshCw, CalendarCheck, ArrowRight, CalendarDays } from 'lucide-react';
 import { vendorsApi, featuredApi } from '@/lib/api';
 import { RestaurantCard, type VendorLite } from '@/components/RestaurantCard';
+import { useAuthStore } from '@/stores/auth.store';
 
 const STEPS = [
   { icon: Search, title: 'Find your table', desc: 'Browse top restaurants and pick a date, time and party size.' },
@@ -14,6 +15,7 @@ const STEPS = [
 ];
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuthStore();
   const { data: featuredData } = useQuery({ queryKey: ['featured'], queryFn: () => featuredApi.getAll() });
   const { data: vendorsData, isLoading } = useQuery({
     queryKey: ['vendors', 'home'],
@@ -39,8 +41,8 @@ export default function HomePage() {
             <Link href="/restaurants" className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-[#c9a84c] text-[#070f1e] font-semibold hover:bg-[#b8973f] transition-colors">
               <Search className="h-5 w-5" /> Find a restaurant
             </Link>
-            <Link href="/register" className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl border border-[rgba(201,168,76,0.4)] text-[#f5f0e8] font-semibold hover:bg-[rgba(255,255,255,0.05)] transition-colors">
-              Create free account
+            <Link href={isAuthenticated ? '/bookings' : '/register'} className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl border border-[rgba(201,168,76,0.4)] text-[#f5f0e8] font-semibold hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+              {isAuthenticated ? <><CalendarDays className="h-5 w-5" /> My reservations</> : 'Create free account'}
             </Link>
           </div>
         </div>

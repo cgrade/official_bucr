@@ -9,8 +9,10 @@ export const tokenStorage = {
   get: () => Cookies.get(TOKEN_KEY) || null,
   getRefresh: () => Cookies.get(REFRESH_KEY) || null,
   set: (access: string, refresh?: string) => {
-    Cookies.set(TOKEN_KEY, access, { expires: 1, sameSite: 'lax' });
-    if (refresh) Cookies.set(REFRESH_KEY, refresh, { expires: 7, sameSite: 'lax' });
+    // secure flag on HTTPS so tokens are never sent over plain HTTP in production
+    const secure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    Cookies.set(TOKEN_KEY, access, { expires: 1, sameSite: 'lax', secure });
+    if (refresh) Cookies.set(REFRESH_KEY, refresh, { expires: 7, sameSite: 'lax', secure });
   },
   clear: () => {
     Cookies.remove(TOKEN_KEY);

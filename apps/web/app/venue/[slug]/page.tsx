@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { getImageUrl, getReservationDeposit, formatNaira, creditsToNaira, formatDate, cn } from '@/lib/utils';
 
 const TIMES = ['12:00', '12:30', '13:00', '13:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'];
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 type Tab = 'overview' | 'menu' | 'photos' | 'reviews';
 
@@ -63,7 +63,7 @@ export default function VenuePage() {
   const menu: any[] = (vendor.menu ?? []).filter((c: any) => (c.items?.length ?? 0) > 0);
   const gallery: any[] = vendor.gallery ?? [];
   const reviews: any[] = vendor.reviews ?? [];
-  const hours = branch?.operatingHours;
+  const hours: any[] = Array.isArray(branch?.operatingHours) ? branch.operatingHours : [];
 
   const TABS: { id: Tab; label: string; show: boolean }[] = [
     { id: 'overview', label: 'Overview', show: true },
@@ -148,17 +148,14 @@ export default function VenuePage() {
                     <Navigation className="h-4 w-4" /> Get directions
                   </a>
                 )}
-                {hours && typeof hours === 'object' && (
+                {hours.length > 0 && (
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
-                    {DAYS.map((d) => {
-                      const h = (hours as any)[d];
-                      return (
-                        <div key={d} className="flex justify-between border-b border-line py-1">
-                          <span className="capitalize text-muted">{d}</span>
-                          <span className="text-ink">{h?.closed || (!h?.open && !h?.close) ? 'Closed' : `${h.open} – ${h.close}`}</span>
-                        </div>
-                      );
-                    })}
+                    {[...hours].sort((a, b) => a.dayOfWeek - b.dayOfWeek).map((h) => (
+                      <div key={h.dayOfWeek} className="flex justify-between border-b border-line py-1">
+                        <span className="text-muted">{DAY_LABELS[h.dayOfWeek] ?? `Day ${h.dayOfWeek}`}</span>
+                        <span className="text-ink">{h.isClosed ? 'Closed' : `${h.openTime} – ${h.closeTime}`}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </section>

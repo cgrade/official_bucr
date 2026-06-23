@@ -7,8 +7,13 @@
 import { NextRequest } from 'next/server';
 import { geocodeAddress } from '@/services/geocoding.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 
 export async function GET(request: NextRequest) {
+  // Public proxy to a paid Mapbox token — throttle to prevent abuse / runaway cost.
+  const limited = applyRateLimit(request, 'api');
+  if (limited) return limited;
+
   const address = new URL(request.url).searchParams.get('address');
   if (!address?.trim()) return errorResponse('address is required', 400);
 
