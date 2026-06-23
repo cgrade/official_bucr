@@ -351,7 +351,7 @@ export default function HomeScreen() {
               renderItem={({ item }) => (
                 <FeaturedCard
                   item={item}
-                  onPress={() => navigateToVendor(item?.vendor?.slug)}
+                  onPress={() => { if (item?.id) featuredApi.trackClick(item.id); navigateToVendor(item?.vendor?.slug); }}
                   colors={colors}
                 />
               )}

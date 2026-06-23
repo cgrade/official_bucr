@@ -877,6 +877,12 @@ model FeaturedSpot {
   endDate      DateTime        @map("end_date")
   isActive     Boolean         @default(true) @map("is_active")
   addedByAdmin Boolean         @default(false) @map("added_by_admin")
+  // Performance metrics (ad ROI for vendors)
+  impressions  Int             @default(0)
+  clicks       Int             @default(0)
+  // When true, the spot is repurchased automatically on expiry if the vendor
+  // has enough credits (recurring ad revenue).
+  autoRenew    Boolean         @default(false) @map("auto_renew")
   adminId      String?         @map("admin_id")
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")

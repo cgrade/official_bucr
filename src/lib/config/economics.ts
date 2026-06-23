@@ -115,6 +115,11 @@ export const ECONOMICS = {
   /** Days the score must stay ≥ BADGE_THRESHOLD to award the badge. */
   BADGE_SUSTAINED_DAYS:     numEnv('BADGE_SUSTAINED_DAYS',    60),
 
+  // ── Featured (ad) placement ───────────────────────────────────────────────
+  /** Max active spots shown per featured carousel/type — keeps placement scarce
+   *  (premium) and rotates exposure fairly when more are sold than slots. */
+  FEATURED_CAROUSEL_MAX: numEnv('FEATURED_CAROUSEL_MAX', 5),
+
   // ── Multi-currency DISPLAY (base = NGN) ───────────────────────────────────
   // The credit is always priced in NGN (CREDIT_VALUE_NGN = ₦10 — the locked
   // base). For Ghana/Kenya we only DISPLAY local-currency equivalents using live

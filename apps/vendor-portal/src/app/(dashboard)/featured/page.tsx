@@ -56,6 +56,18 @@ function FeaturedPageInner() {
     },
   });
 
+  const autoRenewMutation = useMutation({
+    mutationFn: ({ id, autoRenew }: { id: string; autoRenew: boolean }) =>
+      featuredApi.toggleAutoRenew(id, autoRenew),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Updated');
+      queryClient.invalidateQueries({ queryKey: ['featured'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update auto-renew');
+    },
+  });
+
   const handlePurchase = () => {
     if (!selectedPackage) return;
 
@@ -172,9 +184,40 @@ function FeaturedPageInner() {
                     <Calendar className="h-4 w-4" />
                     <span>Ends {formatDistanceToNow(new Date(spot.endDate), { addSuffix: true })}</span>
                   </div>
-                  <div className="text-xs text-[#7a8fa6]">
+                  <div className="text-xs text-[#7a8fa6] mb-3">
                     {format(new Date(spot.startDate), 'MMM d')} - {format(new Date(spot.endDate), 'MMM d, yyyy')}
                   </div>
+
+                  {/* Performance (ad ROI) */}
+                  <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-[rgba(201,168,76,0.15)]">
+                    <div>
+                      <p className="text-base font-bold text-[#f5f0e8]">{(spot.impressions ?? 0).toLocaleString()}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-[#7a8fa6]">Views</p>
+                    </div>
+                    <div>
+                      <p className="text-base font-bold text-[#f5f0e8]">{(spot.clicks ?? 0).toLocaleString()}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-[#7a8fa6]">Clicks</p>
+                    </div>
+                    <div>
+                      <p className="text-base font-bold text-[#c9a84c]">
+                        {spot.impressions > 0 ? ((spot.clicks / spot.impressions) * 100).toFixed(1) : '0.0'}%
+                      </p>
+                      <p className="text-[10px] uppercase tracking-wide text-[#7a8fa6]">CTR</p>
+                    </div>
+                  </div>
+
+                  {/* Auto-renew toggle */}
+                  <button
+                    type="button"
+                    onClick={() => autoRenewMutation.mutate({ id: spot.id, autoRenew: !spot.autoRenew })}
+                    disabled={autoRenewMutation.isPending}
+                    className="flex items-center justify-between w-full text-sm pt-1 disabled:opacity-50"
+                  >
+                    <span className="text-[rgba(245,240,232,0.8)]">Auto-renew</span>
+                    <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${spot.autoRenew ? 'bg-[#c9a84c]' : 'bg-[rgba(255,255,255,0.15)]'}`}>
+                      <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${spot.autoRenew ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </span>
+                  </button>
                 </div>
               ))}
             </div>

@@ -226,6 +226,10 @@ export const featuredApi = {
     }>>('/featured');
     return response.data;
   },
+  // Best-effort click tracking for ad ROI — never block navigation on it.
+  trackClick: (spotId: string) => {
+    api.post(`/featured/${spotId}/click`).catch(() => {});
+  },
 };
 
 // Reservations API

@@ -578,4 +578,8 @@ export const featuredApi = {
     const { data } = await api.post<ApiResponse<any>>('/vendor/featured', payload);
     return data;
   },
+  toggleAutoRenew: async (spotId: string, autoRenew: boolean) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/featured/${spotId}`, { autoRenew });
+    return data;
+  },
 };

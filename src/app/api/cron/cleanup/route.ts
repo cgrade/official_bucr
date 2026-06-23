@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { cleanupExpiredTokens } from '@/services/token.service';
+import { processFeaturedAutoRenewals } from '@/services/featured.service';
 import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
+    // Renew opted-in featured spots before resetting expired flags below.
+    const featuredAutoRenew = await processFeaturedAutoRenewals();
+
     const [tokensCleared, menuItemsRestored, featuredExpired] = await Promise.all([
       cleanupExpiredTokens(),
       // Clear expired "86" windows so items show as available again
@@ -43,6 +47,7 @@ export async function GET(request: NextRequest) {
       tokensCleared,
       menuItemsRestored,
       featuredExpired,
+      featuredAutoRenew,
     });
   } catch (error) {
     console.error('Cleanup cron job error:', error);

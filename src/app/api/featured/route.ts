@@ -1,13 +1,17 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
+import { ECONOMICS } from '@/lib/config/economics';
 
 // GET /api/featured - Get all active featured items (public)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type'); // restaurant, experience, offer
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const requested = parseInt(searchParams.get('limit') || '10');
+    // Scarcity: never show more than the carousel cap per type, and rotate
+    // exposure fairly (least-shown first).
+    const cap = Math.max(1, Math.min(requested, ECONOMICS.FEATURED_CAROUSEL_MAX));
 
     const now = new Date();
 
@@ -75,8 +79,10 @@ export async function GET(request: NextRequest) {
           select: { id: true, name: true, type: true },
         },
       },
-      orderBy: [{ createdAt: 'desc' }],
-      take: limit,
+      // Fair rotation: least-shown spots surface first, so exposure is shared
+      // when more spots are sold than there are slots.
+      orderBy: [{ impressions: 'asc' }, { createdAt: 'desc' }],
+      take: ECONOMICS.FEATURED_CAROUSEL_MAX * 4,
     });
 
     // Transform data for easier frontend consumption
@@ -97,7 +103,8 @@ export async function GET(request: NextRequest) {
         },
         startDate: spot.startDate,
         endDate: spot.endDate,
-      }));
+      }))
+      .slice(0, cap);
 
     const featuredExperiences = featuredSpots
       .filter((spot) => spot.type === 'experience')
@@ -118,7 +125,8 @@ export async function GET(request: NextRequest) {
           endDate: spot.endDate,
         };
       })
-      .filter((item) => item.experience);
+      .filter((item) => item.experience)
+      .slice(0, cap);
 
     const featuredOffers = featuredSpots
       .filter((spot) => spot.type === 'offer')
@@ -139,7 +147,21 @@ export async function GET(request: NextRequest) {
           endDate: spot.endDate,
         };
       })
-      .filter((item) => item.offer);
+      .filter((item) => item.offer)
+      .slice(0, cap);
+
+    // Record an impression for every spot actually served (fire-and-forget).
+    const shownIds = [
+      ...featuredRestaurants.map((r) => r.id),
+      ...featuredExperiences.map((e) => e.id),
+      ...featuredOffers.map((o) => o.id),
+    ];
+    if (shownIds.length) {
+      db.featuredSpot.updateMany({
+        where: { id: { in: shownIds } },
+        data: { impressions: { increment: 1 } },
+      }).catch((err) => console.error('[featured] impression track failed:', err));
+    }
 
     return successResponse({
       featuredRestaurants,
