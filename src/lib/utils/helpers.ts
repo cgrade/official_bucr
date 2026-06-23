@@ -37,15 +37,6 @@ export function formatNaira(amount: number): string {
   }).format(amount);
 }
 
-/**
- * @deprecated Deposits are now FLAT per reservation (party size irrelevant).
- * Use calculateReservationDeposit() from services/credit.service.ts which
- * reads ECONOMICS.DEPOSIT_BY_VENUE_TYPE. This shim returns the global default.
- */
-export function calculateCreditsForPartySize(_partySize?: number): number {
-  return 1000; // ECONOMICS.DEPOSIT_DEFAULT (₦10,000)
-}
-
 export function addMonths(date: Date, months: number): Date {
   const result = new Date(date);
   result.setMonth(result.getMonth() + months);

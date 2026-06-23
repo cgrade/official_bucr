@@ -156,6 +156,8 @@ Each `apps/*` has `dev`, `build`, `start`, `type-check`.
 
 ## Deployment
 
+> **Full step-by-step guide: [`DEPLOYMENT.md`](./DEPLOYMENT.md)** — Supabase, the four Vercel projects, env vars, migrations, webhooks, crons, mobile (EAS), and the go-live checklist.
+
 - **Backend + web + portals:** Vercel (native Next.js 14 + cron). Set all env vars; Vercel Crons read from `vercel.json`.
 - **Database:** Supabase (managed Postgres + RLS).
 - **Mobile:** EAS Build (custom dev/preview/production builds — native modules: Mapbox, Sentry, view‑shot).

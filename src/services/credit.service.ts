@@ -340,14 +340,6 @@ export function calculateReservationDeposit(
   return ECONOMICS.DEPOSIT_DEFAULT;
 }
 
-/**
- * @deprecated Deposits are now flat per reservation. Kept as a thin shim so any
- * remaining callers resolve to the default flat deposit. Use calculateReservationDeposit.
- */
-export function calculateCreditsForPartySize(_partySize?: number): number {
-  return ECONOMICS.DEPOSIT_DEFAULT;
-}
-
 export function calculateShowupBonus(depositedCredits: number): number {
   return Math.floor(depositedCredits * ECONOMICS.SHOWUP_BONUS_PCT);
 }

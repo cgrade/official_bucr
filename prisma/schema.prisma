@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // App runtime: use the POOLED connection on serverless (Supabase pgbouncer, port 6543).
+  url       = env("DATABASE_URL")
+  // Migrations / introspection: use the DIRECT connection (Supabase port 5432).
+  // Locally (single Postgres, no pooler) set DIRECT_URL to the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
