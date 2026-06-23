@@ -44,6 +44,11 @@ export interface JWTPayload {
   sub: string;
   email: string;
   role: UserRole;
+  // Vendor-staff context (present only on staff tokens). Staff log in at the vendor
+  // portal but are scoped to one vendor with a limited role.
+  vendorId?: string;
+  staffId?: string;
+  staffRole?: 'manager' | 'staff';
   iat: number;
   exp: number;
 }

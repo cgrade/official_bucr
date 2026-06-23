@@ -68,6 +68,42 @@ model Admin {
   @@map("admins")
 }
 
+// Staff that a vendor owner invites to help run their restaurant on Bucr.
+// They log in at the vendor portal but are scoped to ONE vendor with a limited role.
+enum VendorStaffRole {
+  manager // most operations except billing/danger (bank, subscription, delete, team)
+  staff   // floor staff: check-in guests, view reservations, toggle menu availability
+}
+
+enum VendorStaffStatus {
+  pending // invited, hasn't set a password yet
+  active
+  disabled
+}
+
+model VendorStaff {
+  id              String            @id @default(uuid())
+  vendorId        String            @map("vendor_id")
+  email           String
+  name            String
+  passwordHash    String?           @map("password_hash") // null until invite accepted
+  role            VendorStaffRole   @default(staff)
+  status          VendorStaffStatus @default(pending)
+  inviteToken     String?           @unique @map("invite_token")
+  inviteExpiresAt DateTime?         @map("invite_expires_at")
+  invitedById     String?           @map("invited_by_id")
+  lastLoginAt     DateTime?         @map("last_login_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  deletedAt       DateTime?         @map("deleted_at")
+  vendor          Vendor            @relation(fields: [vendorId], references: [id])
+
+  @@unique([vendorId, email])
+  @@index([vendorId])
+  @@index([inviteToken])
+  @@map("vendor_staff")
+}
+
 model Vendor {
   id                    String             @id @default(uuid())
   ownerId               String             @map("owner_id")
@@ -142,6 +178,7 @@ model Vendor {
   events                Event[]
   coverCharges          CoverCharge[]
   platformRevenues      PlatformRevenue[]
+  staff                 VendorStaff[]
 
   @@index([verificationStatus, deletedAt])
   @@index([slug])

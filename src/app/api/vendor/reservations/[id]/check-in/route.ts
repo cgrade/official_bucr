@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { getVendorContext } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -17,12 +18,6 @@ const checkInSchema = z.object({
   pin: z.string().length(4, 'PIN must be 4 digits').optional(),
 });
 
-async function getVendorForUser(userId: string) {
-  return db.vendor.findFirst({
-    where: { ownerId: userId, deletedAt: null },
-  });
-}
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -34,7 +29,8 @@ export async function POST(
       return unauthorizedResponse();
     }
 
-    const vendor = await getVendorForUser(payload.sub);
+    const __vctx = await getVendorContext(payload);
+    const vendor = __vctx?.vendor;
 
     if (!vendor) {
       return forbiddenResponse('No vendor account found');

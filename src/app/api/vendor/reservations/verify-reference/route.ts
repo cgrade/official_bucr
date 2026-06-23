@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { getVendorContext } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -15,12 +16,6 @@ const verifyReferenceSchema = z.object({
   reference: z.string().min(1, 'Reference is required'),
 });
 
-async function getVendorForUser(userId: string) {
-  return db.vendor.findFirst({
-    where: { ownerId: userId, deletedAt: null },
-  });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const payload = await authenticateRequest(request);
@@ -28,7 +23,8 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    const vendor = await getVendorForUser(payload.sub);
+    const __vctx = await getVendorContext(payload);
+    const vendor = __vctx?.vendor;
     if (!vendor) {
       return forbiddenResponse('No vendor account found');
     }

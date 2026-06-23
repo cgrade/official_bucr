@@ -28,6 +28,43 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data;
 
+    // ── Staff login path ────────────────────────────────────────────────────
+    // Invited staff authenticate against their own VendorStaff password and are
+    // scoped to one vendor with a limited role. Checked before the owner path.
+    const staff = await db.vendorStaff.findFirst({
+      where: { email, status: 'active', deletedAt: null },
+      include: {
+        vendor: {
+          select: {
+            id: true, businessName: true, slug: true, verificationStatus: true,
+            subscriptionTier: true, subscriptionExpiresAt: true, deletedAt: true,
+            branches: { where: { deletedAt: null }, orderBy: { isMainBranch: 'desc' } },
+          },
+        },
+      },
+    });
+    const staffValid = await verifyPassword(password, staff?.passwordHash ?? (await getDummyHash()));
+    if (staff?.passwordHash && staffValid && staff.vendor && !staff.vendor.deletedAt) {
+      const accessToken = await signAccessToken({
+        sub: staff.id, email: staff.email, role: 'vendor',
+        vendorId: staff.vendorId, staffId: staff.id, staffRole: staff.role,
+      });
+      const refreshToken = await signRefreshToken({
+        sub: staff.id, email: staff.email, role: 'vendor',
+        vendorId: staff.vendorId, staffId: staff.id, staffRole: staff.role,
+      });
+      db.vendorStaff.update({ where: { id: staff.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
+      return successResponse({
+        user: { id: staff.id, email: staff.email, name: staff.name, isStaff: true, staffRole: staff.role },
+        vendor: {
+          id: staff.vendor.id, businessName: staff.vendor.businessName, slug: staff.vendor.slug,
+          verificationStatus: staff.vendor.verificationStatus, subscriptionTier: staff.vendor.subscriptionTier,
+          subscriptionExpiresAt: staff.vendor.subscriptionExpiresAt, branches: staff.vendor.branches,
+        },
+        tokens: { accessToken, refreshToken },
+      }, 'Login successful');
+    }
+
     // Find user by email
     const user = await db.user.findUnique({
       where: { email, deletedAt: null },

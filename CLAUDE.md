@@ -241,6 +241,7 @@ A full reference document with reasoning exists: `BUCR_Third_Party_Services_Refe
 | Vendor subscriptions | Built — repriced to Basic free / Pro N30k / Elite N85k |
 | Platform revenue ledger | Built — separates spread/breakage/cover-fee/gift-fee/no-show-share/subscription |
 | Vendor credit withdrawal | **Disabled by design** — `VENDOR_WITHDRAWAL_ENABLED = false`, do not re-enable without legal sign-off + licensed partner |
+| Vendor staff logins | Built — `VendorStaff` model (roles: manager/staff), owner invite → email accept link → set password → login at the vendor portal. Scoped to one vendor via `getVendorContext(payload)`; least-privilege capability matrix in `src/lib/auth/vendor-context.ts`. Operational endpoints (check-in cluster, reservations) accept staff; money/identity/team endpoints stay owner-only by default. |
 | Mapbox integration (discovery map, branch geocoding) | In progress per `BUCR_Mapbox_Integration_Prompt.md` |
 | BUCR+ guest membership | Designed, deliberately not yet built — deferred to Stage 2-3 |
 | Night-out planner (multi-venue) | Designed, not built — lower priority |

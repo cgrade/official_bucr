@@ -32,6 +32,24 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse('Invalid or expired refresh token');
     }
 
+    // ── Vendor-staff refresh ──────────────────────────────────────────────
+    // Staff tokens aren't backed by a User row; re-issue scoped staff tokens and
+    // re-check the staff is still active (so removal/disable takes effect on refresh).
+    if (payload.staffId && payload.vendorId) {
+      const staff = await db.vendorStaff.findFirst({
+        where: { id: payload.staffId, vendorId: payload.vendorId, status: 'active', deletedAt: null },
+        select: { id: true, email: true, vendorId: true, role: true },
+      });
+      if (!staff) return unauthorizedResponse('Staff account not found or disabled');
+      const claims = {
+        sub: staff.id, email: staff.email, role: 'vendor' as const,
+        vendorId: staff.vendorId, staffId: staff.id, staffRole: staff.role,
+      };
+      return successResponse({
+        tokens: { accessToken: await signAccessToken(claims), refreshToken: await signRefreshToken(claims) },
+      });
+    }
+
     // Check if user still exists and is active
     // For admin tokens, check admin table; for user/vendor tokens, check user table
     let userId: string;

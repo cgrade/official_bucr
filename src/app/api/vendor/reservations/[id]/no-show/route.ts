@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { getVendorContext } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -8,12 +9,6 @@ import {
   forbiddenResponse,
 } from '@/lib/utils/api-response';
 import { markNoShow } from '@/services/reservation.service';
-
-async function getVendorForUser(userId: string) {
-  return db.vendor.findFirst({
-    where: { ownerId: userId, deletedAt: null },
-  });
-}
 
 export async function POST(
   request: NextRequest,
@@ -26,7 +21,8 @@ export async function POST(
       return unauthorizedResponse();
     }
 
-    const vendor = await getVendorForUser(payload.sub);
+    const __vctx = await getVendorContext(payload);
+    const vendor = __vctx?.vendor;
 
     if (!vendor) {
       return forbiddenResponse('No vendor account found');

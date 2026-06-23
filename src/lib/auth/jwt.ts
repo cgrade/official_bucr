@@ -9,6 +9,11 @@ export async function signAccessToken(payload: {
   sub: string;
   email: string;
   role: UserRole;
+  // Optional vendor-staff context — carried so vendor endpoints can resolve the
+  // staff member's vendor + role without an extra lookup.
+  vendorId?: string;
+  staffId?: string;
+  staffRole?: 'manager' | 'staff';
 }): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
@@ -21,6 +26,9 @@ export async function signRefreshToken(payload: {
   sub: string;
   email: string;
   role: UserRole;
+  vendorId?: string;
+  staffId?: string;
+  staffRole?: 'manager' | 'staff';
 }): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
