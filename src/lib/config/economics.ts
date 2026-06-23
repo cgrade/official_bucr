@@ -120,6 +120,12 @@ export const ECONOMICS = {
    *  (premium) and rotates exposure fairly when more are sold than slots. */
   FEATURED_CAROUSEL_MAX: numEnv('FEATURED_CAROUSEL_MAX', 5),
 
+  /** Impression dedup window (minutes): the same viewer's repeat views of the
+   *  same spot inside this window count once. Aligns with MRC/IAB "viewable +
+   *  deduplicated" impression counting (50% on-screen for ≥1s, counted per
+   *  viewer/session, not per ad request). */
+  FEATURED_IMPRESSION_DEDUP_MINUTES: numEnv('FEATURED_IMPRESSION_DEDUP_MINUTES', 30),
+
   // ── Multi-currency DISPLAY (base = NGN) ───────────────────────────────────
   // The credit is always priced in NGN (CREDIT_VALUE_NGN = ₦10 — the locked
   // base). For Ghana/Kenya we only DISPLAY local-currency equivalents using live

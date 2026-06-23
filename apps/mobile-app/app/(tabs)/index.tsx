@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -225,6 +225,23 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+
+  // ── Viewable-impression tracking for the featured carousel (MRC/IAB) ───────
+  // Count a spot only when ≥50% of its card is on-screen for ≥1s, and only once
+  // per app session (the server further dedups per viewer). Refs must be stable.
+  const seenFeaturedRef = useRef<Set<string>>(new Set());
+  const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 50, minimumViewTime: 1000 });
+  const onFeaturedViewableRef = useRef(({ viewableItems }: { viewableItems: Array<{ item?: any }> }) => {
+    const fresh: string[] = [];
+    for (const v of viewableItems) {
+      const id = v.item?.id;
+      if (id && !seenFeaturedRef.current.has(id)) {
+        seenFeaturedRef.current.add(id);
+        fresh.push(id);
+      }
+    }
+    if (fresh.length) featuredApi.trackImpressions(fresh);
+  });
   
   // Booking search state
   const [location, setLocation] = useState('Lagos, Nigeria');
@@ -355,6 +372,8 @@ export default function HomeScreen() {
                   colors={colors}
                 />
               )}
+              viewabilityConfig={viewabilityConfigRef.current}
+              onViewableItemsChanged={onFeaturedViewableRef.current}
               contentContainerStyle={styles.horizontalList}
             />
           </View>

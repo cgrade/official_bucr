@@ -150,18 +150,10 @@ export async function GET(request: NextRequest) {
       .filter((item) => item.offer)
       .slice(0, cap);
 
-    // Record an impression for every spot actually served (fire-and-forget).
-    const shownIds = [
-      ...featuredRestaurants.map((r) => r.id),
-      ...featuredExperiences.map((e) => e.id),
-      ...featuredOffers.map((o) => o.id),
-    ];
-    if (shownIds.length) {
-      db.featuredSpot.updateMany({
-        where: { id: { in: shownIds } },
-        data: { impressions: { increment: 1 } },
-      }).catch((err) => console.error('[featured] impression track failed:', err));
-    }
+    // NB: impressions are NOT counted here. Serving an ad ≠ a viewable
+    // impression. The client reports genuinely-viewable cards (≥50% on-screen
+    // for ≥1s) to POST /api/featured/impressions, which dedups per viewer —
+    // matching the MRC/IAB viewable-impression standard.
 
     return successResponse({
       featuredRestaurants,

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { sendFeaturedRenewal, sendFeaturedRenewalFailed } from './email.service';
 
 /**
  * Auto-renew expired featured spots that opted in.
@@ -15,7 +16,7 @@ export async function processFeaturedAutoRenewals(): Promise<{ renewed: number; 
     where: { isActive: true, autoRenew: true, endDate: { lt: now } },
     include: {
       package: true,
-      vendor: { select: { id: true, wallet: true } },
+      vendor: { select: { id: true, wallet: true, businessName: true, email: true } },
     },
   });
 
@@ -69,6 +70,17 @@ export async function processFeaturedAutoRenewals(): Promise<{ renewed: number; 
           });
         });
         renewed++;
+
+        // Notify the vendor it renewed (fire-and-forget).
+        if (spot.vendor.email) {
+          sendFeaturedRenewal({
+            to: spot.vendor.email,
+            vendorName: spot.vendor.businessName,
+            packageName: pkg.name,
+            credits: pkg.creditsCost,
+            endDate: endDate.toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' }),
+          }).catch(() => {});
+        }
       } catch (err) {
         console.error(`[featured] auto-renew failed for spot ${spot.id}:`, err);
       }
@@ -79,6 +91,17 @@ export async function processFeaturedAutoRenewals(): Promise<{ renewed: number; 
         data: { isActive: false, autoRenew: false },
       }).catch(() => {});
       lapsed++;
+
+      // Tell the vendor it lapsed so they can top up + re-feature (fire-and-forget).
+      if (spot.vendor.email && pkg) {
+        sendFeaturedRenewalFailed({
+          to: spot.vendor.email,
+          vendorName: spot.vendor.businessName,
+          packageName: pkg.name,
+          creditsNeeded: pkg.creditsCost,
+          balance: wallet?.balance ?? 0,
+        }).catch(() => {});
+      }
     }
   }
 

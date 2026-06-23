@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { config } from './config';
 
 const api = axios.create({
@@ -217,6 +218,24 @@ export const vendorsApi = {
 };
 
 // Featured API
+// Stable anonymous viewer id (for fair, deduped impression/click counting when
+// the user isn't logged in). Generated once, persisted, non-sensitive.
+let cachedViewerId: string | null = null;
+async function getViewerId(): Promise<string> {
+  if (cachedViewerId) return cachedViewerId;
+  try {
+    let id = await AsyncStorage.getItem('bucr_viewer_id');
+    if (!id) {
+      id = 'v_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+      await AsyncStorage.setItem('bucr_viewer_id', id);
+    }
+    cachedViewerId = id;
+    return id;
+  } catch {
+    return 'v_anon';
+  }
+}
+
 export const featuredApi = {
   getAll: async () => {
     const response = await api.get<ApiResponse<{
@@ -226,9 +245,17 @@ export const featuredApi = {
     }>>('/featured');
     return response.data;
   },
+  // Viewable impressions (MRC/IAB): client sends only spots that were genuinely
+  // on-screen (≥50% for ≥1s); the server dedups per viewer. Best-effort.
+  trackImpressions: async (spotIds: string[]) => {
+    if (!spotIds.length) return;
+    const viewerId = await getViewerId();
+    api.post('/featured/impressions', { spotIds, viewerId }).catch(() => {});
+  },
   // Best-effort click tracking for ad ROI — never block navigation on it.
-  trackClick: (spotId: string) => {
-    api.post(`/featured/${spotId}/click`).catch(() => {});
+  trackClick: async (spotId: string) => {
+    const viewerId = await getViewerId();
+    api.post(`/featured/${spotId}/click`, { viewerId }).catch(() => {});
   },
 };
 

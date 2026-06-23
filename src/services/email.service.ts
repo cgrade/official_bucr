@@ -387,6 +387,53 @@ export async function sendReservationReminderEmail(params: {
   });
 }
 
+/** Featured spot auto-renewed successfully. */
+export async function sendFeaturedRenewal(params: {
+  to: string;
+  vendorName: string;
+  packageName: string;
+  credits: number;
+  endDate: string;
+}) {
+  const html = baseEmailLayout({
+    heading: 'Your featured spot renewed',
+    preheader: `${params.packageName} renewed — featured until ${params.endDate}.`,
+    bodyHtml: `
+      <p>Hi ${params.vendorName},</p>
+      <p>Your <strong>${params.packageName}</strong> featured placement auto-renewed.</p>
+      <table style="width:100%;border-collapse:collapse;background:${BRAND.cream};padding:12px;border-radius:8px;margin:12px 0">
+        ${detailRow('Package', params.packageName)}
+        ${detailRow('Charged', `${params.credits.toLocaleString()} credits`)}
+        ${detailRow('Featured until', params.endDate)}
+      </table>
+      <p style="font-size:13px;color:${BRAND.muted}">You can turn auto-renew off any time from Featured Spots in your dashboard.</p>`,
+    ctaText: 'View featured spots',
+    ctaUrl: `${APP_URL.replace(':3000', ':3001')}/featured`,
+  });
+  return sendEmail({ to: params.to, subject: `Your ${params.packageName} featured spot renewed`, html });
+}
+
+/** Featured spot auto-renew failed (not enough credits) — it has lapsed. */
+export async function sendFeaturedRenewalFailed(params: {
+  to: string;
+  vendorName: string;
+  packageName: string;
+  creditsNeeded: number;
+  balance: number;
+}) {
+  const html = baseEmailLayout({
+    heading: 'Featured spot didn’t renew',
+    preheader: `${params.packageName} lapsed — top up to feature again.`,
+    bodyHtml: `
+      <p>Hi ${params.vendorName},</p>
+      <p>Your <strong>${params.packageName}</strong> featured placement expired and couldn't auto-renew — you had ${params.balance.toLocaleString()} credits but it needs ${params.creditsNeeded.toLocaleString()}.</p>
+      <p>Top up your credits and feature your venue again whenever you're ready.</p>`,
+    ctaText: 'Top up & feature again',
+    ctaUrl: `${APP_URL.replace(':3000', ':3001')}/featured`,
+  });
+  return sendEmail({ to: params.to, subject: `Your ${params.packageName} featured spot has lapsed`, html });
+}
+
 export async function sendCreditExpiryReminder(params: {
   to: string;
   userName: string;
