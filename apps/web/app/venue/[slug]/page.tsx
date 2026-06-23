@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft } from 'lucide-react';
-import { vendorsApi, reservationsApi } from '@/lib/api';
+import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart } from 'lucide-react';
+import { vendorsApi, reservationsApi, favoritesApi, reviewsApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/auth.store';
-import { getImageUrl, getReservationDeposit, formatNaira, creditsToNaira, cn } from '@/lib/utils';
+import { getImageUrl, getReservationDeposit, formatNaira, creditsToNaira, formatDate, cn } from '@/lib/utils';
 
 const TIMES = ['12:00', '12:30', '13:00', '13:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'];
 
@@ -24,12 +24,33 @@ export default function VenuePage() {
   const [time, setTime] = useState('19:00');
   const [partySize, setPartySize] = useState(2);
 
+  const [favorited, setFavorited] = useState(false);
+  useEffect(() => { if (vendor?.isFavorited != null) setFavorited(!!vendor.isFavorited); }, [vendor?.isFavorited]);
+
+  const { data: reviewsData } = useQuery({
+    queryKey: ['vendor-reviews', vendor?.id],
+    queryFn: () => reviewsApi.getForVendor(vendor.id, { limit: 5 }),
+    enabled: !!vendor?.id,
+  });
+  const reviews: any[] = (reviewsData?.data as any)?.reviews ?? [];
+
+  const toggleFavorite = useMutation({
+    mutationFn: () => (favorited ? favoritesApi.remove(vendor.id) : favoritesApi.add(vendor.id)),
+    onMutate: () => setFavorited((f) => !f),
+    onError: () => { setFavorited((f) => !f); toast.error('Could not update saved'); },
+  });
+
+  const onToggleFavorite = () => {
+    if (!isAuthenticated) { router.push(`/login?redirect=/venue/${slug}`); return; }
+    toggleFavorite.mutate();
+  };
+
   const book = useMutation({
     mutationFn: () => reservationsApi.create({ vendorId: vendor.id, date, time, partySize }),
     onSuccess: (res) => {
       toast.success('Reservation confirmed!');
       const id = (res.data as any)?.id;
-      router.push(id ? `/bookings?new=${id}` : '/bookings');
+      router.push(id ? `/bookings/${id}` : '/bookings');
     },
     onError: (err: any) => toast.error(err.response?.data?.error || err.response?.data?.message || 'Could not complete reservation'),
   });
@@ -60,6 +81,9 @@ export default function VenuePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f2547] via-transparent to-transparent" />
         <button onClick={() => router.back()} className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#0f2547]">
           <ArrowLeft className="h-5 w-5" />
+        </button>
+        <button onClick={onToggleFavorite} aria-label="Save" className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90">
+          <Heart className={cn('h-5 w-5', favorited ? 'text-red-500' : 'text-[#0f2547]')} fill={favorited ? '#ef4444' : 'none'} />
         </button>
       </div>
 
@@ -111,6 +135,26 @@ export default function VenuePage() {
                       <p className="text-[12px] text-[#7a8fa6] line-clamp-2">{d.description}</p>
                       <p className="text-[13px] font-semibold text-[#c9a84c] mt-0.5">{formatNaira(Number(d.price || 0))}</p>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reviews.length > 0 && (
+            <div className="card p-6 mt-6">
+              <h2 className="font-display text-2xl font-semibold text-[#0f2547] mb-4">Reviews</h2>
+              <div className="space-y-4">
+                {reviews.map((rv) => (
+                  <div key={rv.id} className="border-b border-[rgba(15,37,71,0.06)] last:border-0 pb-4 last:pb-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-[#0f2547] text-[14px]">{rv.user?.name || rv.author?.name || 'Guest'}</p>
+                      <span className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => <Star key={n} className="h-3.5 w-3.5" fill={n <= rv.rating ? '#c9a84c' : 'none'} color="#c9a84c" />)}
+                      </span>
+                    </div>
+                    {rv.comment && <p className="mt-1.5 text-[14px] text-[#3a4a5f]">{rv.comment}</p>}
+                    <p className="mt-1 text-[12px] text-[#7a8fa6]">{formatDate(rv.createdAt)}</p>
                   </div>
                 ))}
               </div>

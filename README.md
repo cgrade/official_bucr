@@ -90,7 +90,7 @@ cd apps/admin-portal  && npm install && npm run dev    # admin      → :3002
 cd apps/mobile-app    && npm install && npx expo start # mobile (dev build for native modules)
 ```
 
-**Seed logins:** admin `admin@bucr.ng` / `Admin@123456` · vendor `vendor@zumagrill.com` / `Vendor@123456` · diner `john@example.com` / `User@123456`.
+**Seed logins:** the seed script defines the demo admin / vendor / diner accounts and their passwords in [`prisma/seed.ts`](./prisma/seed.ts). Read the credentials there (or from the seed console output) — they are intentionally **not** reproduced in docs.
 
 ---
 

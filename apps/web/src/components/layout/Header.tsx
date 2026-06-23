@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Wallet, User as UserIcon, Search } from 'lucide-react';
+import { Wallet, User as UserIcon, Search, Bell } from 'lucide-react';
 import { BucrWordmark } from '@/components/ui/BucrWordmark';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -24,6 +24,7 @@ export function Header() {
 
         <nav className="hidden md:flex items-center gap-7 text-[14px] font-medium text-[#0f2547]">
           <Link href="/restaurants" className="hover:text-[#c9a84c] transition-colors">Restaurants</Link>
+          <Link href="/events" className="hover:text-[#c9a84c] transition-colors">Events</Link>
           <Link href="/#how-it-works" className="hover:text-[#c9a84c] transition-colors">How it works</Link>
           <a href="http://localhost:3001" className="hover:text-[#c9a84c] transition-colors">For restaurants</a>
         </nav>
@@ -34,6 +35,9 @@ export function Header() {
           </Link>
           {isAuthenticated ? (
             <>
+              <Link href="/notifications" className="hidden sm:flex h-9 w-9 items-center justify-center rounded-lg hover:bg-[rgba(15,37,71,0.05)]" aria-label="Notifications">
+                <Bell className="h-5 w-5 text-[#0f2547]" />
+              </Link>
               <Link href="/wallet" className="flex items-center gap-1.5 px-3 h-9 rounded-lg bg-[rgba(201,168,76,0.12)] text-[#0f2547] text-[13px] font-semibold hover:bg-[rgba(201,168,76,0.2)] transition-colors">
                 <Wallet className="h-4 w-4 text-[#c9a84c]" />
                 {(user?.creditsBalance ?? 0).toLocaleString()} cr

@@ -40,7 +40,7 @@ export default function BookingsPage() {
           {reservations.map((r) => {
             const s = STATUS[r.status] || { label: r.status, cls: 'bg-[rgba(15,37,71,0.08)] text-[#7a8fa6]' };
             return (
-              <div key={r.id} className="card p-5">
+              <Link key={r.id} href={`/bookings/${r.id}`} className="card p-5 block hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-display text-xl font-semibold text-[#0f2547]">{r.vendor?.businessName || 'Restaurant'}</h3>
@@ -60,7 +60,7 @@ export default function BookingsPage() {
                     <span className="font-bold tracking-widest text-[#0f2547]">{r.pin}</span>
                   </div>
                 )}
-              </div>
+              </Link>
             );
           })}
         </div>

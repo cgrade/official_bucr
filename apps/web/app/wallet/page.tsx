@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Wallet as WalletIcon, Plus, Check } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, Check, Gift, History } from 'lucide-react';
 import { creditsApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/auth.store';
@@ -29,7 +30,7 @@ export default function WalletPage() {
     mutationFn: (credits: number) =>
       creditsApi.initializePurchase(credits, typeof window !== 'undefined' ? `${window.location.origin}/wallet` : undefined),
     onSuccess: (res) => {
-      const url = (res.data as any)?.authorizationUrl;
+      const url = res?.authorizationUrl;
       if (url) window.location.href = url;
       else toast.error('Could not start payment');
     },
@@ -46,6 +47,17 @@ export default function WalletPage() {
         <div className="flex items-center gap-2 text-[#c9a84c]"><WalletIcon className="h-5 w-5" /><span className="text-[13px] font-semibold">Bucr Credits</span></div>
         <p className="mt-3 text-4xl font-bold">{balance.toLocaleString()} <span className="text-lg font-normal text-[rgba(245,240,232,0.7)]">credits</span></p>
         <p className="text-[14px] text-[#c9a84c]">{formatNaira(balance * 10)} value</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        <Link href="/wallet/gift" className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+          <Gift className="h-5 w-5 text-[#c9a84c]" />
+          <span className="text-[14px] font-semibold text-[#0f2547]">Gift credits</span>
+        </Link>
+        <Link href="/wallet/history" className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+          <History className="h-5 w-5 text-[#c9a84c]" />
+          <span className="text-[14px] font-semibold text-[#0f2547]">History</span>
+        </Link>
       </div>
 
       <h2 className="font-display text-2xl font-semibold text-[#0f2547] mt-10 mb-1">Top up</h2>

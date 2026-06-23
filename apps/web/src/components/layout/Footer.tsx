@@ -13,6 +13,7 @@ export function Footer() {
           <h4 className="text-[12px] font-bold uppercase tracking-wider text-[#c9a84c] mb-3">Discover</h4>
           <ul className="space-y-2 text-[13px] text-[rgba(245,240,232,0.8)]">
             <li><Link href="/restaurants" className="hover:text-[#c9a84c]">Restaurants</Link></li>
+            <li><Link href="/events" className="hover:text-[#c9a84c]">Events</Link></li>
             <li><Link href="/#how-it-works" className="hover:text-[#c9a84c]">How it works</Link></li>
             <li><Link href="/register" className="hover:text-[#c9a84c]">Create an account</Link></li>
           </ul>
