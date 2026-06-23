@@ -200,13 +200,18 @@ export const GET = withRateLimit(
             select: { url: true },
           },
         },
+        // Ranking precedence (subscriptionTier enum is basic<pro<elite, so 'desc'
+        // = elite > pro > basic). Premium tiers rank ahead of basic on every
+        // sort; on the default sort, active featured (paid placement) leads, then
+        // tier, then quality. Explicit sorts keep their primary key, with tier as
+        // the tiebreaker so premium edges out basic at equal rating/price.
         orderBy:
-          sortBy === 'rating'     ? [{ averageRating: 'desc' }, { totalReviews: 'desc' }]
-          : sortBy === 'price_low'  ? [{ priceLevel: 'asc' },  { averageRating: 'desc' }]
-          : sortBy === 'price_high' ? [{ priceLevel: 'desc' }, { averageRating: 'desc' }]
+          sortBy === 'rating'     ? [{ averageRating: 'desc' }, { subscriptionTier: 'desc' }, { totalReviews: 'desc' }]
+          : sortBy === 'price_low'  ? [{ priceLevel: 'asc' },  { subscriptionTier: 'desc' }, { averageRating: 'desc' }]
+          : sortBy === 'price_high' ? [{ priceLevel: 'desc' }, { subscriptionTier: 'desc' }, { averageRating: 'desc' }]
           : jsMode
-            ? [{ averageRating: 'desc' }]  // secondary; primary (distance) applied in JS
-            : [{ subscriptionTier: 'desc' }, { averageRating: 'desc' }, { totalReviews: 'desc' }],
+            ? [{ subscriptionTier: 'desc' }, { averageRating: 'desc' }]  // secondary; primary (distance) applied in JS
+            : [{ isFeatured: 'desc' }, { subscriptionTier: 'desc' }, { averageRating: 'desc' }, { totalReviews: 'desc' }],
         skip: dbSkip,
         take: dbTake,
       }),
@@ -265,10 +270,13 @@ export const GET = withRateLimit(
       total = formattedVendors.length;
 
       if (sortBy === 'distance') {
+        // elite > pro > basic — used only to break near-ties (within ~50m).
+        const tierRank: Record<string, number> = { elite: 3, pro: 2, basic: 1 };
         formattedVendors.sort((a, b) => {
-          if (a.distanceKm === null) return 1;
-          if (b.distanceKm === null) return -1;
-          return a.distanceKm - b.distanceKm;
+          const da = a.distanceKm ?? Infinity;
+          const db_ = b.distanceKm ?? Infinity;
+          if (Math.abs(da - db_) > 0.05) return da - db_; // >50m apart → nearest wins
+          return (tierRank[b.subscriptionTier] ?? 0) - (tierRank[a.subscriptionTier] ?? 0);
         });
       }
 

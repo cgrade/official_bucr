@@ -138,7 +138,7 @@ function FeaturedCard({ item, onPress, colors }: { item: any; onPress: () => voi
           style={styles.featuredGradient}
         />
         <View style={styles.featuredContent}>
-          <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.featuredBadge, { backgroundColor: colors.tertiary }]}>
             <Text style={styles.featuredBadgeText}>FEATURED</Text>
           </View>
           <Text style={styles.featuredTitle} numberOfLines={1}>{vendor.businessName}</Text>
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   featuredBadgeText: {
-    color: '#FFF',
+    color: '#070f1e',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,

@@ -22,7 +22,7 @@ const variantStyles = {
     iconGlow: '',
   },
   primary: {
-    icon: 'bg-[#c9a84c] text-white shadow-lg shadow-tertiary-500/30',
+    icon: 'bg-[#c9a84c] text-[#070f1e] shadow-lg shadow-tertiary-500/30',
     iconGlow: 'shadow-glow-primary',
   },
   success: {

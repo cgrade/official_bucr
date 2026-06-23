@@ -342,7 +342,7 @@ export default function MenuPage() {
               onClick={() => setActiveCategory(cat.id)}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeCategory === cat.id
-                  ? 'bg-[#c9a84c] text-white shadow-lg shadow-tertiary-500/30'
+                  ? 'bg-[#c9a84c] text-[#070f1e] shadow-lg shadow-tertiary-500/30'
                   : 'bg-[rgba(255,255,255,0.05)] text-slate-600 text-[#7a8fa6] hover:bg-slate-200 hover:bg-[rgba(255,255,255,0.06)]'
               }`}
             >

@@ -21,7 +21,7 @@ const variantStyles = {
     icon: 'bg-slate-100 bg-[rgba(255,255,255,0.04)] text-slate-600 text-[#7a8fa6]',
   },
   primary: {
-    icon: 'bg-[#c9a84c] text-white shadow-lg shadow-tertiary-500/30',
+    icon: 'bg-[#c9a84c] text-[#070f1e] shadow-lg shadow-tertiary-500/30',
   },
   success: {
     icon: 'bg-[rgba(255,255,255,0.06)]  text-white shadow-lg shadow-success-500/30',

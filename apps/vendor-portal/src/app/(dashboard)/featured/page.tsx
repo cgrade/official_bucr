@@ -220,7 +220,7 @@ function FeaturedPageInner() {
                 <button
                   onClick={() => openPurchaseModal(pkg)}
                   disabled={walletBalance < pkg.creditsCost}
-                  className="w-full py-2.5 px-4 rounded-xl font-medium text-white bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 px-4 rounded-xl font-medium text-[#070f1e] bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {walletBalance < pkg.creditsCost ? 'Insufficient Credits' : 'Purchase'}
                 </button>
@@ -359,7 +359,7 @@ function FeaturedPageInner() {
                   (selectedPackage.type === 'experience' && !selectedExperience) ||
                   (selectedPackage.type === 'offer' && !selectedOffer)
                 }
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-white bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-[#070f1e] bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {purchaseMutation.isPending ? (
                   <>

@@ -23,13 +23,18 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
-    const [tokensCleared, menuItemsRestored] = await Promise.all([
+    const [tokensCleared, menuItemsRestored, featuredExpired] = await Promise.all([
       cleanupExpiredTokens(),
       // Clear expired "86" windows so items show as available again
       (db.menu as any).updateMany({
         where: { unavailableUntil: { lte: now } },
         data: { unavailableUntil: null },
       }).then((r: { count: number }) => r.count),
+      // Reset expired featured flags so search ranking + badges stay accurate
+      db.vendor.updateMany({
+        where: { isFeatured: true, featuredUntil: { not: null, lte: now } },
+        data: { isFeatured: false, featuredUntil: null, featuredAt: null },
+      }).then((r) => r.count),
     ]);
 
     return successResponse({
@@ -37,6 +42,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       tokensCleared,
       menuItemsRestored,
+      featuredExpired,
     });
   } catch (error) {
     console.error('Cleanup cron job error:', error);

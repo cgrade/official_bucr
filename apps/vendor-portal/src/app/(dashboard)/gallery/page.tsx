@@ -284,7 +284,7 @@ export default function GalleryPage() {
                 {/* Featured Badge */}
                 {image.isFeatured && (
                   <div className="absolute top-3 left-3">
-                    <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#c9a84c]/90 text-white text-xs font-medium">
+                    <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#c9a84c]/90 text-[#070f1e] text-xs font-medium">
                       <Star className="h-3 w-3" />
                       Featured
                     </span>

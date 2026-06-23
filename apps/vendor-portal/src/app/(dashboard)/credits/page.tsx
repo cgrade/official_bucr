@@ -288,7 +288,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
                     )}
                   >
                     {pkg.popular && (
-                      <span className="absolute -top-2 -right-2 bg-[#c9a84c] text-white text-xs px-2 py-0.5 rounded-full">
+                      <span className="absolute -top-2 -right-2 bg-[#c9a84c] text-[#070f1e] text-xs px-2 py-0.5 rounded-full">
                         Popular
                       </span>
                     )}

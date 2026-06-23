@@ -150,7 +150,7 @@ export default function MapPicker({ lat, lng, address, onChange, className = '' 
           type="button"
           onClick={geocodeAddress}
           disabled={geocoding || !addressInput.trim()}
-          className="px-4 py-2.5 rounded-xl bg-[#c9a84c] hover:bg-[#a07830] disabled:opacity-50 text-white text-sm font-medium flex items-center gap-2 transition-colors"
+          className="px-4 py-2.5 rounded-xl bg-[#c9a84c] hover:bg-[#a07830] disabled:opacity-50 text-[#070f1e] text-sm font-medium flex items-center gap-2 transition-colors"
         >
           {geocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
           Find
