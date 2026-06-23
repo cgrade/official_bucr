@@ -103,10 +103,10 @@ describe('Helper Utilities', () => {
   });
 
   describe('creditsToNaira', () => {
-    it('should convert credits to Naira value (1 credit = ₦100)', () => {
-      expect(creditsToNaira(100)).toBe(10000); // 100 credits = ₦10,000
-      expect(creditsToNaira(50)).toBe(5000);
-      expect(creditsToNaira(1)).toBe(100);
+    it('should convert credits to Naira value (1 credit = ₦10)', () => {
+      expect(creditsToNaira(100)).toBe(1000); // 100 credits = ₦1,000
+      expect(creditsToNaira(50)).toBe(500);
+      expect(creditsToNaira(1)).toBe(10);
     });
 
     it('should handle zero credits', () => {
@@ -115,10 +115,10 @@ describe('Helper Utilities', () => {
   });
 
   describe('nairaToCredits', () => {
-    it('should convert Naira to credits (₦100 = 1 credit)', () => {
-      expect(nairaToCredits(10000)).toBe(100); // ₦10,000 = 100 credits
-      expect(nairaToCredits(5000)).toBe(50);
-      expect(nairaToCredits(100)).toBe(1);
+    it('should convert Naira to credits (₦10 = 1 credit)', () => {
+      expect(nairaToCredits(10000)).toBe(1000); // ₦10,000 = 1,000 credits
+      expect(nairaToCredits(500)).toBe(50);
+      expect(nairaToCredits(10)).toBe(1);
     });
 
     it('should handle zero Naira', () => {
@@ -126,7 +126,7 @@ describe('Helper Utilities', () => {
     });
 
     it('should floor partial credits', () => {
-      expect(nairaToCredits(150)).toBe(1); // ₦150 = 1.5 credits, floors to 1
+      expect(nairaToCredits(15)).toBe(1); // ₦15 = 1.5 credits, floors to 1
     });
   });
 });

@@ -115,7 +115,7 @@ describe('Credit atomicity — createCreditTransaction', () => {
     expect(dbBalance).toBe(balanceBefore); // unchanged
   });
 
-  it('purchase transaction sets expiresAt approximately 12 months ahead', async () => {
+  it('purchase transaction sets expiresAt 90 days ahead', async () => {
     resetDb(0);
     const before = Date.now();
     const tx = await createCreditTransaction({
@@ -126,10 +126,9 @@ describe('Credit atomicity — createCreditTransaction', () => {
     expect(tx.expiresAt).toBeDefined();
     if (tx.expiresAt) {
       const diffDays = (tx.expiresAt.getTime() - before) / (1000 * 60 * 60 * 24);
-      // addMonths(12) can be 365 or 366 days depending on the calendar month.
-      // Allow ±2 days of tolerance around the expected 365-day range.
-      expect(diffDays).toBeGreaterThan(363);
-      expect(diffDays).toBeLessThan(368);
+      // CREDIT_EXPIRY_DAYS = 90; allow ±1 day tolerance.
+      expect(diffDays).toBeGreaterThan(89);
+      expect(diffDays).toBeLessThan(91);
     }
   });
 });
