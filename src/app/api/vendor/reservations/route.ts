@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext } from '@/lib/auth/vendor-context';
+import { getVendorContext, can } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -17,11 +17,14 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    const __vctx = await getVendorContext(payload);
-    const vendor = __vctx?.vendor;
+    const ctx = await getVendorContext(payload);
+    const vendor = ctx?.vendor;
 
     if (!vendor) {
       return forbiddenResponse('No vendor account found');
+    }
+    if (!can(ctx, 'view_reservations')) {
+      return forbiddenResponse('You do not have permission to view reservations');
     }
 
     const { searchParams } = new URL(request.url);

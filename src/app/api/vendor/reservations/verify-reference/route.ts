@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext } from '@/lib/auth/vendor-context';
+import { getVendorContext, can } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -23,10 +23,13 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    const __vctx = await getVendorContext(payload);
-    const vendor = __vctx?.vendor;
+    const ctx = await getVendorContext(payload);
+    const vendor = ctx?.vendor;
     if (!vendor) {
       return forbiddenResponse('No vendor account found');
+    }
+    if (!can(ctx, 'check_in')) {
+      return forbiddenResponse('You do not have permission to check guests in');
     }
     const body = await request.json();
     const validation = verifyReferenceSchema.safeParse(body);

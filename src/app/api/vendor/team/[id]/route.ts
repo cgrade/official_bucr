@@ -2,12 +2,13 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext, can } from '@/lib/auth/vendor-context';
+import { getVendorContext, can, sanitizePermissions } from '@/lib/auth/vendor-context';
 import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, notFoundResponse, validationErrorResponse } from '@/lib/utils/api-response';
 
 const patchSchema = z.object({
   role: z.enum(['manager', 'staff']).optional(),
   status: z.enum(['active', 'disabled']).optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 /** PATCH /api/vendor/team/[id] — change a staff member's role or enable/disable (owner only). */
@@ -25,10 +26,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const staff = await db.vendorStaff.findFirst({ where: { id: params.id, vendorId: ctx.vendor.id, deletedAt: null } });
     if (!staff) return notFoundResponse('Staff member');
 
+    const { role, status, permissions } = validation.data;
     const updated = await db.vendorStaff.update({
       where: { id: staff.id },
-      data: validation.data,
-      select: { id: true, email: true, name: true, role: true, status: true },
+      data: {
+        ...(role !== undefined ? { role } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(permissions !== undefined ? { permissions: sanitizePermissions(permissions) } : {}),
+      },
+      select: { id: true, email: true, name: true, role: true, status: true, permissions: true },
     });
     return successResponse(updated, 'Team member updated');
   } catch (error) {

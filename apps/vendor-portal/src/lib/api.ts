@@ -90,6 +90,23 @@ export const authApi = {
     const { data } = await api.post<ApiResponse<any>>('/vendor/team/invite', { email });
     return data;
   },
+  // ── Team / staff management ──────────────────────────────────────────────
+  getTeam: async () => {
+    const { data } = await api.get<ApiResponse<any>>('/vendor/team');
+    return data;
+  },
+  inviteStaff: async (payload: { email: string; name?: string; role?: 'manager' | 'staff'; permissions?: string[] }) => {
+    const { data } = await api.post<ApiResponse<any>>('/vendor/team/invite', payload);
+    return data;
+  },
+  updateStaff: async (id: string, payload: { role?: 'manager' | 'staff'; status?: 'active' | 'disabled'; permissions?: string[] }) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/team/${id}`, payload);
+    return data;
+  },
+  removeStaff: async (id: string) => {
+    const { data } = await api.delete<ApiResponse<null>>(`/vendor/team/${id}`);
+    return data;
+  },
 };
 
 // Reservations API

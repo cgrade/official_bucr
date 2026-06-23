@@ -109,6 +109,13 @@ export const ECONOMICS = {
     elite: numEnv('SUBSCRIPTION_ELITE_NGN', 85000),
   } as Record<string, number>,
 
+  // Max staff accounts a vendor may create, by tier. Basic = none.
+  VENDOR_STAFF_SEATS: {
+    basic: numEnv('STAFF_SEATS_BASIC', 0),
+    pro:   numEnv('STAFF_SEATS_PRO',   1),
+    elite: numEnv('STAFF_SEATS_ELITE', 3),
+  } as Record<string, number>,
+
   // ── Gifting ───────────────────────────────────────────────────────────────
   /** Platform fee charged to the gift sender (fraction of creditAmount). */
   GIFT_FEE_PCT:           numEnv('GIFT_FEE_PCT',            0.08),

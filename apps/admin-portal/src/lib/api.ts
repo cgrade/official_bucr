@@ -66,6 +66,26 @@ export const dashboardApi = {
   },
 };
 
+// Admins API (super_admin only)
+export const adminsApi = {
+  getAll: async () => {
+    const { data } = await api.get<ApiResponse<any>>('/admin/admins');
+    return data;
+  },
+  create: async (payload: { email: string; name: string; role: string; permissions?: string[]; password: string }) => {
+    const { data } = await api.post<ApiResponse<any>>('/admin/admins', payload);
+    return data;
+  },
+  update: async (id: string, payload: { role?: string; permissions?: string[]; password?: string }) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/admin/admins/${id}`, payload);
+    return data;
+  },
+  remove: async (id: string) => {
+    const { data } = await api.delete<ApiResponse<null>>(`/admin/admins/${id}`);
+    return data;
+  },
+};
+
 // Users API
 export const usersApi = {
   getAll: async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {

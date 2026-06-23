@@ -3,7 +3,7 @@ import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext } from '@/lib/auth/vendor-context';
+import { getVendorContext, can } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
     const vendor = ctx?.vendor;
     if (!vendor) {
       return forbiddenResponse('No vendor account found');
+    }
+    if (!can(ctx, 'check_in')) {
+      return forbiddenResponse('You do not have permission to check guests in');
     }
     const body = await request.json();
     const validation = verifyPinSchema.safeParse(body);

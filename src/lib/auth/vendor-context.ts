@@ -5,22 +5,62 @@ export type VendorActorRole = 'owner' | 'manager' | 'staff';
 
 export interface VendorContext {
   vendor: any;
-  /** 'owner' for the account owner, otherwise the staff member's role. */
+  /** 'owner' for the account owner, otherwise the staff member's role label. */
   actorRole: VendorActorRole;
   isOwner: boolean;
-  /** Set only when the actor is a staff member. */
+  /** Effective granular permissions for a staff actor (empty for owner — owner can do all). */
+  permissions: string[];
   staffId?: string;
 }
 
 /**
- * Resolve the vendor a request is acting on, for BOTH the owner and invited staff.
- *
- * - Owner tokens (role='vendor', no staff claims) → vendor by ownerId.
- * - Staff tokens (carry vendorId + staffId + staffRole) → that vendor, after
- *   re-checking the staff row is still active (so disabling/removing staff takes
- *   effect immediately, not only at next login).
- *
- * Returns null if no active vendor/staff is found (caller returns 403/404).
+ * Permissions an owner MAY delegate to staff — all strictly within the owner's
+ * own operational privileges (no money, identity, or team management).
+ */
+export const VENDOR_DELEGATABLE_PERMISSIONS = [
+  'check_in',
+  'cancel_reservation',
+  'modify_reservation',
+  'view_reservations',
+  'toggle_menu_availability',
+  'manage_menu',
+  'respond_reviews',
+  'manage_offers',
+  'view_analytics',
+  'manage_experiences',
+  'manage_gallery',
+] as const;
+
+export type VendorPermission = (typeof VENDOR_DELEGATABLE_PERMISSIONS)[number];
+
+/** Actions only the owner can ever perform — never delegatable to staff. */
+export const VENDOR_OWNER_ONLY = [
+  'manage_staff',
+  'manage_billing',
+  'manage_bank',
+  'manage_subscription',
+  'spend_credits',
+  'manage_settings',
+  'delete_account',
+] as const;
+
+/** Convenience presets the UI can offer when assigning a role. */
+export const VENDOR_ROLE_PRESETS: Record<'manager' | 'staff', string[]> = {
+  manager: [...VENDOR_DELEGATABLE_PERMISSIONS],
+  staff: ['check_in', 'view_reservations', 'toggle_menu_availability'],
+};
+
+/** Keep only valid, delegatable permissions (drop anything owner-only or unknown). */
+export function sanitizePermissions(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const set = new Set(VENDOR_DELEGATABLE_PERMISSIONS as readonly string[]);
+  return [...new Set(input.filter((p) => typeof p === 'string' && set.has(p)))];
+}
+
+/**
+ * Resolve the vendor a request acts on, for BOTH the owner and invited staff.
+ * Staff rows are re-checked as active so disable/remove takes effect immediately.
+ * Returns null if no active vendor/staff is found.
  */
 export async function getVendorContext(
   payload: JWTPayload | null,
@@ -34,57 +74,37 @@ export async function getVendorContext(
       ? { include: options.include }
       : {};
 
-  // Staff member
   if (payload.staffId && payload.vendorId) {
     const staff = await db.vendorStaff.findFirst({
       where: { id: payload.staffId, vendorId: payload.vendorId, status: 'active', deletedAt: null },
-      select: { id: true, role: true },
+      select: { id: true, role: true, permissions: true },
     });
     if (!staff) return null;
     const vendor = await db.vendor.findFirst({ where: { id: payload.vendorId, deletedAt: null }, ...query });
     if (!vendor) return null;
-    return { vendor, actorRole: staff.role as VendorActorRole, isOwner: false, staffId: staff.id };
+    return {
+      vendor,
+      actorRole: staff.role as VendorActorRole,
+      isOwner: false,
+      permissions: sanitizePermissions(staff.permissions),
+      staffId: staff.id,
+    };
   }
 
-  // Owner
   const vendor = await db.vendor.findFirst({ where: { ownerId: payload.sub, deletedAt: null }, ...query });
   if (!vendor) return null;
-  return { vendor, actorRole: 'owner', isOwner: true };
+  return { vendor, actorRole: 'owner', isOwner: true, permissions: [] };
 }
 
 /**
- * Capability matrix — least privilege.
- *  - staff   : floor operations only (check in guests, see bookings, 86 a dish).
- *  - manager : everything operational + content, but NOT money/identity/team.
- *  - owner   : everything (money, subscription, bank, team, delete).
- * Sensitive endpoints resolve the vendor via getVendorContext and reject anyone
- * whose actorRole lacks the capability. Endpoints NOT wired to getVendorContext
- * stay owner-only by default (a staff token can't resolve a vendor there).
+ * Authorization check.
+ *  - Owner can do everything (all delegatable + all owner-only).
+ *  - Staff can do a delegatable action only if it's in their granted permissions.
+ *  - Owner-only actions are never available to staff.
  */
-export const VENDOR_CAPABILITIES: Record<string, VendorActorRole[]> = {
-  check_in:               ['owner', 'manager', 'staff'],
-  view_reservations:      ['owner', 'manager', 'staff'],
-  view_dashboard:         ['owner', 'manager', 'staff'],
-  toggle_menu_availability: ['owner', 'manager', 'staff'],
-  manage_menu:            ['owner', 'manager'],
-  manage_reservations:    ['owner', 'manager'],
-  view_analytics:         ['owner', 'manager'],
-  manage_offers:          ['owner', 'manager'],
-  respond_reviews:        ['owner', 'manager'],
-  manage_experiences:     ['owner', 'manager'],
-  manage_gallery:         ['owner', 'manager'],
-  // Owner-only (money / identity / team)
-  manage_billing:         ['owner'],
-  manage_bank:            ['owner'],
-  manage_subscription:    ['owner'],
-  spend_credits:          ['owner'],
-  manage_staff:           ['owner'],
-  manage_settings:        ['owner'],
-  delete_account:         ['owner'],
-};
-
-export function can(ctx: VendorContext | null, capability: keyof typeof VENDOR_CAPABILITIES): boolean {
+export function can(ctx: VendorContext | null, action: string): boolean {
   if (!ctx) return false;
-  const allowed = VENDOR_CAPABILITIES[capability];
-  return !!allowed && allowed.includes(ctx.actorRole);
+  if (ctx.isOwner) return true;
+  if ((VENDOR_OWNER_ONLY as readonly string[]).includes(action)) return false;
+  return ctx.permissions.includes(action);
 }

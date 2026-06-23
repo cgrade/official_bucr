@@ -44,6 +44,7 @@ const NAV: Array<{ name: string; href: string; icon: React.ElementType; feature:
 
 const BOTTOM_NAV = [
   { name: 'KYC Documents', href: '/documents',    icon: Shield    },
+  { name: 'Team',           href: '/team',         icon: Users     },
   { name: 'Credits',        href: '/credits',      icon: Wallet    },
   { name: 'Subscription',   href: '/subscription', icon: CreditCard},
   { name: 'Settings',       href: '/settings', icon: Settings  },

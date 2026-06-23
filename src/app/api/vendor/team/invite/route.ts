@@ -3,7 +3,8 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext, can } from '@/lib/auth/vendor-context';
+import { getVendorContext, can, sanitizePermissions, VENDOR_ROLE_PRESETS } from '@/lib/auth/vendor-context';
+import { ECONOMICS } from '@/lib/config/economics';
 import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse, validationErrorResponse } from '@/lib/utils/api-response';
 import { sendEmail } from '@/services/email.service';
 
@@ -11,6 +12,7 @@ const schema = z.object({
   email: z.string().email(),
   name: z.string().min(2).max(100).optional(),
   role: z.enum(['manager', 'staff']).default('staff'),
+  permissions: z.array(z.string()).optional(),
 });
 
 const VENDOR_PORTAL_URL = process.env.VENDOR_PORTAL_URL || 'https://vendor.bucr.ng';
@@ -33,9 +35,14 @@ export async function POST(request: NextRequest) {
     if (!validation.success) return validationErrorResponse(validation.error.errors.map((e) => e.message));
     const { email, role } = validation.data;
     const name = validation.data.name || email.split('@')[0];
+    // Effective permissions = explicit list (if given) else the role preset, sanitized
+    // to the delegatable set (so staff can never exceed the owner's privileges).
+    const permissions = sanitizePermissions(validation.data.permissions ?? VENDOR_ROLE_PRESETS[role]);
 
-    // Team management is a Pro/Elite feature
-    if (ctx.vendor.subscriptionTier === 'basic') {
+    // Seat limit by tier: Basic = 0, Pro = 1, Elite = 3 (configurable).
+    const tier = ctx.vendor.subscriptionTier as string;
+    const seatLimit = ECONOMICS.VENDOR_STAFF_SEATS[tier] ?? 0;
+    if (seatLimit === 0) {
       return errorResponse('Team management requires a Pro or Elite subscription', 403);
     }
 
@@ -46,17 +53,25 @@ export async function POST(request: NextRequest) {
       return errorResponse('That email is already an active team member', 409);
     }
 
+    // Enforce the seat cap on NEW staff (re-inviting an existing pending row doesn't count).
+    if (!existing) {
+      const used = await db.vendorStaff.count({ where: { vendorId: ctx.vendor.id, deletedAt: null } });
+      if (used >= seatLimit) {
+        return errorResponse(`Your ${tier} plan allows ${seatLimit} staff account${seatLimit === 1 ? '' : 's'}. Remove a member or upgrade to add more.`, 403);
+      }
+    }
+
     const inviteToken = crypto.randomBytes(32).toString('hex');
     const inviteExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     if (existing) {
       await db.vendorStaff.update({
         where: { id: existing.id },
-        data: { name, role, status: 'pending', inviteToken, inviteExpiresAt, invitedById: ctx.vendor.ownerId, deletedAt: null },
+        data: { name, role, permissions, status: 'pending', inviteToken, inviteExpiresAt, invitedById: ctx.vendor.ownerId, deletedAt: null },
       });
     } else {
       await db.vendorStaff.create({
-        data: { vendorId: ctx.vendor.id, email, name, role, status: 'pending', inviteToken, inviteExpiresAt, invitedById: ctx.vendor.ownerId },
+        data: { vendorId: ctx.vendor.id, email, name, role, permissions, status: 'pending', inviteToken, inviteExpiresAt, invitedById: ctx.vendor.ownerId },
       });
     }
 

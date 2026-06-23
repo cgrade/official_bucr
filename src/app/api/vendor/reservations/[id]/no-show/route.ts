@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticateRequest } from '@/lib/auth/middleware';
-import { getVendorContext } from '@/lib/auth/vendor-context';
+import { getVendorContext, can } from '@/lib/auth/vendor-context';
 import {
   successResponse,
   errorResponse,
@@ -21,11 +21,14 @@ export async function POST(
       return unauthorizedResponse();
     }
 
-    const __vctx = await getVendorContext(payload);
-    const vendor = __vctx?.vendor;
+    const ctx = await getVendorContext(payload);
+    const vendor = ctx?.vendor;
 
     if (!vendor) {
       return forbiddenResponse('No vendor account found');
+    }
+    if (!can(ctx, 'check_in')) {
+      return forbiddenResponse('You do not have permission to check guests in');
     }
 
     const result = await markNoShow(params.id, vendor.id);

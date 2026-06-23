@@ -88,6 +88,9 @@ model VendorStaff {
   name            String
   passwordHash    String?           @map("password_hash") // null until invite accepted
   role            VendorStaffRole   @default(staff)
+  // Granular capabilities the owner delegated (subset of the owner's privileges).
+  // Source of truth for staff authorization; role is just a preset label.
+  permissions     String[]          @default([])
   status          VendorStaffStatus @default(pending)
   inviteToken     String?           @unique @map("invite_token")
   inviteExpiresAt DateTime?         @map("invite_expires_at")

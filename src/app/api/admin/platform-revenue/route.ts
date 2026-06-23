@@ -1,15 +1,19 @@
 import { NextRequest } from 'next/server';
 import { withAuth } from '@/lib/auth/middleware';
 import { db } from '@/lib/db';
-import { successResponse, errorResponse } from '@/lib/utils/api-response';
+import { successResponse, errorResponse, forbiddenResponse } from '@/lib/utils/api-response';
+import { getAdminContext, adminCan } from '@/lib/auth/admin-rbac';
+import type { JWTPayload } from '@/types';
 
 /**
  * GET /api/admin/platform-revenue
- * Returns monthly totals by revenue type for admin dashboards and CSV export.
+ * Finance data — requires the `revenue.view` permission (super_admin / finance / analyst).
  * Query params: month=YYYY-MM, type=<PlatformRevenueType>
  */
-export const GET = withAuth(async (request: NextRequest) => {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   try {
+    const me = await getAdminContext(user);
+    if (!adminCan(me, 'revenue.view')) return forbiddenResponse('Insufficient permissions for this resource');
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
     const type = searchParams.get('type') as string | undefined;
