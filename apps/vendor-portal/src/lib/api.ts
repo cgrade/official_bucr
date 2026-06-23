@@ -422,8 +422,11 @@ export const subscriptionApi = {
     const { data } = await api.get<ApiResponse<any[]>>('/vendor/subscription/plans');
     return data;
   },
-  upgrade: async (planId: string) => {
-    const { data } = await api.post<ApiResponse<any>>('/vendor/subscription/upgrade', { planId });
+  upgrade: async (planId: string, callbackUrl?: string) => {
+    const { data } = await api.post<ApiResponse<any>>('/vendor/subscription/upgrade', {
+      planId,
+      ...(callbackUrl ? { callbackUrl } : {}),
+    });
     return data;
   },
   getBillingHistory: async () => {

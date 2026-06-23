@@ -901,7 +901,7 @@ export default function SettingsPage() {
             onClick={e => e.stopPropagation()}>
             <h2 className="font-display text-xl font-semibold text-[#f5f0e8]">Invite Team Member</h2>
             <p className="text-[13px] text-[#7a8fa6]">
-              They'll receive an email invitation to join your restaurant's dashboard.
+              They&apos;ll receive an email invitation to join your restaurant&apos;s dashboard.
               Team management requires a Pro or Elite subscription.
             </p>
             <div>

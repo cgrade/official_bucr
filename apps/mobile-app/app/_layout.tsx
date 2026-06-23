@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
+import * as Sentry from '@sentry/react-native';
 import { AuthProvider } from '../src/providers/AuthProvider';
 import { ThemeProvider } from '../src/contexts/ThemeContext';
 import {
@@ -17,6 +18,18 @@ import {
 } from '../src/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
+
+// Crash + error reporting. No-op without a DSN (so dev/local builds are unaffected);
+// disabled in __DEV__ so only real builds report. Set EXPO_PUBLIC_SENTRY_DSN to enable.
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    enabled: !__DEV__,
+    tracesSampleRate: 0.2,
+    sendDefaultPii: false,
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +49,7 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function RootLayout() {
+function RootLayout() {
   const router = useRouter();
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
@@ -118,3 +131,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap adds error-boundary + perf instrumentation; passes through safely
+// even when Sentry isn't initialised (no DSN).
+export default Sentry.wrap(RootLayout);

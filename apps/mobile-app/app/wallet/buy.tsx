@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import * as ExpoLinking from 'expo-linking';
 import { ArrowLeft, Check, CreditCard } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { creditsApi } from '../../src/lib/api';
@@ -36,19 +38,27 @@ export default function BuyCreditsScreen() {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(100);
 
   const purchaseMutation = useMutation({
-    mutationFn: (credits: number) => creditsApi.initializePurchase(credits),
-    onSuccess: async (data) => {
-      if (data.authorizationUrl) {
-        const supported = await Linking.canOpenURL(data.authorizationUrl);
-        if (supported) {
-          await Linking.openURL(data.authorizationUrl);
-          setTimeout(() => {
-            refreshBalance();
-          }, 5000);
-        } else {
-          Alert.alert('Error', 'Cannot open payment page');
-        }
+    mutationFn: async (credits: number) => {
+      // Deep link Paystack should redirect back to after payment (e.g. bucr://wallet).
+      const returnUrl = ExpoLinking.createURL('wallet');
+      const data = await creditsApi.initializePurchase(credits, returnUrl);
+      return { data, returnUrl };
+    },
+    onSuccess: async ({ data, returnUrl }) => {
+      if (!data.authorizationUrl) return;
+      try {
+        // Opens an in-app browser session that auto-closes when Paystack
+        // redirects to our returnUrl, handing control straight back to the app.
+        await WebBrowser.openAuthSessionAsync(data.authorizationUrl, returnUrl);
+      } catch {
+        // Fallback to the external browser (no auto-return; the webhook still credits).
+        await Linking.openURL(data.authorizationUrl).catch(() => {});
       }
+      // The Paystack webhook is the source of truth for crediting — refresh now
+      // and again shortly to catch any webhook lag.
+      await refreshBalance();
+      setTimeout(() => refreshBalance(), 4000);
+      router.back();
     },
     onError: (error: any) => {
       const msg =

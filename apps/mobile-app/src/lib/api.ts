@@ -324,10 +324,10 @@ export const creditsApi = {
     return response.data;
   },
   
-  initializePurchase: async (credits: number) => {
+  initializePurchase: async (credits: number, callbackUrl?: string) => {
     const response = await api.post<
       ApiResponse<{ authorizationUrl: string; reference: string; accessCode?: string }>
-    >('/users/credits/purchase', { credits });
+    >('/users/credits/purchase', { credits, ...(callbackUrl ? { callbackUrl } : {}) });
     const body = response.data;
     if (!body.success || !body.data?.authorizationUrl) {
       const err = (body as { error?: string }).error;

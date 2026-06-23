@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
       return forbiddenResponse('No vendor account found');
     }
 
-    // Check subscription tier for experiences
-    if (vendor.subscriptionTier === 'basic') {
-      return forbiddenResponse('Experiences require Pro or Premium subscription');
+    // Experiences are an Elite-tier feature.
+    if (vendor.subscriptionTier !== 'elite') {
+      return forbiddenResponse('Experiences are an Elite-tier feature. Upgrade to Elite to create experiences.');
     }
 
     const body = await request.json();

@@ -8,13 +8,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "bucr",
-
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#1a1a2e"
     },
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bucr.app",
@@ -24,7 +22,6 @@
         "NSPhotoLibraryUsageDescription": "Bucr accesses photos for your profile picture."
       }
     },
-
     "android": {
       "package": "com.bucr.app",
       "adaptiveIcon": {
@@ -41,12 +38,10 @@
         "WRITE_EXTERNAL_STORAGE"
       ]
     },
-
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-
     "plugins": [
       "expo-secure-store",
       "expo-updates",
@@ -81,22 +76,20 @@
         {
           "RNMapboxMapsDownloadToken": "$(MAPBOX_DOWNLOADS_TOKEN)"
         }
-      ]
+      ],
+      "expo-web-browser",
+      "@sentry/react-native"
     ],
-
     "experiments": {
       "typedRoutes": true
     },
-
     "updates": {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/bucr"
     },
-
     "runtimeVersion": {
       "policy": "appVersion"
     },
-
     "extra": {
       "eas": {
         "_note": "Replace projectId below with your real EAS UUID from: eas init OR expo.dev, OR set EXPO_PUBLIC_PROJECT_ID in .env",

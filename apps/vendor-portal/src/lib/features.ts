@@ -50,9 +50,9 @@ export const FEATURE_TIERS: Record<FeatureId, Tier> = {
   analytics:        'pro',    // advanced analytics & trends
   guest_profiles:   'pro',    // CRM, notes, VIP tags
   special_offers:   'pro',    // promotions, discounts
-  experiences:      'pro',    // special dining experiences
 
   // ── Elite ────────────────────────────────────────────────────────────
+  experiences:      'elite',  // special dining experiences (Elite-only)
   achievements:     'elite',  // badges displayed on profile
   featured:         'elite',  // paid marketing placement
   display_settings: 'elite',  // customise what guests see

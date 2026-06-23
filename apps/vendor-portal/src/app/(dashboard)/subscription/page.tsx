@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -26,8 +25,8 @@ import {
 
 // Prices and features match ECONOMICS config + /lib/features.ts FEATURE_TIERS exactly.
 // Scanner is Basic (required for guest check-in and cover-fee accrual).
-// Pro = analytics, guest_profiles, special_offers, experiences.
-// Elite = achievements, featured, display_settings.
+// Pro = analytics, guest_profiles, special_offers.
+// Elite = experiences, achievements, featured, display_settings.
 const plans = [
   {
     id: 'basic',
@@ -64,7 +63,6 @@ const plans = [
       'Advanced analytics & booking trends',
       'Guest profiles — CRM, notes & VIP tags',
       'Special offers & promotional discounts',
-      'Special dining experiences',
       '50% off per-cover success fees',
       'Priority email & chat support',
     ],
@@ -80,12 +78,13 @@ const plans = [
     popular: false,
     features: [
       'Everything in Pro',
+      'Special dining experiences',
       'Achievement badges on your public profile',
-      'Featured carousel & discovery placement',
+      'Access to featured placement (carousel & search)',
       'Custom display & branding settings',
       'Zero per-cover success fees',
-      'Dedicated account manager',
       'Priority placement in local search',
+      'Dedicated account manager',
     ],
   },
 ];
@@ -101,11 +100,14 @@ export default function SubscriptionPage() {
   const { vendor } = useAuthStore();
   // Normalise: 'premium' (legacy) → 'elite'
   const currentTier = (vendor?.subscriptionTier?.toLowerCase() ?? 'basic').replace('premium', 'elite');
-  const [selectedPlan, setSelectedPlan] = useState(currentTier);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const upgradeMutation = useMutation({
-    mutationFn: (planId: string) => subscriptionApi.upgrade(planId),
+    // Return the vendor to this page after Paystack checkout.
+    mutationFn: (planId: string) =>
+      subscriptionApi.upgrade(
+        planId,
+        typeof window !== 'undefined' ? `${window.location.origin}/subscription` : undefined,
+      ),
     onSuccess: (data: any) => {
       // If the backend returns a Paystack authorization URL, redirect to payment
       const authUrl = data?.data?.authorizationUrl || data?.data?.authorization_url;
@@ -138,7 +140,7 @@ export default function SubscriptionPage() {
         <div className="flex h-20 items-center justify-between px-8">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#c9a84c] shadow-lg shadow-[#c9a84c]/30">
-              <CreditCard className="h-6 w-6 text-white" />
+              <CreditCard className="h-6 w-6 text-[#0f2547]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">Subscription</h1>
@@ -175,36 +177,8 @@ export default function SubscriptionPage() {
                 </p>
               </div>
             </div>
-            <Button variant="outline">Manage Billing</Button>
           </div>
         </motion.div>
-
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              billingCycle === 'monthly'
-                ? 'bg-[#c9a84c] text-[#0f2547]'
-                : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingCycle('yearly')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-              billingCycle === 'yearly'
-                ? 'bg-[#c9a84c] text-[#0f2547]'
-                : 'text-[#7a8fa6] hover:text-[#f5f0e8]'
-            }`}
-          >
-            Yearly
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold tracking-wide">
-              SAVE 20%
-            </span>
-          </button>
-        </div>
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -212,8 +186,8 @@ export default function SubscriptionPage() {
             // Normalise legacy 'premium' → 'elite' for comparison
             const normalizedTier = (vendor?.subscriptionTier?.toLowerCase() ?? 'basic').replace('premium', 'elite');
             const isCurrentPlan = plan.id === normalizedTier;
-            const price = billingCycle === 'yearly' ? plan.price * 12 * 0.8 : plan.price;
-            
+            const price = plan.price;
+
             return (
               <motion.div
                 key={plan.id}
@@ -253,7 +227,7 @@ export default function SubscriptionPage() {
                         <span className="text-4xl font-bold text-[#f5f0e8]">
                           {formatCurrency(price)}
                         </span>
-                        <span className="text-[#7a8fa6] text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                        <span className="text-[#7a8fa6] text-sm">/mo</span>
                       </>
                     )}
                   </div>
