@@ -132,9 +132,9 @@ function FeaturedPageInner() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#c9a84c] dark:/30 dark:to-[#c9a84c]/15 rounded-xl">
-            <Coins className="h-5 w-5 text-[#a07830] dark:text-[#e8d49a]" />
-            <span className="font-semibold text-[#a07830] dark:text-[#e8d49a]">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#c9a84c] rounded-xl">
+            <Coins className="h-5 w-5 text-[#070f1e]" />
+            <span className="font-bold text-[#070f1e]">
               {walletBalance.toLocaleString()} credits
             </span>
           </div>
@@ -199,7 +199,7 @@ function FeaturedPageInner() {
                 <h3 className="text-lg font-semibold text-[#f5f0e8] mb-1">
                   {pkg.name}
                 </h3>
-                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(255,255,255,0.05)] text-slate-600 text-[rgba(245,240,232,0.7)] uppercase mb-3">
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide bg-[rgba(201,168,76,0.15)] text-[#c9a84c] uppercase mb-3">
                   {pkg.type}
                 </span>
                 {pkg.description && (
@@ -208,13 +208,13 @@ function FeaturedPageInner() {
                   </p>
                 )}
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
+                  <div className="flex items-center gap-1 text-sm text-[rgba(245,240,232,0.85)]">
                     <Coins className="h-4 w-4 text-[#c9a84c]" />
-                    <span className="font-semibold">{pkg.creditsCost}</span> credits
+                    <span className="font-semibold text-[#f5f0e8]">{pkg.creditsCost}</span> credits
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    <span className="font-semibold">{pkg.durationDays}</span> days
+                  <div className="flex items-center gap-1 text-sm text-[rgba(245,240,232,0.85)]">
+                    <Clock className="h-4 w-4 text-[#c9a84c]" />
+                    <span className="font-semibold text-[#f5f0e8]">{pkg.durationDays}</span> days
                   </div>
                 </div>
                 <button

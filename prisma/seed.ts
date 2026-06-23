@@ -316,6 +316,25 @@ async function main() {
   }
   console.log('✅ Credit transaction created');
 
+  // ── Featured (ad) packages — admins manage these; these are sensible defaults.
+  // Priced as premium ad inventory (1 credit = ₦10), with a volume discount on
+  // longer durations. Covers all three placement types.
+  const featuredPackages = [
+    { id: 'pkg-spotlight-3d',  name: 'Spotlight',          type: 'restaurant' as const, durationDays: 3,  creditsCost: 800,  sortOrder: 1, description: 'A quick visibility boost — featured on the home carousel and lifted in search for 3 days.' },
+    { id: 'pkg-prime-7d',      name: 'Prime',              type: 'restaurant' as const, durationDays: 7,  creditsCost: 1500, sortOrder: 2, description: 'Our most popular — a full week on the home carousel and top of search.' },
+    { id: 'pkg-headline-30d',  name: 'Headline',           type: 'restaurant' as const, durationDays: 30, creditsCost: 5000, sortOrder: 3, description: 'Maximum exposure — a month on the home carousel and top of search. Best value per day.' },
+    { id: 'pkg-experience-7d', name: 'Experience Feature', type: 'experience' as const, durationDays: 7,  creditsCost: 1000, sortOrder: 4, description: 'Put one of your experiences in front of every diner for a week.' },
+    { id: 'pkg-offer-7d',      name: 'Offer Boost',        type: 'offer' as const,      durationDays: 7,  creditsCost: 750,  sortOrder: 5, description: 'Promote a special offer on the home screen for a week.' },
+  ];
+  for (const p of featuredPackages) {
+    await prisma.featuredPackage.upsert({
+      where: { id: p.id },
+      update: { name: p.name, type: p.type, durationDays: p.durationDays, creditsCost: p.creditsCost, sortOrder: p.sortOrder, description: p.description, isActive: true },
+      create: { ...p, isActive: true },
+    });
+  }
+  console.log('✅ Featured packages seeded');
+
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');
   console.log('-------------------');
