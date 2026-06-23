@@ -338,8 +338,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   activeSection === section.id
-                    ? 'bg-[#c9a84c] text-primary-600 dark:text-primary-400 border-l-2 border-primary-500'
-                    : 'text-slate-600 text-[#7a8fa6] hover:bg-[rgba(255,255,255,0.04)]'
+                    ? 'bg-[#c9a84c] text-[#070f1e] font-semibold'
+                    : 'text-[#7a8fa6] hover:bg-[rgba(255,255,255,0.04)]'
                 }`}
               >
                 <section.icon className="h-5 w-5" />

@@ -101,10 +101,10 @@ export default function ReportsPage() {
             }`}
           >
             <type.icon className={`w-6 h-6 mb-2 ${
-              selectedReport === type.id ? 'text-primary-500' : 'text-[#7a8fa6]'
+              selectedReport === type.id ? 'text-[#c9a84c]' : 'text-[#7a8fa6]'
             }`} />
             <h3 className={`font-medium text-sm ${
-              selectedReport === type.id ? 'text-primary-700 dark:text-primary-300' : 'text-[#f5f0e8]'
+              selectedReport === type.id ? 'text-[#c9a84c]' : 'text-[#f5f0e8]'
             }`}>
               {type.name}
             </h3>

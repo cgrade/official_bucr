@@ -42,7 +42,7 @@ export default function PrivacyPolicyScreen() {
         </Text>
         <Text style={[styles.subHeading, { color: colors.text }]}>Contact Us</Text>
         <Text style={[styles.body, { color: colors.textSecondary }]}>
-          If you have questions about this privacy policy, contact us at privacy@bucr.app.
+          If you have questions about this privacy policy, contact us at privacy@bucr.ng.
         </Text>
       </ScrollView>
     </SafeAreaView>

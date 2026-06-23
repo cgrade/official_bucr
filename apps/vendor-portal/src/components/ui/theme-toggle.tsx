@@ -46,7 +46,7 @@ export function ThemeToggle() {
         onClick={() => handleSetTheme('dark')}
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
           theme === 'dark'
-            ? 'bg-[rgba(255,255,255,0.04)] text-primary-500 shadow-md'
+            ? 'bg-[rgba(255,255,255,0.04)] text-[#c9a84c] shadow-md'
             : 'text-[#7a8fa6] hover:text-slate-600 hover:text-[#f5f0e8]'
         }`}
         title="Dark mode"

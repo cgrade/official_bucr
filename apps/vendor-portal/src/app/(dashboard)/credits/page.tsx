@@ -364,7 +364,7 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
         {isVerifying && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,15,30,0.75)]">
             <div className="glass-card rounded-2xl p-8 text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary-500 mx-auto mb-4" />
+              <Loader2 className="h-12 w-12 animate-spin text-[#c9a84c] mx-auto mb-4" />
               <p className="text-lg font-medium text-[#f5f0e8]">Verifying payment...</p>
               <p className="text-sm text-[#7a8fa6]">Please wait while we confirm your purchase</p>
             </div>

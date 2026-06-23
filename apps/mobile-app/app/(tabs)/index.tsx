@@ -392,7 +392,7 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Near You</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/search')}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.tertiary }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {isLoading ? (

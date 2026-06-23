@@ -45,7 +45,7 @@ export default function HelpScreen() {
   const { colors } = useTheme();
 
   const handleEmailSupport = () => {
-    Linking.openURL('mailto:support@bucr.app');
+    Linking.openURL('mailto:support@bucr.ng');
   };
 
   const handleCallSupport = () => {
@@ -83,7 +83,7 @@ export default function HelpScreen() {
           <HelpItem
             icon={<Mail size={22} color={colors.info} />}
             title="Email Support"
-            description="Send us an email at support@bucr.app"
+            description="Send us an email at support@bucr.ng"
             onPress={handleEmailSupport}
           />
           <HelpItem

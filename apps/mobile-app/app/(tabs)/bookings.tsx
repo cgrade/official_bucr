@@ -262,10 +262,10 @@ export default function BookingsScreen() {
               style={[styles.tab, activeTab === tab.id && { borderBottomColor: colors.primary }]}
               onPress={() => setActiveTab(tab.id)}
             >
-              <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab.id && { color: colors.primary }]}>
+              <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab.id && { color: colors.tertiary }]}>
                 {tab.label}
                 {tab.id === 'upcoming' && filteredReservations.length > 0 && activeTab === 'upcoming' && (
-                  <Text style={{ color: colors.primary }}> ({filteredReservations.length})</Text>
+                  <Text style={{ color: colors.tertiary }}> ({filteredReservations.length})</Text>
                 )}
               </Text>
             </TouchableOpacity>

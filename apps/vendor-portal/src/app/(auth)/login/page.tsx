@@ -69,7 +69,7 @@ export default function LoginPage() {
           className="space-y-8">
           <div className="space-y-3">
             <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#c9a84c]">
-              Bucr Vendor Portal — Abuja
+              Bucr Vendor Portal
             </p>
             <h1 className="font-display text-5xl font-semibold text-[#f5f0e8] leading-[1.1]">
               Your table,<br />
@@ -102,7 +102,7 @@ export default function LoginPage() {
 
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
           className="text-[11px] text-[rgba(122,143,166,0.6)]">
-          © 2026 Bucr Limited · Abuja, Nigeria
+          © 2026 Bucr Limited · Nigeria
         </motion.p>
       </div>
 
@@ -196,7 +196,10 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-[11px] text-[rgba(122,143,166,0.5)]">
-            By continuing you agree to Bucr's Terms of Service
+            By continuing you agree to Bucr's{' '}
+            <Link href="/terms" className="text-[#c9a84c] hover:underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="text-[#c9a84c] hover:underline">Privacy Policy</Link>.
           </p>
         </motion.div>
       </div>

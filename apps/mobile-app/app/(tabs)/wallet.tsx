@@ -237,11 +237,11 @@ export default function WalletScreen() {
         <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.infoTitle, { color: colors.text }]}>How credits work</Text>
           <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.primary }]}>•</Text>
+            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>1 credit = {formatMoney(CREDIT_VALUE_NGN)} value</Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.primary }]}>•</Text>
+            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>Use credits to book reservations & events</Text>
           </View>
           <View style={styles.infoItem}>
@@ -292,7 +292,7 @@ export default function WalletScreen() {
         <View style={styles.transactionsHeader}>
           <Text style={[styles.transactionsTitle, { color: colors.text }]}>Recent Transactions</Text>
           <TouchableOpacity onPress={() => router.push('/wallet/history')}>
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
+            <Text style={[styles.seeAllText, { color: colors.tertiary }]}>See all</Text>
           </TouchableOpacity>
         </View>
 

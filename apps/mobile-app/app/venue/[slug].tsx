@@ -444,7 +444,7 @@ export default function VenueDetailScreen() {
                   }
                 }}
               >
-                <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab && { color: colors.primary }]}>
+                <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab && { color: colors.tertiary }]}>
                   {tab}
                 </Text>
               </TouchableOpacity>
@@ -708,7 +708,7 @@ export default function VenueDetailScreen() {
                               <View style={styles.menuItemHeader}>
                                 <Text style={[styles.menuItemName, { color: colors.text }]}>{String(item.name || '')}</Text>
                                 {item.availableForTakeout && item.price ? (
-                                  <Text style={[styles.menuItemPrice, { color: colors.primary }]}>₦{Number(item.price || 0).toLocaleString()}</Text>
+                                  <Text style={[styles.menuItemPrice, { color: colors.tertiary }]}>₦{Number(item.price || 0).toLocaleString()}</Text>
                                 ) : null}
                               </View>
                               {item.description ? (

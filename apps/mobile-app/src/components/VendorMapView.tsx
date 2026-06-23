@@ -213,7 +213,7 @@ export default function VendorMapView({ vendors, userLocation, loading, onReques
                         ⭐ {v.averageRating.toFixed(1)}
                       </Text>
                     )}
-                    <Text style={[styles.calloutCta, { color: colors.primary }]}>
+                    <Text style={[styles.calloutCta, { color: colors.tertiary }]}>
                       Tap to view →
                     </Text>
                   </View>

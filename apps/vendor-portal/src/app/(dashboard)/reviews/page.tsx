@@ -196,7 +196,7 @@ export default function ReviewsPage() {
             <h3 className="text-lg font-semibold text-[#f5f0e8] mb-4">Review Insights</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl bg-[rgba(255,255,255,0.04)]">
-                <MessageSquare className="h-6 w-6 text-primary-500 mb-2" />
+                <MessageSquare className="h-6 w-6 text-[#c9a84c] mb-2" />
                 <p className="text-2xl font-bold text-[#f5f0e8]">{stats.total}</p>
                 <p className="text-sm text-[#7a8fa6]">Total Reviews</p>
               </div>
@@ -288,7 +288,7 @@ export default function ReviewsPage() {
                       {/* Response */}
                       {review.response && (
                         <div className="mt-4 p-4 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20">
-                          <p className="text-sm font-medium text-primary-700 dark:text-primary-400 mb-1">Your Response</p>
+                          <p className="text-sm font-medium text-[#c9a84c] mb-1">Your Response</p>
                           <p className="text-sm text-slate-600 text-[rgba(245,240,232,0.7)]">{review.response}</p>
                         </div>
                       )}
@@ -324,7 +324,7 @@ export default function ReviewsPage() {
                         {!review.response && replyingTo !== review.id && (
                           <button 
                             onClick={() => { setReplyingTo(review.id); setReplyText(''); }}
-                            className="flex items-center gap-1.5 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                            className="flex items-center gap-1.5 text-sm text-[#c9a84c] hover:text-[#c9a84c] dark:"
                           >
                             <Reply className="h-4 w-4" />
                             Reply

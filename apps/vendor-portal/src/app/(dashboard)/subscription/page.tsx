@@ -85,7 +85,7 @@ const plans = [
       'Custom display & branding settings',
       'Zero per-cover success fees',
       'Dedicated account manager',
-      'Priority search placement in Abuja',
+      'Priority placement in local search',
     ],
   },
 ];
@@ -326,9 +326,9 @@ export default function SubscriptionPage() {
         <div className="text-center py-8">
           <p className="text-[#7a8fa6]">
             Have questions about our plans?{' '}
-            <button className="text-[#c9a84c] font-medium hover:text-[#f5f0e8]">
+            <a href="mailto:support@bucr.ng?subject=Bucr%20plans%20enquiry" className="text-[#c9a84c] font-medium hover:text-[#f5f0e8] hover:underline">
               Contact our sales team
-            </button>
+            </a>
           </p>
         </div>
       </div>

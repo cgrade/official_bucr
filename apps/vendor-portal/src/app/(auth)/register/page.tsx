@@ -716,7 +716,7 @@ export default function RegisterPage() {
 
                 <p className="mt-6 text-center text-sm text-[#7a8fa6]">
                   Already have an account?{' '}
-                  <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">
+                  <Link href="/login" className="font-semibold text-[#c9a84c] underline-offset-2 hover:underline">
                     Sign in
                   </Link>
                 </p>
@@ -1190,7 +1190,7 @@ function DocumentUploadCard({
             </p>
           </div>
           {document.uploading ? (
-            <Loader2 className="h-5 w-5 text-primary-500 animate-spin" />
+            <Loader2 className="h-5 w-5 text-[#c9a84c] animate-spin" />
           ) : (
             <button
               onClick={onRemove}
@@ -1204,11 +1204,11 @@ function DocumentUploadCard({
         <label
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[rgba(201,168,76,0.18)] rounded-xl cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
+          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[rgba(201,168,76,0.18)] rounded-xl cursor-pointer hover:border-[#c9a84c] transition-colors"
         >
           <Upload className="h-8 w-8 text-[#7a8fa6] mb-2" />
-          <p className="text-sm text-slate-600 text-[#7a8fa6] text-center">
-            <span className="font-medium text-primary-600 dark:text-primary-400">Click to upload</span>
+          <p className="text-sm text-[#7a8fa6] text-center">
+            <span className="font-semibold text-[#c9a84c]">Click to upload</span>
             {' '}or drag and drop
           </p>
           <p className="text-xs text-[#7a8fa6] mt-1">PNG, JPG or PDF (max 5MB)</p>

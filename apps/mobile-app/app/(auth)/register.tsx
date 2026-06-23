@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff, CheckSquare, Square, Check, X } from 'lucide-react-native';
+import { BucrLogo } from '../../src/components/ui/BucrLogo';
 import { useAuthStore } from '../../src/stores/auth.store';
 import { useTheme } from '../../src/contexts/ThemeContext';
 
@@ -121,6 +122,10 @@ export default function RegisterScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
+
+          <View style={styles.brandRow}>
+            <BucrLogo size={34} />
+          </View>
 
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>Create your account</Text>
@@ -294,7 +299,7 @@ export default function RegisterScreen() {
           <View style={styles.loginContainer}>
             <Text style={[styles.loginText, { color: colors.textSecondary }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-              <Text style={[styles.loginLink, { color: colors.primary }]}>Sign In</Text>
+              <Text style={[styles.loginLink, { color: colors.tertiary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -327,6 +332,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, padding: 24 },
   backButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  brandRow: { alignItems: 'center', marginBottom: 20 },
   header: { marginBottom: 28 },
   title: { fontSize: 28, fontWeight: '700', marginBottom: 8 },
   subtitle: { fontSize: 15, lineHeight: 22 },

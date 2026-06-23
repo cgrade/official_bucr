@@ -223,7 +223,7 @@ export default function DocumentsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#c9a84c]" />
       </div>
     );
   }
@@ -250,7 +250,7 @@ export default function DocumentsPage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="h-10 w-10 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center">
-              <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <Shield className="h-5 w-5 text-[#c9a84c]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#f5f0e8]">

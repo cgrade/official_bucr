@@ -131,7 +131,7 @@ export function DataTable<T extends Record<string, any>>({
                   <div className="flex items-center gap-2">
                     {column.label}
                     {column.sortable && sortKey === column.key && (
-                      <span className="text-primary-500">
+                      <span className="text-[#c9a84c]">
                         {sortDirection === 'asc' ? '↑' : '↓'}
                       </span>
                     )}

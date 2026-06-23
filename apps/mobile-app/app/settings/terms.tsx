@@ -34,7 +34,7 @@ export default function TermsScreen() {
         </Text>
         <Text style={[styles.subHeading, { color: colors.text }]}>3. Cancellation Policy</Text>
         <Text style={[styles.body, { color: colors.textSecondary }]}>
-          Reservations may be cancelled up to 2 hours before the scheduled time for a full credit refund. Late cancellations may result in forfeiture of credits used.
+          Cancellations are refunded based on timing: 24 hours or more before the booking — 100%; between 12 and 24 hours — 50%; under 12 hours — 0%. No-shows forfeit 40% of the deposit. If a restaurant cancels, you receive a full refund plus a 10% bonus.
         </Text>
         <Text style={[styles.subHeading, { color: colors.text }]}>4. User Conduct</Text>
         <Text style={[styles.body, { color: colors.textSecondary }]}>
@@ -42,7 +42,7 @@ export default function TermsScreen() {
         </Text>
         <Text style={[styles.subHeading, { color: colors.text }]}>5. Contact</Text>
         <Text style={[styles.body, { color: colors.textSecondary }]}>
-          For questions about these terms, contact us at support@bucr.app.
+          For questions about these terms, contact us at support@bucr.ng.
         </Text>
       </ScrollView>
     </SafeAreaView>
