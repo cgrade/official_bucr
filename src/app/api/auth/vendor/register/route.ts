@@ -156,6 +156,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Welcome email (fire-and-forget)
+    import('@/services/email.service')
+      .then(({ sendVendorWelcomeEmail }) => sendVendorWelcomeEmail({
+        to: ownerEmail,
+        businessName,
+        verificationPending: vendor.verificationStatus === 'pending',
+      }))
+      .catch(() => {});
+
     // Generate tokens
     const accessToken = await signAccessToken({
       sub: user.id,

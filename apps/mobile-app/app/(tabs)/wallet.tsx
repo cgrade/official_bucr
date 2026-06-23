@@ -250,7 +250,7 @@ export default function WalletScreen() {
           </View>
           <View style={styles.infoItem}>
             <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Credits expire 12 months after purchase</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Credits expire 90 days after purchase</Text>
           </View>
         </View>
 

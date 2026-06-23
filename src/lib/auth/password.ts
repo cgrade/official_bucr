@@ -53,3 +53,15 @@ export async function verifyPassword(
 ): Promise<boolean> {
   return impl.compare(password, hashedPassword);
 }
+
+/**
+ * A valid bcrypt hash used to equalize login timing when the email doesn't
+ * exist — run verifyPassword against this so a missing account takes the same
+ * time as a wrong password, defeating user-enumeration via response timing.
+ * Computed once, lazily.
+ */
+let dummyHash: string | null = null;
+export async function getDummyHash(): Promise<string> {
+  if (!dummyHash) dummyHash = await impl.hash('bucr-timing-equalizer', SALT_ROUNDS);
+  return dummyHash;
+}

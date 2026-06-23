@@ -143,6 +143,11 @@ export async function POST(request: NextRequest) {
       .then(({ autoClaimGiftsForNewUser }) => autoClaimGiftsForNewUser(user.id))
       .catch(() => {});
 
+    // Welcome email (fire-and-forget)
+    import('@/services/email.service')
+      .then(({ sendWelcomeEmail }) => sendWelcomeEmail({ to: user.email, userName: user.name }))
+      .catch(() => {});
+
     return successResponse(
       {
         user,

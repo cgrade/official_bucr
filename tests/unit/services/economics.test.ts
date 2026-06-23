@@ -24,8 +24,8 @@ describe('ECONOMICS config', () => {
     expect(ECONOMICS.CREDIT_SPREAD).toBeCloseTo(0.06);
   });
 
-  it('CREDIT_EXPIRY_MONTHS is 12', () => {
-    expect(ECONOMICS.CREDIT_EXPIRY_MONTHS).toBe(12);
+  it('CREDIT_EXPIRY_DAYS is 90', () => {
+    expect(ECONOMICS.CREDIT_EXPIRY_DAYS).toBe(90);
   });
 
   it('VENDOR_WITHDRAWAL_ENABLED defaults false', () => {

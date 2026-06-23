@@ -21,7 +21,7 @@ import {
 const ECONOMICS = {
   CREDIT_VALUE_NGN: 10,
   CREDIT_SPREAD: 0.06,
-  CREDIT_EXPIRY_MONTHS: 12,
+  CREDIT_EXPIRY_DAYS: 90,
   SHOWUP_BONUS_PCT: 0.03,
   NOSHOW_FORFEIT_PCT: 0.40,
   NOSHOW_VENDOR_PCT: 0.30,
@@ -184,7 +184,7 @@ export default function SettingsPage() {
             <ReadOnlyField label="Credit face value"       value="₦10 / credit"    note="LOCKED — data migration required to change" />
             <ReadOnlyField label="Purchase spread"         value={`${(ECONOMICS.CREDIT_SPREAD * 100).toFixed(0)}%`} note="env: CREDIT_SPREAD" />
             <ReadOnlyField label="Purchase price"          value="₦10.60 / credit" note="face × (1 + spread)" />
-            <ReadOnlyField label="Credit expiry"           value={`${ECONOMICS.CREDIT_EXPIRY_MONTHS} months`} note="env: CREDIT_EXPIRY_MONTHS" />
+            <ReadOnlyField label="Credit expiry"           value={`${ECONOMICS.CREDIT_EXPIRY_DAYS} days`} note="env: CREDIT_EXPIRY_DAYS" />
             <ReadOnlyField label="Gift fee"                value={`${(ECONOMICS.GIFT_FEE_PCT * 100).toFixed(0)}%`} note="env: GIFT_FEE_PCT" />
           </div>
           <div>

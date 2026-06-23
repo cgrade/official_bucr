@@ -1,6 +1,5 @@
 import { db } from '@/lib/db';
 import { ECONOMICS } from '@/lib/config/economics';
-import { addMonths } from '@/lib/utils/helpers';
 
 // ============================================================================
 // TYPES
@@ -98,7 +97,7 @@ export async function createGift(params: CreateGiftParams) {
           balanceAfter: recipientNewBalance,
           referenceType: 'gift',
           description: `Received gift of ${creditAmount} credits`,
-          expiresAt: addMonths(now, ECONOMICS.CREDIT_EXPIRY_MONTHS),
+          expiresAt: addDays(now, ECONOMICS.CREDIT_EXPIRY_DAYS),
         },
       });
       await tx.user.update({
@@ -208,7 +207,7 @@ export async function claimGift(giftId: string, userId: string) {
         referenceType: 'gift',
         referenceId: giftId,
         description: `Claimed gift of ${gift.creditAmount} credits`,
-        expiresAt: addMonths(now, ECONOMICS.CREDIT_EXPIRY_MONTHS),
+        expiresAt: addDays(now, ECONOMICS.CREDIT_EXPIRY_DAYS),
       },
     });
     await tx.user.update({ where: { id: userId }, data: { creditsBalance: newBalance } });

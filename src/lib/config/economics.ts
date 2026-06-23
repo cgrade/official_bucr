@@ -15,8 +15,8 @@ export const ECONOMICS = {
   CREDIT_VALUE_NGN: 10,
   /** Markup over face value charged to buyers (default 6%). Revenue = spread × purchase. */
   CREDIT_SPREAD: numEnv('CREDIT_SPREAD', 0.06),
-  /** Credits expire N months after purchase. */
-  CREDIT_EXPIRY_MONTHS: numEnv('CREDIT_EXPIRY_MONTHS', 12),
+  /** Credits expire N days after purchase (90 days). */
+  CREDIT_EXPIRY_DAYS: numEnv('CREDIT_EXPIRY_DAYS', 90),
   /** Days before expiry to send a reminder notification. */
   EXPIRY_REMINDER_DAYS: numEnv('EXPIRY_REMINDER_DAYS', 30),
 

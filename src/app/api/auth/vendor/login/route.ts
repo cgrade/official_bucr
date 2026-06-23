@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { verifyPassword } from '@/lib/auth/password';
+import { verifyPassword, getDummyHash } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt';
 import { successResponse, errorResponse, validationErrorResponse } from '@/lib/utils/api-response';
 import { emailSchema } from '@/lib/utils/validation';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 
 const loginSchema = z.object({
   email: emailSchema,
@@ -13,6 +14,10 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Throttle brute-force attempts on the vendor login.
+    const rateLimited = applyRateLimit(request, 'auth');
+    if (rateLimited) return rateLimited;
+
     const body = await request.json();
     const validation = loginSchema.safeParse(body);
 
@@ -32,18 +37,23 @@ export async function POST(request: NextRequest) {
         name: true,
         phone: true,
         passwordHash: true,
+        status: true,
       },
     });
 
-    if (!user) {
+    // Constant-time: always run a compare, even for a missing account.
+    const isValidPassword = await verifyPassword(
+      password,
+      user?.passwordHash ?? (await getDummyHash()),
+    );
+
+    if (!user || !isValidPassword) {
       return errorResponse('Invalid email or password', 401);
     }
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
-
-    if (!isValidPassword) {
-      return errorResponse('Invalid email or password', 401);
+    // Block suspended/banned accounts (checked after auth so it can't be probed).
+    if (user.status && user.status !== 'active') {
+      return errorResponse('Your account is not active. Please contact support.', 403);
     }
 
     // Check if user is a vendor owner

@@ -10,6 +10,8 @@ const securityHeaders = [
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+  // Force HTTPS for 2 years (incl. subdomains). Safe: the API is HTTPS-only in prod.
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
 // CORS for the API. Auth is Bearer-token only (no cookies / withCredentials),

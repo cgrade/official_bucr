@@ -53,7 +53,7 @@ This is the most important section. Get this wrong and the legal architecture, t
 ### 4.1 Core unit
 - **1 credit = N10** (locked; do not use N100 anywhere — this was an early build error, since corrected).
 - Purchase price = `credits x N10 x (1 + spread)`, spread default **6%** (configurable, A/B-test candidate).
-- Credits expire **12 months** after purchase; expiry reminder sent 30 days before.
+- Credits expire **90 days** after purchase (`CREDIT_EXPIRY_DAYS`, env-overridable); expiry reminder sent 30 days before.
 - Credits are **non-refundable to cash, non-withdrawable, closed-loop** — for both guests and vendors. This is a legal requirement, not a preference.
 
 ### 4.2 Deposit — FLAT per reservation (NOT per person)
@@ -138,7 +138,7 @@ BUCR is designed to operate in Nigeria **without a CBN payment-services/e-money 
 1. Vendor credits are never withdrawable/cashable. (`VENDOR_WITHDRAWAL_ENABLED = false`, enforced server-side.)
 2. No naira ever flows from BUCR to a vendor as settlement of guest funds. Vendors are paid in real naira only directly by guests at the venue (outside BUCR) or via BUCR invoicing the vendor (subscriptions, per-cover fees — money flows TO BUCR).
 3. The per-cover fee is always a **flat amount**, never a percentage of the bill — a percentage would functionally resemble a payment-processing commission and re-introduce settlement/licensing exposure.
-4. Credits are disclosed as "platform access credits," not as a wallet, stored value, or currency. They're non-refundable, expire in 12 months, earn no interest.
+4. Credits are disclosed as "platform access credits," not as a wallet, stored value, or currency. They're non-refundable, expire in 90 days, earn no interest.
 5. The credit float (cash received for unspent credits) is held in a segregated operating bank account, not commingled with general opex.
 
 **A Nigerian fintech/payments lawyer must review this architecture before launch.** A purpose-built legal review brief exists (`BUCR_Legal_Review_Brief.docx`) with seven specific questions for counsel, scoped narrowly so the review is fast and cheap rather than an open-ended audit. Until that review is complete and the model is cleared, treat every economic figure in this file as provisional.
@@ -247,6 +247,9 @@ A full reference document with reasoning exists: `BUCR_Third_Party_Services_Refe
 | Live real-time queue (beyond basic waitlist) | Designed, not built — lower priority |
 | Guest loyalty tiers | Designed, not built |
 | Bill commission / in-app meal payment | Deferred — requires licensed BaaS partner, not part of launch architecture |
+| Multi-country support (NG/GH/KE) | Plumbing built — `VendorBranch.country`, `User.country`, country-aware geocoding, country→phone-format on registration. Phone-format localisation is **live**. |
+| Local-currency DISPLAY (GH₵/KSh via live FX) | **Built but gated OFF** — `MULTI_CURRENCY_DISPLAY_ENABLED = false`. Credit base stays ₦10; FX (open.er-api.com) is display-only, never settlement. Flip per market only after counsel sign-off + real approved vendors. Converted amounts carry a "≈" marker + "billed in Naira" disclaimer. |
+| Transactional email (Resend) | Built — welcome (diner + vendor), reservation confirmation (diner) + new-reservation alert (vendor), reservation reminder, credit-expiry reminder, order confirmation, vendor weekly report. SMS deferred to post-launch. |
 
 ---
 
@@ -272,6 +275,7 @@ These exist alongside this file and should be treated as authoritative for their
 - Credit purchase spread (6-7%) is not yet validated against guest acceptance — needs a small user survey.
 - BUCR+ guest membership has the highest uncertainty in the entire model — treat as a hypothesis, not a plan.
 - Legal review of the full closed-loop architecture is pending — do not treat any economic figure here as final until counsel signs off.
+- **Legal Q for counsel (add to `BUCR_Legal_Review_Brief.docx`):** Is displaying an *indicative* foreign-currency equivalent (GH₵/KSh), while the price of record and settlement remain in Naira, compliant with CBN Act 2007 s20 and the anti-dollarization circulars — including for cross-border Ghanaian/Kenyan users? Research suggests yes (benchmarking ≠ pricing/denominating in FX), but it must be confirmed. Until then `MULTI_CURRENCY_DISPLAY_ENABLED` stays `false` and everything shows ₦.
 - BUCR Limited's incorporation status with the CAC should be confirmed/updated wherever the legal brief references "in formation."
 - Flutterwave failover integration not yet built (planned for Stage 2).
 - Postmark fallback for booking-critical emails not yet built (trigger: deliverability issues observed on Resend).

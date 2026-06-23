@@ -36,7 +36,7 @@ const SLIDES: Slide[] = [
   {
     icon: Wallet,
     title: 'Your wallet, your credits',
-    body: 'Top up, gift credits to friends, and track every transaction. Credits are valid for 12 months.',
+    body: 'Top up, gift credits to friends, and track every transaction. Credits are valid for 90 days.',
   },
 ];
 

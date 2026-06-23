@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { verifyPassword } from '@/lib/auth/password';
+import { verifyPassword, getDummyHash } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt';
 import {
   successResponse,
@@ -39,6 +39,7 @@ export const POST = withRateLimit(
         phone: true,
         passwordHash: true,
         role: true,
+        status: true,
         creditsBalance: true,
         referralCode: true,
         avatar: true,
@@ -48,15 +49,20 @@ export const POST = withRateLimit(
       },
     });
 
-    if (!user) {
+    // Always run a password compare (against a dummy hash when the account is
+    // missing) so timing doesn't reveal whether the email exists.
+    const isValidPassword = await verifyPassword(
+      password,
+      user?.passwordHash ?? (await getDummyHash()),
+    );
+
+    if (!user || !isValidPassword) {
       return errorResponse('Invalid email or password', 401);
     }
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
-
-    if (!isValidPassword) {
-      return errorResponse('Invalid email or password', 401);
+    // Block suspended/banned accounts — only after auth, so it can't be probed.
+    if (user.status && user.status !== 'active') {
+      return errorResponse('Your account is not active. Please contact support.', 403);
     }
 
     // Generate tokens

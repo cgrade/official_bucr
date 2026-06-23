@@ -7,9 +7,9 @@ import {
   calculateShowupBonus,
   calculateCancellationRefund,
 } from './credit.service';
-import { sendReservationConfirmation } from './email.service';
+import { sendReservationConfirmation, sendVendorNewReservation } from './email.service';
 import { notifyReservationConfirmed, notifyCheckInBonus, notifyNoShow, notifyVendorNewReservation, notifyVendorCancellation } from './notification.service';
-import { resolvePreferences } from '@/lib/notifications/preferences';
+import { resolvePreferences, resolveVendorPreferences } from '@/lib/notifications/preferences';
 
 export interface CreateReservationParams {
   userId: string;
@@ -122,10 +122,21 @@ export async function createReservation(params: CreateReservationParams) {
     vendorName, date: dateStr, time, reference,
   }).catch((err) => console.error('Failed to send reservation push:', err));
 
-  // Vendor-facing notification (gated by vendor's 'newReservations' preference).
+  // Vendor-facing push/in-app (gated by vendor's 'newReservations' preference).
   notifyVendorNewReservation(vendorId, {
     guestName, date: dateStr, time, partySize, reference,
   }).catch((err) => console.error('Failed to notify vendor of reservation:', err));
+
+  // Vendor-facing EMAIL (same 'newReservations' preference gate).
+  db.vendor.findUnique({
+    where: { id: vendorId },
+    select: { email: true, businessName: true, notificationPreferences: true },
+  }).then((v) => {
+    if (!v?.email || !resolveVendorPreferences(v.notificationPreferences).newReservations) return;
+    return sendVendorNewReservation({
+      to: v.email, vendorName: v.businessName, guestName, date: dateStr, time, partySize, reference,
+    });
+  }).catch((err) => console.error('Failed to email vendor of reservation:', err));
 
   return { ...reservation, qrCode };
 }

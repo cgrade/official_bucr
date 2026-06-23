@@ -3,14 +3,30 @@ import { ECONOMICS } from './config/economics';
 // Re-export ECONOMICS so callers that already import config can access it
 export { ECONOMICS };
 
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+/**
+ * Resolve a required secret. In production a missing/weak secret is fatal — we
+ * refuse to boot rather than fall back to a publicly-known string (which would
+ * let anyone forge JWTs). In dev/test a clearly-marked throwaway is allowed.
+ */
+function requireSecret(envKey: string, devFallback: string): string {
+  const v = process.env[envKey];
+  if (v && v.length >= 16) return v;
+  if (IS_PROD) {
+    throw new Error(`${envKey} is not set (or too short). Refusing to start with an insecure secret.`);
+  }
+  return devFallback;
+}
+
 export const config = {
   app: {
     name: process.env.NEXT_PUBLIC_APP_NAME || 'Bucr',
     url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'fallback-secret-change-in-production',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-in-production',
+    secret: requireSecret('JWT_SECRET', 'dev-only-insecure-access-secret'),
+    refreshSecret: requireSecret('JWT_REFRESH_SECRET', 'dev-only-insecure-refresh-secret'),
     accessTokenExpiry: '15m',
     refreshTokenExpiry: '7d',
   },
@@ -37,7 +53,7 @@ export const config = {
     valueNgn:           ECONOMICS.CREDIT_VALUE_NGN,
     // purchase price = value × (1 + spread)
     purchasePriceNgn:   ECONOMICS.CREDIT_VALUE_NGN * (1 + ECONOMICS.CREDIT_SPREAD),
-    expiryMonths:       ECONOMICS.CREDIT_EXPIRY_MONTHS,
+    expiryDays:         ECONOMICS.CREDIT_EXPIRY_DAYS,
     expiryReminderDays: ECONOMICS.EXPIRY_REMINDER_DAYS,
     showupBonusPercent: ECONOMICS.SHOWUP_BONUS_PCT * 100,
     reviewBonusMin:     5,   // exactly 5 — user promised this, don't randomise

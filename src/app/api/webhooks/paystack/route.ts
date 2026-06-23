@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
       .update(body)
       .digest('hex');
 
-    if (hash !== signature) {
+    // Constant-time comparison to avoid leaking the signature via timing.
+    const hashBuf = Buffer.from(hash);
+    const sigBuf = Buffer.from(signature);
+    if (hashBuf.length !== sigBuf.length || !crypto.timingSafeEqual(hashBuf, sigBuf)) {
       console.error('Paystack webhook: Invalid signature');
       return new Response('Invalid signature', { status: 400 });
     }

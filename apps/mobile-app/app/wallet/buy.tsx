@@ -126,7 +126,7 @@ export default function BuyCreditsScreen() {
           <Text style={[styles.howItWorksTitle, { color: colors.text }]}>How credits work</Text>
           <Text style={[styles.howItWorksItem, { color: colors.textSecondary }]}>✓ Use credits to book reservations</Text>
           <Text style={[styles.howItWorksItem, { color: colors.textSecondary }]}>✓ Credits refunded + 3% bonus when you check in</Text>
-          <Text style={[styles.howItWorksItem, { color: colors.textSecondary }]}>✓ Credits valid for 12 months</Text>
+          <Text style={[styles.howItWorksItem, { color: colors.textSecondary }]}>✓ Credits valid for 90 days</Text>
           <Text style={[styles.howItWorksItem, { color: colors.textSecondary }]}>✓ Secure payment via Paystack</Text>
         </View>
       </ScrollView>

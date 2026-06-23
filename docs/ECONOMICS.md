@@ -2,6 +2,12 @@
 
 > Comprehensive documentation of the credit system, event ticketing, revenue generation, and payment strategy for the Bucr platform.
 
+> ⚠️ **Outdated in places.** This early doc predates the economic corrections.
+> The canonical source of truth is `src/lib/config/economics.ts` and `CLAUDE.md`.
+> Known stale figures here: credit face value is **₦10** (not ₦100), purchase
+> spread is **6%** (not 17%), expiry is **90 days**. Expiry references below have
+> been corrected; the ₦100 face-value figures have not been swept.
+
 ---
 
 ## Table of Contents
@@ -28,7 +34,7 @@ Bucr operates a **closed-loop credit system** ("Bucr Wallet") that serves as the
 | **Face value** | 1 credit = ₦100 | `config.credits.valueNgn` |
 | **Purchase price** | 1 credit = ₦120 | `config.credits.purchasePriceNgn` |
 | **Purchase margin** | 17% per credit | (₦120 - ₦100) / ₦120 |
-| **Expiry** | 6 months from purchase | `config.credits.expiryMonths` |
+| **Expiry** | 90 days from purchase | `config.credits.expiryDays` |
 | **Expiry reminder** | 30 days before expiry | `config.credits.expiryReminderDays` |
 | **Breakage target** | ~12% of purchased credits | Business target |
 
@@ -43,7 +49,7 @@ The system tracks these transaction types (defined in `CreditTransactionType` en
 | `refund` | Credits returned (cancellation, show-up) | **+** (positive) |
 | `bonus` | Bonus credits awarded | **+** (positive) |
 | `forfeit` | Credits forfeited (no-show, late cancel) | **-** (negative) |
-| `expire` | Credits expired after 6 months | **-** (negative) |
+| `expire` | Credits expired after 90 days | **-** (negative) |
 
 ### 1.4 Credit Purchase Flow
 
@@ -56,21 +62,21 @@ User → Paystack (₦120/credit) → Webhook verification → Credits added to 
 3. `purchaseCredits()` creates a `CreditTransaction` with:
    - `type: 'purchase'`
    - `amount: credits` (positive)
-   - `expiresAt: now + 6 months`
+   - `expiresAt: now + 90 days`
    - `status: 'active'`
    - `remainingAmount: credits` (tracks partial usage)
 4. User's `creditsBalance` is updated atomically in a DB transaction
 
 ### 1.5 Credit Expiry & Breakage
 
-Credits expire 6 months after purchase. The platform runs a cron job (`processExpiredCredits()`) that:
+Credits expire 90 days after purchase. The platform runs a cron job (`processExpiredCredits()`) that:
 
 1. Finds all `purchase` transactions where `expiresAt <= now` and `expiredAt IS NULL`
 2. Marks them as `status: 'expired'`
 3. Deducts the `remainingAmount` from the user's balance
 4. Creates an `expire` transaction for the audit trail
 
-**Breakage revenue** = expired credits × ₦100 face value. This is pure profit — the naira was already collected, and the credits are now removed from circulation without delivering any service.
+**Breakage revenue** = expired credits × ₦10 face value. This is pure profit — the naira was already collected, and the credits are now removed from circulation without delivering any service.
 
 Target: **12% breakage** (industry standard for closed-loop systems).
 

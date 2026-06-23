@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { ECONOMICS } from '@/lib/config/economics';
-import { addMonths } from '@/lib/utils/helpers';
+import { addDays } from '@/lib/utils/helpers';
 import { sendCreditExpiryReminder } from './email.service';
 import { notifyCreditExpiring } from './notification.service';
 import { isNotificationEnabled } from '@/lib/notifications/preferences';
@@ -38,7 +38,7 @@ export async function createCreditTransaction(params: CreditTransactionParams) {
 
   let expiresAt: Date | undefined;
   if (type === 'purchase' && amount > 0) {
-    expiresAt = addMonths(new Date(), ECONOMICS.CREDIT_EXPIRY_MONTHS);
+    expiresAt = addDays(new Date(), ECONOMICS.CREDIT_EXPIRY_DAYS);
   }
 
   const [transaction] = await db.$transaction([
