@@ -65,8 +65,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Wallet size={size} color={color} />,
         }}
       />
-      {/* Events tab hidden — removed from the app, file kept as redirect to prevent stale links crashing */}
-      <Tabs.Screen name="events"   options={{ href: null }} />
+      {/* Events & Orders removed from the app for launch. */}
       <Tabs.Screen name="profile"  options={{ href: null }} />
     </Tabs>
   );

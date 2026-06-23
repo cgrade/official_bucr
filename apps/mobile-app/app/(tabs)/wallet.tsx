@@ -242,7 +242,7 @@ export default function WalletScreen() {
           </View>
           <View style={styles.infoItem}>
             <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Use credits to book reservations & events</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Use credits to book reservations</Text>
           </View>
           <View style={styles.infoItem}>
             <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>

@@ -190,23 +190,8 @@ export const favoritesApi = {
   remove: async (vendorId: string) => (await api.delete<ApiResponse<null>>('/users/favorites', { params: { vendorId } })).data,
 };
 
-// ── Orders (takeout) ──────────────────────────────────────────────────────────
-export const ordersApi = {
-  create: async (data: any) => (await api.post<ApiResponse<any>>('/orders', data)).data,
-  getAll: async (params?: { page?: number; limit?: number; status?: string; orderType?: string }) => (await api.get<ApiResponse<any[]>>('/users/orders', { params })).data,
-  getById: async (id: string) => (await api.get<ApiResponse<any>>(`/orders/${id}`)).data,
-  cancel: async (id: string, reason?: string) => (await api.patch<ApiResponse<any>>(`/orders/${id}`, { status: 'cancelled', reason })).data,
-  confirmPayment: async (id: string) => (await api.post<ApiResponse<any>>(`/orders/${id}/confirm-payment`)).data,
-};
-
-// ── Events ────────────────────────────────────────────────────────────────────
-export const eventsApi = {
-  getUpcoming: async (params?: { city?: string; category?: string; page?: number; limit?: number }) => (await api.get<ApiResponse<any>>('/events', { params })).data,
-  getById: async (id: string) => (await api.get<ApiResponse<any>>(`/events/${id}`)).data,
-  purchaseTicket: async (eventId: string, quantity: number) => (await api.post<ApiResponse<any>>(`/events/${eventId}/tickets`, { quantity })).data,
-  getUserTickets: async () => (await api.get<ApiResponse<any[]>>('/users/event-tickets')).data,
-  getUserBundles: async () => (await api.get<ApiResponse<any[]>>('/users/event-bundles')).data,
-};
+// Orders (takeout) and Events are intentionally disabled for launch — removed from
+// the web client. Re-add the ordersApi / eventsApi modules here if reinstated.
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 export const notificationsApi = {

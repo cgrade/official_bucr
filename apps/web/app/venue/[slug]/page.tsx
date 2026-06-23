@@ -71,7 +71,7 @@ export default function VenuePage() {
   const img = getImageUrl(vendor.coverImage || vendor.galleryImages?.[0]?.url || vendor.logo);
   const branch = vendor.branches?.[0] || vendor.mainBranch;
   const deposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
-  const menu: any[] = (vendor.menus?.flatMap((m: any) => m.items || []) ?? vendor.menuItems ?? []).slice(0, 6);
+  const menu: any[] = ((vendor.menu ?? vendor.menus)?.flatMap((c: any) => c.items || []) ?? vendor.menuItems ?? []).slice(0, 6);
 
   return (
     <div>

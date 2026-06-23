@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarCheck, Wallet, Heart, ShoppingBag, Bell, Star, Gift, UserCog, KeyRound, HelpCircle, FileText, Shield, LogOut, ChevronRight } from 'lucide-react';
+import { CalendarCheck, Wallet, Heart, Bell, Star, Gift, UserCog, KeyRound, HelpCircle, FileText, Shield, LogOut, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 
 const GROUPS: { title: string; rows: { href: string; icon: any; label: string }[] }[] = [
@@ -11,7 +11,6 @@ const GROUPS: { title: string; rows: { href: string; icon: any; label: string }[
     title: 'Activity',
     rows: [
       { href: '/bookings', icon: CalendarCheck, label: 'Your reservations' },
-      { href: '/orders', icon: ShoppingBag, label: 'Your orders' },
       { href: '/favorites', icon: Heart, label: 'Saved restaurants' },
       { href: '/account/reviews', icon: Star, label: 'Your reviews' },
     ],

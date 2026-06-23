@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   CreditCard, Heart, Star, Bell, HelpCircle,
-  LogOut, ChevronRight, Camera, Users, Gift,
+  LogOut, ChevronRight, Camera, Gift,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -261,8 +261,6 @@ export default function ProfileScreen() {
             label="My Reviews" onPress={() => router.push('/settings/reviews')} />
           <MenuItem icon={<Gift size={20} color={colors.tertiary} />}
             label="Referrals" onPress={() => router.push('/settings/referral')} />
-          <MenuItem icon={<Users size={20} color={colors.info} />}
-            label="Order History" onPress={() => router.push('/settings/orders')} />
         </View>
 
         <View style={[styles.menuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>

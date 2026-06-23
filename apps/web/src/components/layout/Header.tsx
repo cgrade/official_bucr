@@ -24,7 +24,6 @@ export function Header() {
 
         <nav className="hidden md:flex items-center gap-7 text-[14px] font-medium text-[#0f2547]">
           <Link href="/restaurants" className="hover:text-[#c9a84c] transition-colors">Restaurants</Link>
-          <Link href="/events" className="hover:text-[#c9a84c] transition-colors">Events</Link>
           <Link href="/#how-it-works" className="hover:text-[#c9a84c] transition-colors">How it works</Link>
           <a href="http://localhost:3001" className="hover:text-[#c9a84c] transition-colors">For restaurants</a>
         </nav>

@@ -110,7 +110,6 @@ function RootLayout() {
                 <Stack.Screen name="wallet/buy"     options={{ presentation: 'modal' }} />
                 <Stack.Screen name="wallet/gift"    options={{ presentation: 'modal' }} />
                 <Stack.Screen name="wallet/history" options={{ presentation: 'card' }}  />
-                <Stack.Screen name="order/[id]" options={{ presentation: 'card' }} />
                 {/* settings/index.tsx is the settings hub — must use "settings/index", not "settings" */}
                 <Stack.Screen name="settings/index"         options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/edit-profile"  options={{ presentation: 'card' }} />
@@ -119,7 +118,6 @@ function RootLayout() {
                 <Stack.Screen name="settings/referral"      options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/notifications" options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/help"          options={{ presentation: 'card' }} />
-                <Stack.Screen name="settings/orders"        options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/privacy"       options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/privacy-policy" options={{ presentation: 'card' }} />
                 <Stack.Screen name="settings/terms"         options={{ presentation: 'card' }} />

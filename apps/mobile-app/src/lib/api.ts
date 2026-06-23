@@ -434,42 +434,7 @@ export const favoritesApi = {
   },
 };
 
-// Orders API
-export const ordersApi = {
-  create: async (data: {
-    vendorId: string;
-    branchId?: string;
-    orderType: 'pickup' | 'delivery';
-    items: Array<{ menuItemId: string; name: string; quantity: number; price: number; notes?: string }>;
-    deliveryAddress?: string;
-    deliveryCity?: string;
-    deliveryNotes?: string;
-    scheduledTime?: string;
-  }) => {
-    const response = await api.post<ApiResponse<any>>('/orders', data);
-    return response.data;
-  },
-
-  getAll: async (params?: { page?: number; limit?: number; status?: string; orderType?: string }) => {
-    const response = await api.get<ApiResponse<any[]>>('/users/orders', { params });
-    return response.data;
-  },
-
-  getById: async (id: string) => {
-    const response = await api.get<ApiResponse<any>>(`/orders/${id}`);
-    return response.data;
-  },
-
-  cancel: async (id: string, reason?: string) => {
-    const response = await api.patch<ApiResponse<any>>(`/orders/${id}`, { status: 'cancelled', reason });
-    return response.data;
-  },
-
-  confirmPayment: async (id: string) => {
-    const response = await api.post<ApiResponse<any>>(`/orders/${id}/confirm-payment`);
-    return response.data;
-  },
-};
+// Orders (takeout) — disabled for launch; removed from the app.
 
 // Waitlist API
 export const waitlistApi = {
@@ -492,38 +457,7 @@ export const waitlistApi = {
   },
 };
 
-// Events API
-export const eventsApi = {
-  getUpcoming: async (params?: { city?: string; category?: string; page?: number; limit?: number }) => {
-    const response = await api.get<ApiResponse<any>>('/events', { params });
-    return response.data;
-  },
-
-  getById: async (id: string) => {
-    const response = await api.get<ApiResponse<any>>(`/events/${id}`);
-    return response.data;
-  },
-
-  purchaseTicket: async (data: { eventId: string; quantity: number }) => {
-    const response = await api.post<ApiResponse<any>>(`/events/${data.eventId}/tickets`, { quantity: data.quantity });
-    return response.data;
-  },
-
-  createBundle: async (data: { eventId: string; reservationId: string }) => {
-    const response = await api.post<ApiResponse<any>>(`/events/${data.eventId}/bundles`, { reservationId: data.reservationId });
-    return response.data;
-  },
-
-  getUserTickets: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/users/event-tickets');
-    return response.data;
-  },
-
-  getUserBundles: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/users/event-bundles');
-    return response.data;
-  },
-};
+// Events — disabled for launch; removed from the app.
 
 // Gifts API
 export const giftsApi = {

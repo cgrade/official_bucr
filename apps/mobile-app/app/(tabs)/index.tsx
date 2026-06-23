@@ -347,7 +347,7 @@ export default function HomeScreen() {
         >
           <Search size={20} color={colors.textMuted} />
           <Text style={[styles.searchBarText, { color: colors.textMuted }]}>
-            Search restaurants, events...
+            Search restaurants...
           </Text>
         </TouchableOpacity>
 
