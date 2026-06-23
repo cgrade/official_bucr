@@ -32,12 +32,12 @@ export default function ChangePasswordPage() {
     save.mutate();
   };
 
-  if (!ready || !isAuthenticated) return <div className="max-w-md mx-auto px-5 py-20 text-center text-[#7a8fa6]">Loading…</div>;
+  if (!ready || !isAuthenticated) return <div className="max-w-md mx-auto px-5 py-20 text-center text-muted">Loading…</div>;
 
   return (
     <div className="max-w-md mx-auto px-5 py-8">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-[#7a8fa6] hover:text-[#0f2547] mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
-      <h1 className="font-display text-3xl font-semibold text-[#0f2547]">Change password</h1>
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-muted hover:text-ink mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
+      <h1 className="font-display text-3xl font-semibold text-ink">Change password</h1>
       <form onSubmit={onSubmit} className="card p-6 mt-6 space-y-4">
         <Input label="Current password" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
         <Input label="New password" type="password" value={next} onChange={(e) => setNext(e.target.value)} />

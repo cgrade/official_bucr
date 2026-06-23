@@ -41,28 +41,28 @@ export default function AccountPage() {
   const { user, isAuthenticated, ready, logout } = useAuthStore();
   useEffect(() => { if (ready && !isAuthenticated) router.push('/login?redirect=/account'); }, [ready, isAuthenticated, router]);
 
-  if (!ready || !isAuthenticated || !user) return <div className="max-w-2xl mx-auto px-5 py-20 text-center text-[#7a8fa6]">Loading…</div>;
+  if (!ready || !isAuthenticated || !user) return <div className="max-w-2xl mx-auto px-5 py-20 text-center text-muted">Loading…</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-10">
       <div className="card p-6 flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0f2547] text-[#f5f0e8] text-xl font-bold">{user.name?.charAt(0)?.toUpperCase()}</div>
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold text-[#0f2547] truncate">{user.name}</h1>
-          <p className="text-[13px] text-[#7a8fa6] truncate">{user.email}</p>
+          <h1 className="font-display text-2xl font-semibold text-ink truncate">{user.name}</h1>
+          <p className="text-[13px] text-muted truncate">{user.email}</p>
           {typeof user.creditsBalance === 'number' && <p className="text-[12px] text-[#c9a84c] font-semibold mt-0.5">{user.creditsBalance.toLocaleString()} credits</p>}
         </div>
       </div>
 
       {GROUPS.map((g) => (
         <div key={g.title} className="mt-6">
-          <h2 className="text-[12px] font-bold uppercase tracking-wider text-[#7a8fa6] mb-2 px-1">{g.title}</h2>
-          <div className="card divide-y divide-[rgba(15,37,71,0.06)]">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-muted mb-2 px-1">{g.title}</h2>
+          <div className="card divide-y divide-line">
             {g.rows.map((r) => (
-              <Link key={r.href} href={r.href} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[rgba(15,37,71,0.02)]">
+              <Link key={r.href} href={r.href} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--fill)]">
                 <r.icon className="h-5 w-5 text-[#c9a84c]" />
-                <span className="flex-1 text-[14px] font-medium text-[#0f2547]">{r.label}</span>
-                <ChevronRight className="h-4 w-4 text-[#7a8fa6]" />
+                <span className="flex-1 text-[14px] font-medium text-ink">{r.label}</span>
+                <ChevronRight className="h-4 w-4 text-muted" />
               </Link>
             ))}
           </div>

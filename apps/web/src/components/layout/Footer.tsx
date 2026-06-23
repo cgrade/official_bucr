@@ -7,7 +7,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-5 py-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
         <div className="sm:col-span-2 md:col-span-1">
           <BucrWordmark height={30} light />
-          <p className="mt-3 text-[13px] text-[#7a8fa6] max-w-xs italic font-display">Your table, actually waiting.</p>
+          <p className="mt-3 text-[13px] text-muted max-w-xs italic font-display">Your table, actually waiting.</p>
         </div>
         <div>
           <h4 className="text-[12px] font-bold uppercase tracking-wider text-[#c9a84c] mb-3">Discover</h4>
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[rgba(201,168,76,0.15)]">
-        <div className="max-w-6xl mx-auto px-5 py-4 text-[12px] text-[#7a8fa6]">
+        <div className="max-w-6xl mx-auto px-5 py-4 text-[12px] text-muted">
           © {new Date().getFullYear()} Bucr Limited · Nigeria
         </div>
       </div>

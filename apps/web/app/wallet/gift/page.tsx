@@ -45,30 +45,30 @@ export default function GiftPage() {
     onError: (err: any) => toast.error(err.response?.data?.error || 'Could not claim'),
   });
 
-  if (!ready || !isAuthenticated) return <div className="max-w-xl mx-auto px-5 py-20 text-center text-[#7a8fa6]">Loading…</div>;
+  if (!ready || !isAuthenticated) return <div className="max-w-xl mx-auto px-5 py-20 text-center text-muted">Loading…</div>;
 
   return (
     <div className="max-w-xl mx-auto px-5 py-8">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-[#7a8fa6] hover:text-[#0f2547] mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
-      <h1 className="font-display text-3xl font-semibold text-[#0f2547] flex items-center gap-2"><GiftIcon className="h-7 w-7 text-[#c9a84c]" /> Gift credits</h1>
-      <p className="mt-1 text-[13px] text-[#7a8fa6]">Your balance: {balance.toLocaleString()} credits · 8% gift fee applies.</p>
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-muted hover:text-ink mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
+      <h1 className="font-display text-3xl font-semibold text-ink flex items-center gap-2"><GiftIcon className="h-7 w-7 text-[#c9a84c]" /> Gift credits</h1>
+      <p className="mt-1 text-[13px] text-muted">Your balance: {balance.toLocaleString()} credits · 8% gift fee applies.</p>
 
       <div className="card p-6 mt-6 space-y-4">
         <div>
-          <label className="block text-[13px] font-medium text-[#0f2547] mb-1.5">Amount (credits)</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Amount (credits)</label>
           <div className="flex gap-2 mb-2">
             {[50, 100, 200, 500].map((a) => (
-              <button key={a} onClick={() => setAmount(a)} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', amount === a ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-[#0f2547]' : 'border-[rgba(15,37,71,0.18)] text-[#7a8fa6]')}>{a}</button>
+              <button key={a} onClick={() => setAmount(a)} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', amount === a ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-ink' : 'border-line text-muted')}>{a}</button>
             ))}
           </div>
           <Input type="number" min={10} value={amount} onChange={(e) => setAmount(Math.max(10, Number(e.target.value) || 0))} />
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-[#0f2547] mb-1.5">Send to</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Send to</label>
           <div className="flex gap-2 mb-2">
-            <button onClick={() => setMethod('email')} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', method === 'email' ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-[#0f2547]' : 'border-[rgba(15,37,71,0.18)] text-[#7a8fa6]')}>Email</button>
-            <button onClick={() => setMethod('phone')} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', method === 'phone' ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-[#0f2547]' : 'border-[rgba(15,37,71,0.18)] text-[#7a8fa6]')}>Phone</button>
+            <button onClick={() => setMethod('email')} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', method === 'email' ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-ink' : 'border-line text-muted')}>Email</button>
+            <button onClick={() => setMethod('phone')} className={cn('flex-1 h-10 rounded-lg border text-[13px] font-medium', method === 'phone' ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-ink' : 'border-line text-muted')}>Phone</button>
           </div>
           <Input type={method === 'email' ? 'email' : 'tel'} placeholder={method === 'email' ? 'friend@email.com' : '0801 234 5678'} value={recipient} onChange={(e) => setRecipient(e.target.value)} />
         </div>
@@ -76,9 +76,9 @@ export default function GiftPage() {
         <Input label="Message (optional)" placeholder="Enjoy a meal on me 🎉" value={message} onChange={(e) => setMessage(e.target.value)} />
 
         <div className="rounded-xl bg-[rgba(201,168,76,0.08)] p-3 text-[13px] space-y-1">
-          <div className="flex justify-between"><span className="text-[#7a8fa6]">Gift amount</span><span className="text-[#0f2547]">{amount} cr ({formatNaira(amount * 10)})</span></div>
-          <div className="flex justify-between"><span className="text-[#7a8fa6]">Fee (8%)</span><span className="text-[#0f2547]">{fee} cr</span></div>
-          <div className="flex justify-between font-bold border-t border-[rgba(15,37,71,0.1)] pt-1 mt-1"><span className="text-[#0f2547]">Total deducted</span><span className="text-[#0f2547]">{total} cr</span></div>
+          <div className="flex justify-between"><span className="text-muted">Gift amount</span><span className="text-ink">{amount} cr ({formatNaira(amount * 10)})</span></div>
+          <div className="flex justify-between"><span className="text-muted">Fee (8%)</span><span className="text-ink">{fee} cr</span></div>
+          <div className="flex justify-between font-bold border-t border-line pt-1 mt-1"><span className="text-ink">Total deducted</span><span className="text-ink">{total} cr</span></div>
         </div>
 
         <Button size="lg" className="w-full" loading={send.isPending} disabled={!recipient || total > balance} onClick={() => send.mutate()}>
@@ -88,13 +88,13 @@ export default function GiftPage() {
 
       {received.filter((g) => g.status === 'pending').length > 0 && (
         <div className="mt-8">
-          <h2 className="font-display text-xl font-semibold text-[#0f2547] mb-3">Gifts to claim</h2>
+          <h2 className="font-display text-xl font-semibold text-ink mb-3">Gifts to claim</h2>
           <div className="space-y-2">
             {received.filter((g) => g.status === 'pending').map((g) => (
               <div key={g.id} className="card p-4 flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-[#0f2547]">{g.amount} credits</p>
-                  <p className="text-[12px] text-[#7a8fa6]">from {g.sender?.name || 'a friend'}{g.message ? ` · “${g.message}”` : ''}</p>
+                  <p className="font-semibold text-ink">{g.amount} credits</p>
+                  <p className="text-[12px] text-muted">from {g.sender?.name || 'a friend'}{g.message ? ` · “${g.message}”` : ''}</p>
                 </div>
                 <Button size="sm" loading={claim.isPending} onClick={() => claim.mutate(g.id)}>Claim</Button>
               </div>

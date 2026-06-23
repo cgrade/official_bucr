@@ -11,13 +11,13 @@ const SECTIONS = [
 export default function TermsPage() {
   return (
     <div className="max-w-2xl mx-auto px-5 py-14">
-      <h1 className="font-display text-4xl font-semibold text-[#0f2547]">Terms of Service</h1>
-      <p className="text-[13px] text-[#7a8fa6] mt-1 mb-8">Last updated: June 2026 · These terms are being finalised with counsel; the current version governs your use.</p>
+      <h1 className="font-display text-4xl font-semibold text-ink">Terms of Service</h1>
+      <p className="text-[13px] text-muted mt-1 mb-8">Last updated: June 2026 · These terms are being finalised with counsel; the current version governs your use.</p>
       <div className="space-y-7">
         {SECTIONS.map((s) => (
           <section key={s.h}>
             <h2 className="text-[17px] font-semibold text-[#c9a84c] mb-1.5">{s.h}</h2>
-            <p className="text-[14px] text-[#3a4a5f] leading-relaxed">{s.body}</p>
+            <p className="text-[14px] text-body leading-relaxed">{s.body}</p>
           </section>
         ))}
       </div>

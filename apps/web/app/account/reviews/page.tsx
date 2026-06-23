@@ -30,15 +30,15 @@ function ReviewsContent() {
     onError: (err: any) => toast.error(err.response?.data?.error || 'Could not submit review'),
   });
 
-  if (!ready || !isAuthenticated) return <div className="py-20 text-center text-[#7a8fa6]">Loading…</div>;
+  if (!ready || !isAuthenticated) return <div className="py-20 text-center text-muted">Loading…</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-8">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-[#7a8fa6] hover:text-[#0f2547] mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-muted hover:text-ink mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
 
       {reservationId && (
         <div className="card p-6 mb-6">
-          <h1 className="font-display text-2xl font-semibold text-[#0f2547]">Leave a review</h1>
+          <h1 className="font-display text-2xl font-semibold text-ink">Leave a review</h1>
           <div className="mt-4 flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} onClick={() => setRating(n)} aria-label={`${n} stars`}>
@@ -47,29 +47,29 @@ function ReviewsContent() {
             ))}
           </div>
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={4} placeholder="Tell others about your experience…"
-            className="mt-4 w-full rounded-xl border border-[rgba(15,37,71,0.18)] p-3 text-[14px] text-[#0f2547] focus:outline-none focus:border-[#c9a84c]" />
+            className="mt-4 w-full rounded-xl border border-line p-3 text-[14px] text-ink focus:outline-none focus:border-[#c9a84c]" />
           <Button className="w-full mt-3" loading={submit.isPending} onClick={() => submit.mutate()}>Submit review</Button>
         </div>
       )}
 
-      <h2 className="font-display text-2xl font-semibold text-[#0f2547] mb-4">Your reviews</h2>
+      <h2 className="font-display text-2xl font-semibold text-ink mb-4">Your reviews</h2>
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="card h-24 animate-pulse bg-[#eef1f5]" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="card h-24 animate-pulse bg-surface2" />)}</div>
       ) : reviews.length ? (
         <div className="space-y-3">
           {reviews.map((r) => (
             <div key={r.id} className="card p-5">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-[#0f2547]">{r.vendor?.businessName || 'Restaurant'}</h3>
+                <h3 className="font-semibold text-ink">{r.vendor?.businessName || 'Restaurant'}</h3>
                 <span className="flex items-center gap-0.5">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className="h-3.5 w-3.5" fill={n <= r.rating ? '#c9a84c' : 'none'} color="#c9a84c" />)}</span>
               </div>
-              {r.comment && <p className="mt-2 text-[14px] text-[#3a4a5f]">{r.comment}</p>}
-              <p className="mt-2 text-[12px] text-[#7a8fa6]">{formatDate(r.createdAt)}</p>
+              {r.comment && <p className="mt-2 text-[14px] text-body">{r.comment}</p>}
+              <p className="mt-2 text-[12px] text-muted">{formatDate(r.createdAt)}</p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-[#7a8fa6]">You haven’t left any reviews yet. Reviews unlock after a completed visit.</p>
+        <p className="text-muted">You haven’t left any reviews yet. Reviews unlock after a completed visit.</p>
       )}
     </div>
   );
@@ -77,7 +77,7 @@ function ReviewsContent() {
 
 export default function ReviewsPage() {
   return (
-    <Suspense fallback={<div className="max-w-2xl mx-auto px-5 py-20 text-center text-[#7a8fa6]">Loading…</div>}>
+    <Suspense fallback={<div className="max-w-2xl mx-auto px-5 py-20 text-center text-muted">Loading…</div>}>
       <ReviewsContent />
     </Suspense>
   );

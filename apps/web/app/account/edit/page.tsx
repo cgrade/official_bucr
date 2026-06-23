@@ -25,12 +25,12 @@ export default function EditProfilePage() {
     onError: (err: any) => toast.error(err.response?.data?.error || 'Could not update'),
   });
 
-  if (!ready || !isAuthenticated || !user) return <div className="max-w-md mx-auto px-5 py-20 text-center text-[#7a8fa6]">Loading…</div>;
+  if (!ready || !isAuthenticated || !user) return <div className="max-w-md mx-auto px-5 py-20 text-center text-muted">Loading…</div>;
 
   return (
     <div className="max-w-md mx-auto px-5 py-8">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-[#7a8fa6] hover:text-[#0f2547] mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
-      <h1 className="font-display text-3xl font-semibold text-[#0f2547]">Edit profile</h1>
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-[14px] text-muted hover:text-ink mb-5"><ArrowLeft className="h-4 w-4" /> Back</button>
+      <h1 className="font-display text-3xl font-semibold text-ink">Edit profile</h1>
       <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="card p-6 mt-6 space-y-4">
         <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} />
         <Input label="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />

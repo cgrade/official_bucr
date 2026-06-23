@@ -20,35 +20,35 @@ export default function HelpPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-10">
-      <h1 className="font-display text-4xl font-semibold text-[#0f2547]">Help & support</h1>
-      <p className="mt-1 text-[#7a8fa6]">Answers to common questions — and how to reach us.</p>
+      <h1 className="font-display text-4xl font-semibold text-ink">Help & support</h1>
+      <p className="mt-1 text-muted">Answers to common questions — and how to reach us.</p>
 
-      <div className="card mt-6 divide-y divide-[rgba(15,37,71,0.06)]">
+      <div className="card mt-6 divide-y divide-line">
         {FAQS.map((f, i) => (
           <div key={i}>
             <button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left">
-              <span className="text-[15px] font-medium text-[#0f2547]">{f.q}</span>
+              <span className="text-[15px] font-medium text-ink">{f.q}</span>
               <ChevronDown className={cn('h-5 w-5 text-[#c9a84c] transition-transform flex-shrink-0', open === i && 'rotate-180')} />
             </button>
-            {open === i && <p className="px-5 pb-4 -mt-1 text-[14px] text-[#3a4a5f] leading-relaxed">{f.a}</p>}
+            {open === i && <p className="px-5 pb-4 -mt-1 text-[14px] text-body leading-relaxed">{f.a}</p>}
           </div>
         ))}
       </div>
 
-      <h2 className="font-display text-2xl font-semibold text-[#0f2547] mt-10 mb-3">Still need help?</h2>
+      <h2 className="font-display text-2xl font-semibold text-ink mt-10 mb-3">Still need help?</h2>
       <div className="grid sm:grid-cols-3 gap-3">
         <a href="mailto:support@bucr.ng" className="card p-5 text-center hover:shadow-md transition-shadow">
-          <Mail className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-[#0f2547]">Email</p><p className="text-[12px] text-[#7a8fa6]">support@bucr.ng</p>
+          <Mail className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-ink">Email</p><p className="text-[12px] text-muted">support@bucr.ng</p>
         </a>
         <a href="tel:+2348146104740" className="card p-5 text-center hover:shadow-md transition-shadow">
-          <Phone className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-[#0f2547]">Call</p><p className="text-[12px] text-[#7a8fa6]">+234 814 610 474</p>
+          <Phone className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-ink">Call</p><p className="text-[12px] text-muted">+234 814 610 474</p>
         </a>
         <a href="https://wa.me/2348146104740" target="_blank" rel="noopener noreferrer" className="card p-5 text-center hover:shadow-md transition-shadow">
-          <MessageCircle className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-[#0f2547]">WhatsApp</p><p className="text-[12px] text-[#7a8fa6]">Chat with us</p>
+          <MessageCircle className="h-6 w-6 mx-auto text-[#c9a84c]" /><p className="mt-2 text-[13px] font-semibold text-ink">WhatsApp</p><p className="text-[12px] text-muted">Chat with us</p>
         </a>
       </div>
 
-      <p className="mt-8 text-center text-[13px] text-[#7a8fa6]">See also our <Link href="/terms" className="text-[#c9a84c] hover:underline">Terms</Link> and <Link href="/privacy" className="text-[#c9a84c] hover:underline">Privacy Policy</Link>.</p>
+      <p className="mt-8 text-center text-[13px] text-muted">See also our <Link href="/terms" className="text-[#c9a84c] hover:underline">Terms</Link> and <Link href="/privacy" className="text-[#c9a84c] hover:underline">Privacy Policy</Link>.</p>
     </div>
   );
 }
