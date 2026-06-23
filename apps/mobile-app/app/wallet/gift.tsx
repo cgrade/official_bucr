@@ -219,7 +219,7 @@ export default function GiftCreditsScreen() {
           disabled={sendMutation.isPending}
         >
           {sendMutation.isPending ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#070f1e" />
           ) : (
             <Text style={styles.sendButtonText}>Send {effectiveAmount} Credits</Text>
           )}

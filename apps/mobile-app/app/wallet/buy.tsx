@@ -143,7 +143,7 @@ export default function BuyCreditsScreen() {
           disabled={purchaseMutation.isPending || !selectedPackage}
         >
           {purchaseMutation.isPending ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#070f1e" />
           ) : (
             <Text style={styles.purchaseButtonText}>Continue to Payment</Text>
           )}

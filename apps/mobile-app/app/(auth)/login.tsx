@@ -140,7 +140,7 @@ export default function LoginScreen() {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color="#070f1e" />
             ) : (
               <Text style={styles.submitButtonText}>Sign In</Text>
             )}
