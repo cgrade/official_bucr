@@ -25,6 +25,36 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Single-flight refresh: concurrent 401s share ONE refresh call (prevents races/loops).
+let refreshPromise: Promise<string | null> | null = null;
+function doRefresh(): Promise<string | null> {
+  if (!refreshPromise) {
+    const refreshToken = Cookies.get('vendor_refresh_token');
+    refreshPromise = (refreshToken
+      ? axios.post(`${API_URL}/api/auth/refresh`, { refreshToken })
+          .then(({ data }) => {
+            if (!data?.success) return null;
+            const tokens = data.data.tokens ?? data.data;
+            Cookies.set('vendor_token', tokens.accessToken, { expires: 1 });
+            if (tokens.refreshToken) Cookies.set('vendor_refresh_token', tokens.refreshToken, { expires: 7 });
+            return tokens.accessToken as string;
+          })
+          .catch(() => null)
+      : Promise.resolve(null)
+    ).finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+function hardLogout() {
+  Cookies.remove('vendor_token');
+  Cookies.remove('vendor_refresh_token');
+  // Clear persisted zustand auth so the app doesn't bounce back to /dashboard on stale state.
+  try { localStorage.removeItem('bucr-vendor-auth'); } catch {}
+  if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
+  }
+}
+
 // Response interceptor — silently refresh the access token on 401 so users aren't
 // signed out after the 15-min access token expires; only log out if refresh fails.
 api.interceptors.response.use(
@@ -32,31 +62,18 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
     const requestUrl = original?.url || '';
-    const isAuthRoute = requestUrl.includes('/auth/');
+    // Only skip refresh for the credential endpoints — NOT protected reads like /auth/me.
+    const skipRefresh = /\/auth\/(login|register|refresh)/.test(requestUrl);
 
-    if (error.response?.status === 401 && !isAuthRoute && original && !original._retry) {
+    if (error.response?.status === 401 && !skipRefresh && original && !original._retry) {
       original._retry = true;
-      const refreshToken = Cookies.get('vendor_refresh_token');
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${API_URL}/api/auth/refresh`, { refreshToken });
-          if (data?.success) {
-            const tokens = data.data.tokens ?? data.data;
-            Cookies.set('vendor_token', tokens.accessToken, { expires: 1 });
-            if (tokens.refreshToken) Cookies.set('vendor_refresh_token', tokens.refreshToken, { expires: 7 });
-            original.headers = original.headers ?? {};
-            (original.headers as any).Authorization = `Bearer ${tokens.accessToken}`;
-            return api(original);
-          }
-        } catch {
-          // fall through to logout
-        }
+      const newToken = await doRefresh();
+      if (newToken) {
+        original.headers = original.headers ?? {};
+        (original.headers as any).Authorization = `Bearer ${newToken}`;
+        return api(original);
       }
-      Cookies.remove('vendor_token');
-      Cookies.remove('vendor_refresh_token');
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+      hardLogout();
     }
     return Promise.reject(error);
   }
@@ -134,6 +151,18 @@ export const authApi = {
   },
   markMessageRead: async (id: string) => {
     const { data } = await api.patch<ApiResponse<any>>(`/vendor/messages/${id}`);
+    return data;
+  },
+  // ── Per-cover invoices (billing) ─────────────────────────────────────────
+  getInvoices: async () => {
+    const { data } = await api.get<ApiResponse<{ invoices: any[]; outstanding: number }>>('/vendor/invoices');
+    return data;
+  },
+  payInvoice: async (id: string) => {
+    const { data } = await api.post<ApiResponse<{ authorizationUrl: string; reference: string; amountNgn: number }>>(
+      `/vendor/invoices/${id}/pay`,
+      { callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/billing` : undefined }
+    );
     return data;
   },
 };

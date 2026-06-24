@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Users, X, Sparkles, Tag } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Users, X, Sparkles, Tag, ChefHat, ChevronDown, Minus, Plus } from 'lucide-react-native';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { vendorsApi, reservationsApi } from '../../../src/lib/api';
 import { useAuthStore } from '../../../src/stores/auth.store';
@@ -42,6 +42,9 @@ export default function BookingScreen() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [partySize, setPartySize] = useState(2);
   const [specialRequests, setSpecialRequests] = useState('');
+  // Optional pre-order: menuItemId -> { name, quantity } — helps the kitchen prep ahead.
+  const [preorder, setPreorder] = useState<Record<string, { name: string; quantity: number }>>({});
+  const [showPreorder, setShowPreorder] = useState(false);
 
   // Pass context=dineIn so the menu only returns items available for dine-in
   // (respects isAvailable, unavailableUntil, and availableForDineIn flags)
@@ -85,6 +88,21 @@ export default function BookingScreen() {
   // Get max party size for experiences
   const maxPartySize = selectedExperience?.capacity || 10;
   const availablePartySizes = PARTY_SIZES.filter(size => size <= maxPartySize);
+
+  // Flat list of dine-in menu items for the optional pre-order (skip for experience/offer bookings).
+  const menuItems = useMemo(() => {
+    if (type === 'experience' || type === 'offer') return [];
+    return ((vendor as any)?.menu || [])
+      .flatMap((c: any) => c?.items || [])
+      .filter((i: any) => i && i.name);
+  }, [vendor, type]);
+  const preorderCount = Object.values(preorder).reduce((s, i) => s + i.quantity, 0);
+  const setQty = (id: string, name: string, qty: number) =>
+    setPreorder((cur) => {
+      const next = { ...cur };
+      if (qty <= 0) delete next[id]; else next[id] = { name, quantity: qty };
+      return next;
+    });
 
   const userBalance = user?.creditsBalance || 0;
   const hasEnoughCredits = userBalance >= creditsRequired;
@@ -130,6 +148,7 @@ export default function BookingScreen() {
       time: selectedTime,
       partySize,
       specialRequests: specialRequests.trim() || undefined,
+      preorderItems: Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
     };
 
     // Add experience or offer ID if applicable
@@ -310,6 +329,64 @@ export default function BookingScreen() {
             </View>
           </ScrollView>
         </View>
+
+        {/* Pre-order dishes (optional) — helps the kitchen prep ahead */}
+        {menuItems.length > 0 && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => setShowPreorder((s) => !s)}
+              activeOpacity={0.7}
+            >
+              <ChefHat size={20} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text, flex: 1 }]}>
+                Pre-order dishes (optional){preorderCount > 0 ? ` · ${preorderCount}` : ''}
+              </Text>
+              <ChevronDown
+                size={18}
+                color={colors.textSecondary}
+                style={{ transform: [{ rotate: showPreorder ? '180deg' : '0deg' }] }}
+              />
+            </TouchableOpacity>
+            {showPreorder && (
+              <View>
+                <Text style={[styles.preorderHint, { color: colors.textMuted }]}>
+                  Help the kitchen prep ahead — you still pay for the meal at the venue.
+                </Text>
+                {menuItems.map((it: any) => {
+                  const q = preorder[it.id]?.quantity ?? 0;
+                  return (
+                    <View key={it.id} style={[styles.preorderRow, { borderBottomColor: colors.border }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.preorderName, { color: colors.text }]} numberOfLines={1}>{it.name}</Text>
+                        {it.price != null && (
+                          <Text style={[styles.preorderPrice, { color: colors.tertiary }]}>
+                            ₦{Number(it.price).toLocaleString()}
+                          </Text>
+                        )}
+                      </View>
+                      <View style={styles.preorderStepper}>
+                        <TouchableOpacity
+                          style={[styles.stepBtn, { backgroundColor: colors.inputBackground }]}
+                          onPress={() => setQty(it.id, it.name, q - 1)}
+                        >
+                          <Minus size={16} color={colors.text} />
+                        </TouchableOpacity>
+                        <Text style={[styles.stepQty, { color: colors.text }]}>{q}</Text>
+                        <TouchableOpacity
+                          style={[styles.stepBtn, { backgroundColor: colors.inputBackground }]}
+                          onPress={() => setQty(it.id, it.name, q + 1)}
+                        >
+                          <Plus size={16} color={colors.text} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Special Requests */}
         <View style={styles.section}>
@@ -511,6 +588,20 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginTop: 10,
   },
+  preorderHint: { fontSize: 12, lineHeight: 17, marginBottom: 10 },
+  preorderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  preorderName: { fontSize: 14, fontWeight: '500' },
+  preorderPrice: { fontSize: 12, marginTop: 2 },
+  preorderStepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stepBtn: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  stepQty: { fontSize: 15, fontWeight: '600', minWidth: 18, textAlign: 'center' },
   summaryCard: {
     borderRadius: 16,
     padding: 18,

@@ -32,7 +32,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const country = vendor?.branches?.[0]?.country || vendor?.country || 'Nigeria';
         await loadDisplayCurrency(country);
       })
-      .catch(() => router.push('/login'))
+      .catch(() => {
+        // Only bounce to /login if the session is truly gone (the 401 interceptor clears
+        // the token + persisted auth on a hard logout). A transient error with a valid
+        // token keeps you in via the persisted profile — prevents the login⇄dashboard flicker.
+        if (!Cookies.get('vendor_token')) router.push('/login');
+      })
       .finally(() => setCurrencyReady(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

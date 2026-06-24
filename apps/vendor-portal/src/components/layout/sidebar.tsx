@@ -10,14 +10,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
-import { settingsApi } from '@/lib/api';
+import { settingsApi, authApi } from '@/lib/api';
 import { BucrWordmark } from '@/components/ui/BucrWordmark';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, QrCode, CalendarCheck,
   Users, UtensilsCrossed, ImageIcon, Star, BarChart3,
   Settings, LogOut, CreditCard, Sparkles,
-  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock, Bell,
+  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock, Bell, Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { canAccess, normalizeTier, FEATURE_TIERS, type FeatureId, TIER_LABEL } from '@/lib/features';
@@ -44,6 +44,7 @@ const NAV: Array<{ name: string; href: string; icon: React.ElementType; feature:
 
 const BOTTOM_NAV = [
   { name: 'Messages',       href: '/messages',     icon: Bell      },
+  { name: 'Billing',        href: '/billing',      icon: Receipt   },
   { name: 'KYC Documents', href: '/documents',    icon: Shield    },
   { name: 'Team',           href: '/team',         icon: Users     },
   { name: 'Credits',        href: '/credits',      icon: Wallet    },
@@ -79,6 +80,15 @@ export function Sidebar({ isOpen = true, isCollapsed = false, onClose, onToggleC
     queryFn: () => settingsApi.getProfile(),
     staleTime: 10_000,
   });
+
+  // Unread message-center count → badge on the Messages item. Polls every 60s.
+  const { data: messagesData } = useQuery({
+    queryKey: ['vendor-messages'],
+    queryFn: () => authApi.getMessages(),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const unreadMessages = messagesData?.data?.unreadCount ?? 0;
 
   const profile      = profileData?.data;
   const businessName = profile?.businessName || vendor?.businessName;
@@ -192,11 +202,20 @@ export function Sidebar({ isOpen = true, isCollapsed = false, onClose, onToggleC
         )}
         {BOTTOM_NAV.map(item => {
           const active = pathname === item.href || pathname.startsWith(item.href.replace('/index', ''));
+          const badge = item.href === '/messages' && unreadMessages > 0 ? unreadMessages : 0;
           return (
             <Link key={item.name} href={item.href} onClick={onClose}
-              className={cn(LINK_BASE, active ? LINK_ACTIVE : LINK_IDLE, isCollapsed && 'justify-center px-2')}>
+              className={cn(LINK_BASE, active ? LINK_ACTIVE : LINK_IDLE, isCollapsed && 'justify-center px-2', 'relative')}>
               <item.icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-[#c9a84c]' : 'text-[rgba(245,240,232,0.4)]')} />
-              {!isCollapsed && <span>{item.name}</span>}
+              {!isCollapsed && <span className="flex-1">{item.name}</span>}
+              {badge > 0 && (
+                <span className={cn(
+                  'flex items-center justify-center rounded-full bg-[#c9a84c] text-[10px] font-bold text-[#0f2547]',
+                  isCollapsed ? 'absolute top-1 right-1 h-4 w-4' : 'h-5 min-w-[20px] px-1'
+                )}>
+                  {badge > 9 ? '9+' : badge}
+                </span>
+              )}
             </Link>
           );
         })}

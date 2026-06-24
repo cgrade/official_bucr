@@ -453,6 +453,47 @@ export async function processCompletedPayment(paymentId: string): Promise<void> 
       }
       break;
     }
+
+    case 'cover_fee': {
+      // Vendor paid a per-cover invoice. Mark it (and its charges) paid, recognise
+      // revenue now (not at issuance), and confirm in the message center.
+      const metadata = payment.metadata as { invoiceId?: string } | null;
+      if (!metadata?.invoiceId || !payment.vendorId) break;
+      const invoice = await db.coverInvoice.findUnique({ where: { id: metadata.invoiceId } });
+      if (!invoice || invoice.status === 'paid') break;
+      const now = new Date();
+
+      await db.$transaction(async (tx) => {
+        await tx.coverInvoice.update({
+          where: { id: invoice.id },
+          data: { status: 'paid', paidAt: now, paymentReference: payment.reference },
+        });
+        await tx.coverCharge.updateMany({
+          where: { invoiceId: invoice.id },
+          data: { status: 'paid', paidAt: now },
+        });
+        await tx.platformRevenue.create({
+          data: {
+            type: 'cover_fee',
+            amountNgn: invoice.amountNgn,
+            sourceType: 'cover_invoice',
+            sourceId: invoice.id,
+            vendorId: payment.vendorId!,
+            billingMonth: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+          },
+        }).catch(() => {});
+      });
+
+      const { notifyVendor } = await import('./vendor-message.service');
+      await notifyVendor({
+        vendorId: payment.vendorId,
+        category: 'invoice',
+        subject: `Payment received · ₦${invoice.amountNgn.toLocaleString()}`,
+        body: `We've received your per-cover invoice payment of ₦${invoice.amountNgn.toLocaleString()}. Thank you — your account is in good standing.`,
+        link: '/billing',
+      }).catch(() => {});
+      break;
+    }
   }
 }
 

@@ -269,6 +269,9 @@ export const reservationsApi = {
     partySize: number;
     specialRequests?: string;
     occasion?: string;
+    experienceId?: string;
+    offerId?: string;
+    preorderItems?: Array<{ menuItemId: string; name: string; quantity: number }>;
   }) => {
     // Generate idempotency key per request — prevents double-booking on network retry
     const idempotencyKey = `res_${data.vendorId}_${data.date}_${data.time}_${data.partySize}_${Date.now()}`;

@@ -107,15 +107,19 @@ model VendorStaff {
   @@map("vendor_staff")
 }
 
-// A message to a vendor — currently admin → vendor broadcasts. Shown in the vendor
-// portal message center (dashboard) and also emailed to the vendor.
+// The vendor's message center / notification inbox — admin broadcasts AND system
+// correspondences (new reservations, cancellations, per-cover invoices, reminders).
+// Shown in the vendor portal and (for important categories) emailed to the vendor.
 model VendorMessage {
   id        String    @id @default(uuid())
   vendorId  String    @map("vendor_id")
   subject   String
   body      String
+  // reservation | cancellation | invoice | broadcast | system | message
+  category  String    @default("message")
+  link      String?   // optional in-portal path, e.g. /reservations/<id> or /billing
   isRead    Boolean   @default(false) @map("is_read")
-  sentById  String?   @map("sent_by_id") // admin id
+  sentById  String?   @map("sent_by_id") // admin id (broadcasts)
   readAt    DateTime? @map("read_at")
   createdAt DateTime  @default(now()) @map("created_at")
   vendor    Vendor    @relation(fields: [vendorId], references: [id])
@@ -123,6 +127,30 @@ model VendorMessage {
   @@index([vendorId, isRead])
   @@index([createdAt])
   @@map("vendor_messages")
+}
+
+// A bi-weekly per-cover invoice — groups accrued CoverCharge rows into one payable
+// amount. Money flows TO Bucr only (vendor pays via Paystack), preserving the
+// closed-loop / no-license posture. Vendors get 1 week grace; reminders every 48h.
+model CoverInvoice {
+  id               String        @id @default(uuid())
+  vendorId         String        @map("vendor_id")
+  periodStart      DateTime      @map("period_start")
+  periodEnd        DateTime      @map("period_end")
+  amountNgn        Int           @map("amount_ngn")
+  coverCount       Int           @map("cover_count")
+  status           String        @default("pending") // pending | paid | overdue | waived
+  dueDate          DateTime      @map("due_date")
+  issuedAt         DateTime      @default(now()) @map("issued_at")
+  paidAt           DateTime?     @map("paid_at")
+  lastReminderAt   DateTime?     @map("last_reminder_at")
+  paymentReference String?       @map("payment_reference")
+  vendor           Vendor        @relation(fields: [vendorId], references: [id])
+  charges          CoverCharge[]
+
+  @@index([vendorId, status])
+  @@index([status, dueDate])
+  @@map("cover_invoices")
 }
 
 model Vendor {
@@ -201,6 +229,7 @@ model Vendor {
   platformRevenues      PlatformRevenue[]
   staff                 VendorStaff[]
   messages              VendorMessage[]
+  coverInvoices         CoverInvoice[]
 
   @@index([verificationStatus, deletedAt])
   @@index([slug])
@@ -686,16 +715,19 @@ model CoverCharge {
   tierAtTime   String   @map("tier_at_time")
   billingMonth String   @map("billing_month")       // "YYYY-MM"
   status       String   @default("accrued")          // accrued | invoiced | paid
+  invoiceId    String?  @map("invoice_id")            // set when rolled into a CoverInvoice
   invoicedAt   DateTime? @map("invoiced_at")
   paidAt       DateTime? @map("paid_at")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   vendor       Vendor   @relation(fields: [vendorId], references: [id])
   reservation  Reservation @relation(fields: [reservationId], references: [id])
+  invoice      CoverInvoice? @relation(fields: [invoiceId], references: [id])
 
   @@index([vendorId])
   @@index([billingMonth])
   @@index([status])
+  @@index([invoiceId])
   @@index([vendorId, billingMonth, status])
   @@map("cover_charges")
 }

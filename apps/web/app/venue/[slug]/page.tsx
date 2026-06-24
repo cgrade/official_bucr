@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation, ChefHat, ChevronDown } from 'lucide-react';
-import { vendorsApi, reservationsApi, favoritesApi } from '@/lib/api';
+import { vendorsApi, reservationsApi, favoritesApi, creditsApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/auth.store';
 import { getImageUrl, getReservationDeposit, formatNaira, creditsToNaira, formatDate, cn } from '@/lib/utils';
@@ -21,6 +21,9 @@ export default function VenuePage() {
   const { isAuthenticated } = useAuthStore();
 
   const { data, isLoading } = useQuery({ queryKey: ['vendor', slug], queryFn: () => vendorsApi.getBySlug(slug), enabled: !!slug });
+  // Diner's credit balance — shown in the booking panel so it's clear whether the deposit is covered.
+  const { data: balanceData } = useQuery({ queryKey: ['credit-balance'], queryFn: () => creditsApi.getBalance(), enabled: isAuthenticated });
+  const balance = (balanceData?.data?.balance ?? balanceData?.data?.creditsBalance ?? 0) as number;
   const vendor = data?.data;
 
   const [tab, setTab] = useState<Tab>('overview');
@@ -60,7 +63,6 @@ export default function VenuePage() {
     onError: () => { setFavorited((f) => !f); toast.error('Could not update saved'); },
   });
 
-  const onReserve = () => { if (!isAuthenticated) { router.push(`/login?redirect=/venue/${slug}`); return; } book.mutate(); };
   const onToggleFavorite = () => { if (!isAuthenticated) { router.push(`/login?redirect=/venue/${slug}`); return; } toggleFavorite.mutate(); };
 
   if (isLoading) return <div className="max-w-5xl mx-auto px-5 py-20 text-center text-muted">Loading…</div>;
@@ -74,6 +76,12 @@ export default function VenuePage() {
   const img = getImageUrl(vendor.coverImage || vendor.gallery?.[0]?.url || vendor.logo);
   const branch = vendor.branches?.[0];
   const deposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
+  const insufficient = isAuthenticated && balance < deposit;
+  const onReserve = () => {
+    if (!isAuthenticated) { router.push(`/login?redirect=/venue/${slug}`); return; }
+    if (insufficient) { toast.error(`You need ${deposit.toLocaleString()} credits (${formatNaira(creditsToNaira(deposit))}) for the deposit. Top up to continue.`); router.push('/wallet'); return; }
+    book.mutate();
+  };
   const menu: any[] = (vendor.menu ?? []).filter((c: any) => (c.items?.length ?? 0) > 0);
   const popularDishes: any[] = vendor.popularDishes ?? [];
   const gallery: any[] = vendor.gallery ?? [];
@@ -341,9 +349,20 @@ export default function VenuePage() {
                 <span className="font-bold text-ink">{formatNaira(creditsToNaira(deposit))}</span>
               </div>
               <p className="mt-1 text-[11px] text-muted">{deposit.toLocaleString()} credits · flat, any party size. Returned +3% when you check in.</p>
+              {isAuthenticated && (
+                <div className="mt-2 flex items-center justify-between border-t border-[rgba(201,168,76,0.18)] pt-2">
+                  <span className="text-muted">Your balance</span>
+                  <span className={cn('font-semibold', insufficient ? 'text-red-400' : 'text-ink')}>{formatNaira(creditsToNaira(balance))}</span>
+                </div>
+              )}
             </div>
+            {insufficient && (
+              <p className="mt-2 text-[12px] text-red-400">
+                You're {(deposit - balance).toLocaleString()} credits short. <button onClick={() => router.push('/wallet')} className="underline font-medium">Top up</button> to book.
+              </p>
+            )}
             <Button size="lg" className="w-full mt-4" loading={book.isPending} onClick={onReserve}>
-              {isAuthenticated ? 'Confirm reservation' : 'Sign in to reserve'}
+              {!isAuthenticated ? 'Sign in to reserve' : insufficient ? 'Top up to reserve' : 'Confirm reservation'}
             </Button>
             <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-muted"><Clock className="h-3 w-3" /> Free cancellation 24h+ before</p>
           </div>

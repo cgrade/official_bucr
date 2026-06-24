@@ -25,37 +25,53 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Single-flight refresh: concurrent 401s share ONE refresh call (prevents races/loops).
+let refreshPromise: Promise<string | null> | null = null;
+function doRefresh(): Promise<string | null> {
+  if (!refreshPromise) {
+    const refreshToken = Cookies.get('admin_refresh_token');
+    refreshPromise = (refreshToken
+      ? axios.post(`${API_BASE_URL}/api/auth/refresh`, { refreshToken })
+          .then(({ data }) => {
+            if (!data?.success) return null;
+            const tokens = data.data.tokens ?? data.data;
+            Cookies.set('admin_token', tokens.accessToken, { expires: 1 });
+            if (tokens.refreshToken) Cookies.set('admin_refresh_token', tokens.refreshToken, { expires: 7 });
+            return tokens.accessToken as string;
+          })
+          .catch(() => null)
+      : Promise.resolve(null)
+    ).finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+function hardLogout() {
+  Cookies.remove('admin_token');
+  Cookies.remove('admin_refresh_token');
+  try { localStorage.removeItem('admin-auth-storage'); } catch {}
+  if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
+  }
+}
+
 // Silently refresh the access token on 401 so admins aren't signed out after the
 // 15-min access token expires; only log out if the refresh itself fails.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
-    const isAuthRoute = (original?.url || '').includes('/auth/');
+    // Only skip refresh for credential endpoints — NOT protected reads like /auth/admin/me.
+    const skipRefresh = /\/auth\/(admin\/login|login|register|refresh)/.test(original?.url || '');
 
-    if (error.response?.status === 401 && !isAuthRoute && original && !original._retry) {
+    if (error.response?.status === 401 && !skipRefresh && original && !original._retry) {
       original._retry = true;
-      const refreshToken = Cookies.get('admin_refresh_token');
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${API_BASE_URL}/api/auth/refresh`, { refreshToken });
-          if (data?.success) {
-            const tokens = data.data.tokens ?? data.data;
-            Cookies.set('admin_token', tokens.accessToken, { expires: 1 });
-            if (tokens.refreshToken) Cookies.set('admin_refresh_token', tokens.refreshToken, { expires: 7 });
-            original.headers = original.headers ?? {};
-            (original.headers as any).Authorization = `Bearer ${tokens.accessToken}`;
-            return api(original);
-          }
-        } catch {
-          // fall through to logout
-        }
+      const newToken = await doRefresh();
+      if (newToken) {
+        original.headers = original.headers ?? {};
+        (original.headers as any).Authorization = `Bearer ${newToken}`;
+        return api(original);
       }
-      Cookies.remove('admin_token');
-      Cookies.remove('admin_refresh_token');
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+      hardLogout();
     }
     return Promise.reject(error);
   }

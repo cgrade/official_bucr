@@ -10,6 +10,7 @@ import {
 import { sendReservationConfirmation, sendVendorNewReservation } from './email.service';
 import { notifyReservationConfirmed, notifyCheckInBonus, notifyNoShow, notifyVendorNewReservation, notifyVendorCancellation } from './notification.service';
 import { resolvePreferences, resolveVendorPreferences } from '@/lib/notifications/preferences';
+import { notifyVendor } from './vendor-message.service';
 
 export interface CreateReservationParams {
   userId: string;
@@ -142,6 +143,15 @@ export async function createReservation(params: CreateReservationParams) {
   notifyVendorNewReservation(vendorId, {
     guestName, date: dateStr, time, partySize, reference,
   }).catch((err) => console.error('Failed to notify vendor of reservation:', err));
+
+  // Vendor message center entry (email already handled below — don't double-send).
+  notifyVendor({
+    vendorId,
+    category: 'reservation',
+    subject: `New reservation · ${reference}`,
+    body: `${guestName} booked a table for ${partySize} on ${dateStr} at ${time}.${preorderItems?.length ? ` Pre-ordered ${preorderItems.length} item(s) — see the reservation to prep ahead.` : ''}`,
+    link: `/reservations/${reservation.id}`,
+  }).catch((err) => console.error('Failed to add reservation to message center:', err));
 
   // Vendor-facing EMAIL (same 'newReservations' preference gate).
   db.vendor.findUnique({
@@ -398,13 +408,22 @@ export async function cancelReservation(
 
   // Notify the vendor when a guest cancels (gated by vendor 'cancellations' pref).
   if (cancelledBy === 'user' && reservation.vendor?.id) {
+    const cancelDate = new Date(reservation.date).toISOString().split('T')[0];
     notifyVendorCancellation(reservation.vendor.id, {
       guestName: reservation.user?.name || 'A guest',
-      date: new Date(reservation.date).toISOString().split('T')[0],
+      date: cancelDate,
       time: reservation.time,
       reference: reservation.reference,
       reason: 'cancelled',
     }).catch((err) => console.error('Failed to notify vendor of cancellation:', err));
+
+    notifyVendor({
+      vendorId: reservation.vendor.id,
+      category: 'cancellation',
+      subject: `Reservation cancelled · ${reservation.reference}`,
+      body: `${reservation.user?.name || 'A guest'} cancelled their table for ${cancelDate} at ${reservation.time}.`,
+      link: `/reservations`,
+    }).catch((err) => console.error('Failed to add cancellation to message center:', err));
   }
 
   return {

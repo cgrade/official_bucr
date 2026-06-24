@@ -105,6 +105,14 @@ export const ECONOMICS = {
     elite: numEnv('COVER_MULTIPLIER_ELITE', 0.0),  // waived entirely
   } as Record<string, number>,
 
+  // ── Per-cover invoicing cadence ──────────────────────────────────────────
+  /** Invoices are issued bi-weekly (on these days of the month). */
+  COVER_INVOICE_ANCHOR_DAYS: [1, 16],
+  /** Days a vendor has to pay after an invoice is issued before it's overdue. */
+  COVER_INVOICE_GRACE_DAYS: numEnv('COVER_INVOICE_GRACE_DAYS', 7),
+  /** Hours between payment reminders for an unpaid invoice. */
+  COVER_INVOICE_REMINDER_HOURS: numEnv('COVER_INVOICE_REMINDER_HOURS', 48),
+
   // ── Subscription tiers (NGN / month) ─────────────────────────────────────
   SUBSCRIPTION: {
     basic: 0,  // Always free — never charge for Basic
