@@ -268,6 +268,8 @@ model Menu {
   // Temporary "86" — item is unavailable until this timestamp (null = permanent toggle controls)
   unavailableUntil    DateTime?     @map("unavailable_until")
   sortOrder           Int           @default(0) @map("sort_order")
+  // Times this dish has been pre-ordered — drives "Popular dishes" ranking.
+  orderCount          Int           @default(0) @map("order_count")
   createdAt           DateTime      @default(now()) @map("created_at")
   updatedAt           DateTime      @updatedAt @map("updated_at")
   deletedAt           DateTime?     @map("deleted_at")
@@ -307,6 +309,9 @@ model Reservation {
   partySize          Int               @map("party_size")
   specialRequests    String?           @map("special_requests")
   occasion           String?
+  // Optional pre-order: [{ menuItemId, name, quantity }] — data-only signal to the
+  // kitchen so they can prep ahead. Guest still pays for the meal at the venue.
+  preorderItems      Json?             @map("preorder_items")
   creditsDeposited   Int               @map("credits_deposited")
   creditsRefunded    Int               @default(0) @map("credits_refunded")
   bonusCredits       Int               @default(0) @map("bonus_credits")

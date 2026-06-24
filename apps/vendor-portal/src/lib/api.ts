@@ -25,16 +25,36 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor - handle auth errors
+// Response interceptor — silently refresh the access token on 401 so users aren't
+// signed out after the 15-min access token expires; only log out if refresh fails.
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const requestUrl = error.config?.url || '';
+    const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
+    const requestUrl = original?.url || '';
     const isAuthRoute = requestUrl.includes('/auth/');
-    
-    if (error.response?.status === 401 && !isAuthRoute) {
+
+    if (error.response?.status === 401 && !isAuthRoute && original && !original._retry) {
+      original._retry = true;
+      const refreshToken = Cookies.get('vendor_refresh_token');
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(`${API_URL}/api/auth/refresh`, { refreshToken });
+          if (data?.success) {
+            const tokens = data.data.tokens ?? data.data;
+            Cookies.set('vendor_token', tokens.accessToken, { expires: 1 });
+            if (tokens.refreshToken) Cookies.set('vendor_refresh_token', tokens.refreshToken, { expires: 7 });
+            original.headers = original.headers ?? {};
+            (original.headers as any).Authorization = `Bearer ${tokens.accessToken}`;
+            return api(original);
+          }
+        } catch {
+          // fall through to logout
+        }
+      }
       Cookies.remove('vendor_token');
-      if (typeof window !== 'undefined') {
+      Cookies.remove('vendor_refresh_token');
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }

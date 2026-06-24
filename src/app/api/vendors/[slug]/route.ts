@@ -123,8 +123,21 @@ export async function GET(
         availableForTakeout: item.availableForTakeout,
         // Price only shown for takeout-available items
         price: item.availableForTakeout ? item.price : null,
+        orderCount: item.orderCount ?? 0,
       })),
     }));
+
+    // Popular dishes = the most pre-ordered items (orderCount > 0), top 6.
+    // Never "all items" — if nothing has been ordered yet, this is empty.
+    const popularDishes = vendor.menuCategories
+      .flatMap((c: any) => c.items)
+      .filter((i: any) => (i.orderCount ?? 0) > 0)
+      .sort((a: any, b: any) => (b.orderCount ?? 0) - (a.orderCount ?? 0))
+      .slice(0, 6)
+      .map((i: any) => ({
+        id: i.id, name: i.name, description: i.description, image: i.image,
+        price: i.availableForTakeout ? i.price : null, orderCount: i.orderCount,
+      }));
 
     // Add uncategorized items as a separate category if they exist
     const uncategorizedItems = vendor.menus || [];
@@ -210,6 +223,7 @@ export async function GET(
         category: img.category,
       })) : [],
       menu: showMenu ? menuCategories : [],
+      popularDishes: showMenu ? popularDishes : [],
       experiences: showExperiences ? vendor.experiences.map((exp: any) => ({
         id: exp.id,
         title: exp.title,

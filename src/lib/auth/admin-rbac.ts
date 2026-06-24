@@ -14,6 +14,7 @@ export const ADMIN_PERMISSIONS = [
   'reservations.view', 'reservations.manage',
   'credits.view', 'credits.adjust',
   'documents.view', 'documents.verify',
+  'reviews.view', 'reviews.moderate',
   'featured.view', 'featured.manage',
   'revenue.view',        // platform revenue / finance
   'reports.view', 'reports.generate',
@@ -30,16 +31,16 @@ export const ADMIN_ROLE_PRESETS: Record<AdminRole, string[]> = {
   super_admin: ['*'],
   ops_manager: [
     'vendors.view', 'vendors.manage', 'reservations.view', 'reservations.manage',
-    'documents.view', 'documents.verify', 'featured.view', 'featured.manage',
-    'users.view', 'analytics.view', 'notifications.send',
+    'documents.view', 'documents.verify', 'reviews.view', 'reviews.moderate',
+    'featured.view', 'featured.manage', 'users.view', 'analytics.view', 'notifications.send',
   ],
   support: [
     'users.view', 'users.manage', 'reservations.view', 'vendors.view',
-    'credits.view', 'credits.adjust', 'notifications.send',
+    'reviews.view', 'reviews.moderate', 'credits.view', 'credits.adjust', 'notifications.send',
   ],
   finance: ['revenue.view', 'reports.view', 'reports.generate', 'credits.view', 'analytics.view'],
   content: ['featured.view', 'featured.manage', 'analytics.view'],
-  analyst: ['vendors.view', 'users.view', 'reservations.view', 'revenue.view', 'reports.view', 'analytics.view'],
+  analyst: ['vendors.view', 'users.view', 'reservations.view', 'reviews.view', 'revenue.view', 'reports.view', 'analytics.view'],
 };
 
 export interface AdminCtx {

@@ -22,6 +22,7 @@ const NAV = [
   { name: 'Vendor Map',   href: '/vendors/map',  icon: Map },
   { name: 'Documents',    href: '/documents',    icon: FileText },
   { name: 'Reservations', href: '/reservations', icon: Calendar },
+  { name: 'Reviews',      href: '/reviews',      icon: Star },
   { name: 'Credits',      href: '/credits',      icon: CreditCard },
   { name: 'Featured',     href: '/featured',     icon: Star },
   { name: 'Analytics',    href: '/analytics',    icon: BarChart3 },

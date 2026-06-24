@@ -20,6 +20,12 @@ const createReservationSchema = z.object({
   partySize: z.number().int().positive().max(50),
   specialRequests: z.string().optional(),
   occasion: z.string().optional(),
+  // Optional pre-order — dishes the guest wants prepped ahead (data-only; paid at venue).
+  preorderItems: z.array(z.object({
+    menuItemId: z.string(),
+    name: z.string(),
+    quantity: z.number().int().positive().max(50),
+  })).max(50).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -83,6 +89,7 @@ export async function POST(request: NextRequest) {
       partySize: data.partySize,
       specialRequests: data.specialRequests,
       occasion: data.occasion,
+      preorderItems: data.preorderItems,
       idempotencyKey: idempotencyKey ?? undefined,
     });
 

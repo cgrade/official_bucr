@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, Calendar, Clock, Users, MapPin, CreditCard,
   CheckCircle, XCircle, AlertCircle, QrCode, Phone, Mail,
-  MessageSquare, Loader2,
+  MessageSquare, Loader2, ChefHat,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -111,6 +111,22 @@ export default function ReservationDetailPage() {
           <Row icon={MessageSquare} label="Requests" value={reservation.specialRequests} />
         )}
       </div>
+
+      {/* Pre-order — what the kitchen should prep ahead */}
+      {Array.isArray(reservation.preorderItems) && reservation.preorderItems.length > 0 && (
+        <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-xl p-5">
+          <h2 className="font-semibold text-[#f5f0e8] mb-1 text-[15px] flex items-center gap-2"><ChefHat className="h-4 w-4 text-[#c9a84c]" /> Pre-order</h2>
+          <p className="text-[12px] text-[#7a8fa6] mb-3">Prep these before the guest arrives. They pay at the venue.</p>
+          <div className="space-y-1.5">
+            {reservation.preorderItems.map((it: any, i: number) => (
+              <div key={i} className="flex items-center justify-between text-[14px]">
+                <span className="text-[#f5f0e8]">{it.name}</span>
+                <span className="text-[#c9a84c] font-semibold">×{it.quantity}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Guest details */}
       <div className="bg-[#0f2547] border border-[rgba(201,168,76,0.18)] rounded-xl p-5">

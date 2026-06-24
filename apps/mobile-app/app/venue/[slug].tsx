@@ -626,34 +626,34 @@ export default function VenueDetailScreen() {
                 </View>
               )}
 
-              {/* Popular Dishes — prefer flagged popular/featured, else first few items */}
+              {/* Popular Dishes — ranked by how often diners pre-order them (list form) */}
               {(() => {
-                const allItems = menuCategories.flatMap((cat: any) => cat.items || []);
-                const flagged = allItems.filter((item: any) => item.isPopular || item.isFeatured);
-                const dishes = (flagged.length > 0 ? flagged : allItems).slice(0, 6);
+                const dishes = ((vendor as any).popularDishes || []) as any[];
                 if (dishes.length === 0) return null;
                 return (
                   <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Popular Dishes</Text>
-                    <View style={styles.popularDishes}>
-                      {dishes.map((dish: any) => (
-                        <View key={dish.id} style={[styles.popularDishCard, { backgroundColor: colors.card }]}>
-                          {dish.image && (
-                            <Image source={{ uri: getImageUrl(dish.image) }} style={styles.popularDishImage} resizeMode="cover" />
-                          )}
-                          <View style={styles.popularDishBody}>
+                    <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
+                      {dishes.map((dish: any, idx: number) => (
+                        <View
+                          key={dish.id}
+                          style={{
+                            flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12,
+                            borderTopWidth: idx > 0 ? StyleSheet.hairlineWidth : 0, borderTopColor: colors.border,
+                          }}
+                        >
+                          {dish.image ? (
+                            <Image source={{ uri: getImageUrl(dish.image) }} style={{ width: 52, height: 52, borderRadius: 10 }} resizeMode="cover" />
+                          ) : null}
+                          <View style={{ flex: 1 }}>
                             <Text style={[styles.popularDishName, { color: colors.text }]} numberOfLines={1}>{dish.name}</Text>
-                            {dish.description && (
-                              <Text style={[styles.popularDishDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-                                {dish.description}
-                              </Text>
-                            )}
-                            {dish.price != null && (
-                              <Text style={[styles.popularDishPrice, { color: colors.tertiary }]}>
-                                ₦{(dish.price / 100).toLocaleString()}
-                              </Text>
-                            )}
+                            {dish.description ? (
+                              <Text style={[styles.popularDishDescription, { color: colors.textSecondary }]} numberOfLines={1}>{dish.description}</Text>
+                            ) : null}
                           </View>
+                          {dish.price != null ? (
+                            <Text style={[styles.popularDishPrice, { color: colors.tertiary }]}>₦{Number(dish.price).toLocaleString()}</Text>
+                          ) : null}
                         </View>
                       ))}
                     </View>

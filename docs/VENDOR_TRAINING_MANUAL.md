@@ -97,7 +97,7 @@ Don’t teach everything. Teach the **five things that make it work**, then hand
 1. **Check guests in — every time.** “Open **QR Scanner**, scan or type the PIN. If you don’t check them in, the guest’s deposit doesn’t release and you don’t get credit for the cover. This is the one habit that matters.”
 2. **Mark genuine no‑shows.** “If they truly don’t come, mark **No‑show** — that’s how you get compensated. Be fair; only real no‑shows.”
 3. **Set the deposit & hours.** Settings → confirm the deposit feels right for their venue; set opening hours (powers “Open now”).
-4. **Make the page sell.** Upload **great photos** (cover image first), finish the description, add the **menu** with prices.
+4. **Make the page sell.** Upload **great photos** (cover image first), finish the description, add the **menu** with prices, and set the **Price Level** honestly (₦–₦₦₦₦ = spend per person). The price level isn't cosmetic — diners **filter and sort by it**, so a wrong tier hides the venue from the right diners. Match it to the typical bill per guest.
 5. **Respond to reviews.** “A calm reply to a bad review wins more bookings than ten good ones.”
 
 Then mention the growth levers (don’t hard‑sell day one): **Pro** (analytics, CRM, offers, 50% off cover fees), **Elite** (experiences, featured ads, zero cover fees), and the **Book‑with‑Confidence badge**.
@@ -160,6 +160,7 @@ VENUE: ____________________________   DATE: __________   REP: __________
 
 PAGE SETUP
 [ ] 5+ photos (strong cover image)
+[ ] Price Level set honestly (₦–₦₦₦₦ = spend per head; drives search filters)
 [ ] Description written
 [ ] Menu added with prices (+ dine-in/takeout flags)
 [ ] Opening hours set

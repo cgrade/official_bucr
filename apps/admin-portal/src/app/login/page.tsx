@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(email, password);
       if (res.success && res.data) {
-        setAuth(res.data.admin, res.data.tokens.accessToken);
+        setAuth(res.data.admin, res.data.tokens.accessToken, res.data.tokens.refreshToken);
         toast.success('Welcome back!');
         router.push('/dashboard');
       } else {

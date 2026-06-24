@@ -156,7 +156,7 @@ async function main() {
         categoryId: startersCategory.id,
         name: 'Suya Skewers',
         description: 'Grilled beef skewers with signature suya spice',
-        price: 450000, // ₦4,500
+        price: 4500, // ₦4,500
         sortOrder: 1,
       },
       {
@@ -164,7 +164,7 @@ async function main() {
         categoryId: startersCategory.id,
         name: 'Pepper Soup',
         description: 'Traditional Nigerian pepper soup with goat meat',
-        price: 350000,
+        price: 3500,
         sortOrder: 2,
       },
       {
@@ -172,7 +172,7 @@ async function main() {
         categoryId: mainCategory.id,
         name: 'Jollof Rice Special',
         description: 'Our signature jollof rice with grilled chicken',
-        price: 650000,
+        price: 6500,
         sortOrder: 1,
       },
       {
@@ -180,7 +180,7 @@ async function main() {
         categoryId: mainCategory.id,
         name: 'Egusi Soup & Pounded Yam',
         description: 'Rich melon seed soup with assorted meat',
-        price: 750000,
+        price: 7500,
         sortOrder: 2,
       },
       {
@@ -188,7 +188,7 @@ async function main() {
         categoryId: mainCategory.id,
         name: 'Grilled Tilapia',
         description: 'Whole grilled tilapia with special sauce',
-        price: 850000,
+        price: 8500,
         sortOrder: 3,
       },
       {
@@ -196,7 +196,7 @@ async function main() {
         categoryId: drinksCategory.id,
         name: 'Chapman',
         description: 'Nigerian signature cocktail (non-alcoholic)',
-        price: 150000,
+        price: 1500,
         sortOrder: 1,
       },
       {
@@ -204,7 +204,7 @@ async function main() {
         categoryId: drinksCategory.id,
         name: 'Zobo',
         description: 'Traditional hibiscus drink',
-        price: 80000,
+        price: 800,
         sortOrder: 2,
       },
     ],

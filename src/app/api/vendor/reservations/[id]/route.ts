@@ -79,6 +79,7 @@ export async function GET(
       status: reservation.status,
       specialRequests: reservation.specialRequests,
       occasion: reservation.occasion,
+      preorderItems: reservation.preorderItems ?? null,
       pin: reservation.pin,
       qrCode: reservation.qrCode,
       creditsDeposited: reservation.creditsDeposited,

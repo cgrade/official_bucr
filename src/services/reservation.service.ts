@@ -21,11 +21,12 @@ export interface CreateReservationParams {
   partySize: number;
   specialRequests?: string;
   occasion?: string;
+  preorderItems?: Array<{ menuItemId: string; name: string; quantity: number }>;
   idempotencyKey?: string;
 }
 
 export async function createReservation(params: CreateReservationParams) {
-  const { userId, vendorId, branchId, experienceId, date, time, partySize, specialRequests, occasion, idempotencyKey } = params;
+  const { userId, vendorId, branchId, experienceId, date, time, partySize, specialRequests, occasion, preorderItems, idempotencyKey } = params;
 
   const vendor = await db.vendor.findUnique({
     where: { id: vendorId, deletedAt: null, verificationStatus: 'approved' },
@@ -73,10 +74,15 @@ export async function createReservation(params: CreateReservationParams) {
 
     await tx.user.update({ where: { id: userId }, data: { creditsBalance: newBalance } });
 
+    const cleanPreorder = Array.isArray(preorderItems) && preorderItems.length
+      ? preorderItems.slice(0, 50).map((i) => ({ menuItemId: String(i.menuItemId), name: String(i.name), quantity: Math.max(1, Math.min(50, Number(i.quantity) || 1)) }))
+      : null;
+
     const newReservation = await tx.reservation.create({
       data: {
         userId, vendorId, branchId, experienceId, reference,
         date, time, partySize, specialRequests, occasion,
+        ...(cleanPreorder ? { preorderItems: cleanPreorder } : {}),
         creditsDeposited: creditsRequired,
         status: 'confirmed',
         pin,
@@ -89,6 +95,16 @@ export async function createReservation(params: CreateReservationParams) {
     });
 
     await tx.vendor.update({ where: { id: vendorId }, data: { totalBookings: { increment: 1 } } });
+
+    // Bump pre-ordered dishes' order count — drives "Popular dishes" ranking.
+    if (cleanPreorder) {
+      for (const item of cleanPreorder) {
+        await tx.menu.updateMany({
+          where: { id: item.menuItemId, vendorId },
+          data: { orderCount: { increment: item.quantity } },
+        }).catch(() => {});
+      }
+    }
 
     return newReservation;
   });

@@ -176,25 +176,25 @@ const balanceInNaira = (wallet?.balance || 0) * CREDIT_VALUE_NGN;
               <TrendingUp className="h-5 w-5 text-emerald-400" /> How You Earn
             </h2>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(52,211,153,0.08)]">
-                <Users className="h-5 w-5 text-emerald-400 mt-0.5" />
-                <div>
-                  <p className="font-medium text-[#f5f0e8]">Diner Check-ins</p>
-                  <p className="text-sm text-[#7a8fa6]">Earn credits when diners redeem their reservation deposit</p>
-                </div>
-              </div>
               <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(201,168,76,0.08)]">
                 <Clock className="h-5 w-5 text-[#c9a84c] mt-0.5" />
                 <div>
-                  <p className="font-medium text-[#f5f0e8]">No-Show Share</p>
-                  <p className="text-sm text-[#7a8fa6]">Receive 50% of forfeited credits when diners don&apos;t show</p>
+                  <p className="font-medium text-[#f5f0e8]">No-Show Compensation</p>
+                  <p className="text-sm text-[#7a8fa6]">When a confirmed guest doesn&apos;t show, you receive 30% of their deposit as non-cashable marketing credits.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(52,211,153,0.08)]">
+                <Star className="h-5 w-5 text-emerald-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-[#f5f0e8]">Platform Promotions</p>
+                  <p className="text-sm text-[#7a8fa6]">Bucr occasionally awards bonus marketing credits through campaigns and incentives.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(122,143,166,0.08)]">
-                <Star className="h-5 w-5 text-[#7a8fa6] mt-0.5" />
+                <CreditCard className="h-5 w-5 text-[#7a8fa6] mt-0.5" />
                 <div>
-                  <p className="font-medium text-[#f5f0e8]">Review Responses</p>
-                  <p className="text-sm text-[#7a8fa6]">Earn bonus credits for responding to customer reviews</p>
+                  <p className="font-medium text-[#f5f0e8]">Top up with Naira</p>
+                  <p className="text-sm text-[#7a8fa6]">Buy marketing credits directly to boost visibility (featured placement). Credits are non-cashable and never withdrawn to cash.</p>
                 </div>
               </div>
             </div>

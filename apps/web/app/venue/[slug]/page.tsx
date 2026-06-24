@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation } from 'lucide-react';
+import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation, ChefHat, ChevronDown } from 'lucide-react';
 import { vendorsApi, reservationsApi, favoritesApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/auth.store';
@@ -28,10 +28,24 @@ export default function VenuePage() {
   const [time, setTime] = useState('19:00');
   const [partySize, setPartySize] = useState(2);
   const [favorited, setFavorited] = useState(false);
+  // Optional pre-order: itemId -> { name, price, quantity }
+  const [preorder, setPreorder] = useState<Record<string, { name: string; price: number | null; quantity: number }>>({});
+  const [showPreorder, setShowPreorder] = useState(false);
   useEffect(() => { if (vendor?.isFavorited != null) setFavorited(!!vendor.isFavorited); }, [vendor?.isFavorited]);
 
+  const preorderCount = Object.values(preorder).reduce((s, i) => s + i.quantity, 0);
+  const setQty = (id: string, name: string, price: number | null, qty: number) =>
+    setPreorder((cur) => {
+      const next = { ...cur };
+      if (qty <= 0) delete next[id]; else next[id] = { name, price, quantity: qty };
+      return next;
+    });
+
   const book = useMutation({
-    mutationFn: () => reservationsApi.create({ vendorId: vendor.id, date, time, partySize }),
+    mutationFn: () => reservationsApi.create({
+      vendorId: vendor.id, date, time, partySize,
+      preorderItems: Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
+    }),
     onSuccess: (res) => {
       toast.success('Reservation confirmed!');
       const id = (res.data as any)?.id;
@@ -61,6 +75,7 @@ export default function VenuePage() {
   const branch = vendor.branches?.[0];
   const deposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
   const menu: any[] = (vendor.menu ?? []).filter((c: any) => (c.items?.length ?? 0) > 0);
+  const popularDishes: any[] = vendor.popularDishes ?? [];
   const gallery: any[] = vendor.gallery ?? [];
   const reviews: any[] = vendor.reviews ?? [];
   const hours: any[] = Array.isArray(branch?.operatingHours) ? branch.operatingHours : [];
@@ -159,20 +174,23 @@ export default function VenuePage() {
                   </div>
                 )}
               </section>
-              {menu.length > 0 && (
+              {popularDishes.length > 0 && (
                 <section className="card p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-display text-2xl font-semibold text-ink">Popular dishes</h2>
-                    <button onClick={() => setTab('menu')} className="text-[13px] font-semibold text-[#c9a84c] hover:underline">Full menu</button>
+                    {menu.length > 0 && <button onClick={() => setTab('menu')} className="text-[13px] font-semibold text-[#c9a84c] hover:underline">Full menu</button>}
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {menu.flatMap((c) => c.items).slice(0, 6).map((d: any) => (
-                      <div key={d.id} className="flex gap-3">
-                        {getImageUrl(d.image) ? <img src={getImageUrl(d.image)!} alt={d.name} className="h-16 w-16 rounded-lg object-cover" /> : <div className="h-16 w-16 rounded-lg bg-surface2" />}
+                  {/* Ranked by how often diners pre-order them */}
+                  <div className="divide-y divide-line">
+                    {popularDishes.map((d: any) => (
+                      <div key={d.id} className="flex gap-3 py-3 first:pt-0">
+                        {getImageUrl(d.image) ? <img src={getImageUrl(d.image)!} alt={d.name} className="h-14 w-14 rounded-lg object-cover flex-shrink-0" /> : <div className="h-14 w-14 rounded-lg bg-surface2 flex-shrink-0" />}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-ink text-[14px] truncate">{d.name}</p>
-                          <p className="text-[12px] text-muted line-clamp-2">{d.description}</p>
-                          {d.price != null && <p className="text-[13px] font-semibold text-[#c9a84c] mt-0.5">{formatNaira(Number(d.price))}</p>}
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-medium text-ink text-[14px]">{d.name}</p>
+                            {d.price != null && <p className="text-[13px] font-semibold text-[#c9a84c] whitespace-nowrap">{formatNaira(Number(d.price))}</p>}
+                          </div>
+                          {d.description && <p className="text-[12px] text-muted line-clamp-1">{d.description}</p>}
                         </div>
                       </div>
                     ))}
@@ -283,6 +301,40 @@ export default function VenuePage() {
                 </div>
               </div>
             </div>
+
+            {/* Optional pre-order */}
+            {menu.length > 0 && (
+              <div className="mt-4 border-t border-line pt-4">
+                <button onClick={() => setShowPreorder((s) => !s)} className="flex w-full items-center justify-between text-[13px] font-semibold text-ink">
+                  <span className="flex items-center gap-1.5"><ChefHat className="h-4 w-4 text-[#c9a84c]" /> Pre-order dishes (optional){preorderCount > 0 ? ` · ${preorderCount}` : ''}</span>
+                  <ChevronDown className={cn('h-4 w-4 text-muted transition-transform', showPreorder && 'rotate-180')} />
+                </button>
+                {showPreorder && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[11px] text-muted">Help the kitchen prep ahead — you still pay for the meal at the venue.</p>
+                    <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+                      {menu.flatMap((c) => c.items).map((it: any) => {
+                        const q = preorder[it.id]?.quantity ?? 0;
+                        return (
+                          <div key={it.id} className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-[13px] text-ink truncate">{it.name}</p>
+                              {it.price != null && <p className="text-[11px] text-[#c9a84c]">{formatNaira(Number(it.price))}</p>}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <button onClick={() => setQty(it.id, it.name, it.price ?? null, q - 1)} className="h-7 w-7 rounded-lg border border-line text-ink">−</button>
+                              <span className="w-5 text-center text-[13px] text-ink">{q}</span>
+                              <button onClick={() => setQty(it.id, it.name, it.price ?? null, q + 1)} className="h-7 w-7 rounded-lg border border-line text-ink">+</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-4 rounded-xl bg-[rgba(201,168,76,0.08)] p-3 text-[13px]">
               <div className="flex items-center justify-between">
                 <span className="text-muted">Refundable deposit</span>

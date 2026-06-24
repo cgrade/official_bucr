@@ -85,9 +85,9 @@ export default function DocumentsPage() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      approved: { icon: CheckCircle, color: 'text-green-700 bg-green-50 border-green-200', label: 'Approved' },
-      pending: { icon: Clock, color: 'text-amber-700 bg-amber-50 border-amber-200', label: 'Pending' },
-      rejected: { icon: XCircle, color: 'text-red-700 bg-red-50 border-red-200', label: 'Rejected' },
+      approved: { icon: CheckCircle, color: 'text-green-400 bg-green-500/15 border-green-500/30', label: 'Approved' },
+      pending: { icon: Clock, color: 'text-amber-400 bg-amber-500/15 border-amber-500/30', label: 'Pending' },
+      rejected: { icon: XCircle, color: 'text-red-400 bg-red-500/15 border-red-500/30', label: 'Rejected' },
     };
     const badge = badges[status as keyof typeof badges] || badges.pending;
     const Icon = badge.icon;
@@ -131,9 +131,17 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#f5f0e8]">Document Review</h1>
+          <h1 className="text-2xl font-bold text-[#f5f0e8]">KYC — Document Review</h1>
           <p className="text-[#7a8fa6]">Review and verify vendor documents</p>
         </div>
+      </div>
+
+      {/* Why KYC */}
+      <div className="rounded-xl border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.06)] p-4 text-[13px] text-[#cdd8e6] leading-relaxed">
+        <span className="font-semibold text-[#c9a84c]">Why we verify:</span> KYC confirms a vendor is a real, registered business before it goes
+        live to diners and starts taking credit-backed bookings. Checking the <strong>CAC certificate</strong> (legal registration) and the
+        <strong> owner&apos;s ID</strong> prevents fraud and impersonation, ensures invoices/per-cover fees are billed to a legitimate entity, and
+        protects diners&apos; deposits. Approve only when the business name on the documents matches the vendor profile.
       </div>
 
       {/* Stats Cards */}
@@ -367,8 +375,8 @@ export default function DocumentsPage() {
 
       {/* Reject Modal */}
       {showRejectModal && selectedDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#0f1a2e] border border-[rgba(201,168,76,0.18)] rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -416,8 +424,8 @@ export default function DocumentsPage() {
 
       {/* Preview Modal */}
       {showPreviewModal && selectedDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#0f1a2e] border border-[rgba(201,168,76,0.18)] rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-[rgba(201,168,76,0.18)] flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-[#f5f0e8]">

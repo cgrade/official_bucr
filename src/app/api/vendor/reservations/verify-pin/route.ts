@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
       partySize: reservation.partySize,
       status: reservation.status,
       specialRequests: reservation.specialRequests,
+      preorderItems: reservation.preorderItems ?? null,
       creditsDeposited: reservation.creditsDeposited,
       user: reservation.user,
       branch: reservation.branch,

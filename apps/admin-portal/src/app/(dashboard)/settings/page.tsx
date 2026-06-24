@@ -110,6 +110,10 @@ export default function SettingsPage() {
   const [minPwdLength,   setMinPwdLength]   = useState('8');
   const [verifyRequired, setVerifyRequired] = useState(true);
   const [rateLimitRpm,   setRateLimitRpm]   = useState('100');
+  // Diner-facing spend ranges per price level (₦, ₦₦, ₦₦₦, ₦₦₦₦) used in search/sort.
+  const [priceRanges, setPriceRanges] = useState(['', '', '', '']);
+
+  const PRICE_RANGE_DEFAULTS = ['Under ₦10,000', '₦10,000 – ₦20,000', '₦20,000 – ₦40,000', '₦40,000+'];
 
   // Sync from API once loaded
   useEffect(() => {
@@ -120,7 +124,18 @@ export default function SettingsPage() {
     setMinPwdLength(String(s.minPasswordLength || 8));
     setVerifyRequired(s.vendorVerificationRequired ?? true);
     setRateLimitRpm(String(s.rateLimitRpm || 100));
+    setPriceRanges([
+      s.priceRange1 || PRICE_RANGE_DEFAULTS[0],
+      s.priceRange2 || PRICE_RANGE_DEFAULTS[1],
+      s.priceRange3 || PRICE_RANGE_DEFAULTS[2],
+      s.priceRange4 || PRICE_RANGE_DEFAULTS[3],
+    ]);
   }, [s, isLoading]);
+
+  const savePriceRanges = () => updateM.mutate({
+    priceRange1: priceRanges[0], priceRange2: priceRanges[1],
+    priceRange3: priceRanges[2], priceRange4: priceRanges[3],
+  });
 
   const saveGeneral = () => updateM.mutate({
     platformName,
@@ -257,6 +272,33 @@ export default function SettingsPage() {
           <div className="flex justify-end mt-5 pt-4 border-t border-[rgba(201,168,76,0.1)]">
             <Button onClick={saveVendor} disabled={updateM.isPending} className="gap-2">
               <Save className="h-4 w-4" /> Save Vendor Settings
+            </Button>
+          </div>
+        )}
+      </SectionCard>
+
+      {/* ── Price ranges (diner-facing discovery) ─────────────────────────── */}
+      <SectionCard title="Price Ranges" icon={CreditCard}
+        desc="Define what each price level (₦ to ₦₦₦₦) means as a spend-per-person range. Diners see and filter by these when searching for restaurants.">
+        <div className="space-y-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="w-14 text-[#c9a84c] font-semibold flex-shrink-0">{'₦'.repeat(i + 1)}</span>
+              <input
+                value={priceRanges[i]}
+                onChange={(e) => setPriceRanges((r) => r.map((v, idx) => (idx === i ? e.target.value : v)))}
+                disabled={!canEdit}
+                placeholder={PRICE_RANGE_DEFAULTS[i]}
+                className="flex-1 px-3 py-2 rounded-lg border border-[rgba(201,168,76,0.18)] bg-[rgba(255,255,255,0.03)] text-[14px] text-[#f5f0e8] disabled:opacity-60"
+              />
+            </div>
+          ))}
+          <p className="text-[11px] text-[#7a8fa6]">Example: “₦20,000 – ₦30,000”. Keep them ordered low → high. These labels drive the diner price filter and sort.</p>
+        </div>
+        {canEdit && (
+          <div className="flex justify-end mt-5 pt-4 border-t border-[rgba(201,168,76,0.1)]">
+            <Button onClick={savePriceRanges} disabled={updateM.isPending} className="gap-2">
+              <Save className="h-4 w-4" /> Save Price Ranges
             </Button>
           </div>
         )}

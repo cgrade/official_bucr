@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Search, SlidersHorizontal, Map as MapIcon, List, Navigation, X, Star } from 'lucide-react';
-import { vendorsApi } from '@/lib/api';
+import { vendorsApi, configApi } from '@/lib/api';
 import { RestaurantCard, type VendorLite } from '@/components/RestaurantCard';
 import { VendorsMap } from '@/components/VendorsMap';
 import { Button } from '@/components/ui/Button';
@@ -41,6 +41,10 @@ export default function RestaurantsPage() {
   }, [search]);
 
   const effectiveSort = coords && sort === 'recommended' ? 'distance' : sort;
+
+  const { data: priceRangeData } = useQuery({ queryKey: ['price-ranges'], queryFn: () => configApi.getPriceRanges(), staleTime: 5 * 60_000 });
+  const priceRanges: Array<{ level: number; symbol: string; label: string }> = (priceRangeData?.data as any)?.ranges ?? [];
+  const rangeLabel = (level: number) => priceRanges.find((r) => r.level === level)?.label;
 
   const { data, isLoading } = useQuery({
     queryKey: ['vendors', 'browse', debounced, cuisine, sort, prices, minRating, openNow, coords, radiusKm],
@@ -105,10 +109,14 @@ export default function RestaurantsPage() {
       {showFilters && (
         <div className="card p-5 mt-4 space-y-4">
           <div>
-            <p className="text-[13px] font-semibold text-ink mb-2">Price</p>
-            <div className="flex gap-2">
+            <p className="text-[13px] font-semibold text-ink mb-2">Price <span className="text-muted font-normal">(spend per person)</span></p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PRICES.map((p) => (
-                <button key={p} onClick={() => togglePrice(p)} className={cn('h-9 px-4 rounded-lg border text-[13px] font-medium', prices.includes(p) ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)] text-ink' : 'border-line text-muted')}>{'₦'.repeat(p)}</button>
+                <button key={p} onClick={() => togglePrice(p)}
+                  className={cn('h-auto py-2 px-3 rounded-lg border text-left transition-colors', prices.includes(p) ? 'border-[#c9a84c] bg-[rgba(201,168,76,0.12)]' : 'border-line hover:border-[#c9a84c]')}>
+                  <span className="block text-[14px] font-semibold text-[#c9a84c]">{'₦'.repeat(p)}</span>
+                  {rangeLabel(p) && <span className="block text-[11px] text-muted mt-0.5">{rangeLabel(p)}</span>}
+                </button>
               ))}
             </div>
           </div>

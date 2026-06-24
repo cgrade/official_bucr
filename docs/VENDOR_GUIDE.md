@@ -225,7 +225,15 @@ Three tiers (manage on the **Subscription** page; upgrades are paid securely via
 
 ## 17. Settings
 
-- **Business profile** — name, description, business type, cuisines, **Price Level** (₦–₦₦₦₦, shown to diners and used for budget filtering/sorting).
+- **Business profile** — name, description, business type, cuisines, and **Price Level**.
+
+### Price Level — why it matters for discovery
+Your price level (**₦, ₦₦, ₦₦₦, ₦₦₦₦**) tells diners roughly what a meal costs **per person**. Bucr defines what each tier means as a real spend range (set by the platform, e.g. ₦ = "Under ₦10,000", ₦₦₦ = "₦20,000–₦40,000"). This is **not cosmetic** — it directly powers discovery:
+- Diners **filter by price** when searching ("show me ₦₦ places"), and **sort by price** (low→high / high→low).
+- If your price level is wrong, you either get hidden from the diners who'd actually book you, or you show up for diners with the wrong budget (who then don't convert).
+- **Set it honestly to your average spend per head.** A fine-dining room marked ₦ will disappoint budget diners; a casual spot marked ₦₦₦₦ will be filtered out by its real audience.
+
+Pick the tier that matches your typical bill per guest. You can update it any time in Settings → Business profile; the change takes effect in search immediately.
 - **Reservation deposit** — use the venue‑type default or set a **custom flat deposit** (₦1,000–₦100,000) that applies to every booking regardless of party size.
 - **Opening hours** — per‑day open/close (also powers the “Open now” filter for diners).
 - **Notifications** — choose which emails you receive (new reservations, cancellations, new orders, reviews, weekly reports).

@@ -17,7 +17,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
-  setAuth: (admin: Admin, token: string) => void;
+  setAuth: (admin: Admin, token: string, refreshToken?: string) => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   setHasHydrated: (state: boolean) => void;
@@ -31,13 +31,15 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       _hasHydrated: false,
 
-      setAuth: (admin: Admin, token: string) => {
-        Cookies.set('admin_token', token, { expires: 7 });
+      setAuth: (admin: Admin, token: string, refreshToken?: string) => {
+        Cookies.set('admin_token', token, { expires: 1 });
+        if (refreshToken) Cookies.set('admin_refresh_token', refreshToken, { expires: 7 });
         set({ admin, token, isAuthenticated: true });
       },
 
       logout: () => {
         Cookies.remove('admin_token');
+        Cookies.remove('admin_refresh_token');
         set({ admin: null, token: null, isAuthenticated: false });
       },
 
