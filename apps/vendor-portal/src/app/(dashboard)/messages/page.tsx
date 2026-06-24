@@ -19,7 +19,14 @@ const CATEGORY: Record<string, { label: string; icon: any; color: string }> = {
 export default function MessagesPage() {
   const qc = useQueryClient();
   const router = useRouter();
-  const { data, isLoading } = useQuery({ queryKey: ['vendor-messages'], queryFn: () => authApi.getMessages() });
+  const { data, isLoading } = useQuery({
+    queryKey: ['vendor-messages'],
+    queryFn: () => authApi.getMessages(),
+    // Pick up new broadcasts/notifications without a manual reload.
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
   const messages: any[] = data?.data?.messages ?? [];
   const [open, setOpen] = useState<string | null>(null);
 

@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
     const vendors = await db.vendor.findMany({
       where: {
         deletedAt: null,
-        verificationStatus: 'approved',
+        // Broadcast to every active vendor (incl. onboarding) — only filter by tier
+        // when a specific tier audience is chosen. Don't silently exclude un-approved.
         ...(audience !== 'all' ? { subscriptionTier: audience as any } : {}),
       },
       select: { id: true, email: true, businessName: true },
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (vendors.length === 0) return errorResponse('No vendors match that audience', 400);
 
     await db.vendorMessage.createMany({
-      data: vendors.map((v) => ({ vendorId: v.id, subject, body, sentById: me!.id })),
+      data: vendors.map((v) => ({ vendorId: v.id, subject, body, category: 'broadcast', sentById: me!.id })),
     });
 
     // Email each vendor (fire-and-forget — never block the response).

@@ -31,21 +31,27 @@ interface Transaction {
   createdAt: string;
 }
 
+// Accurate fallback label when a transaction has no stored description.
+// NOTE: prefer transaction.description (precise) over these generic labels.
+export function creditTypeLabel(type: string) {
+  switch (type) {
+    case 'purchase': return 'Credit purchase';
+    case 'refund': return 'Refund';
+    case 'bonus': return 'Bonus credits';
+    case 'redeem': return 'Reservation deposit';
+    case 'forfeit': return 'Forfeited credits';
+    case 'expire': return 'Credits expired';
+    case 'adjustment': return 'Adjustment';
+    default: return type;
+  }
+}
+
 function TransactionItem({ transaction, colors }: { transaction: Transaction; colors: any }) {
   const isPositive = transaction.amount > 0;
   const Icon = isPositive ? Calendar : ChevronRight;
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'purchase': return 'Credit Purchase';
-      case 'refund': return 'Check-in Refund';
-      case 'bonus': return 'Bonus';
-      case 'redeem': return 'Reservation Deposit';
-      case 'forfeit': return 'No-show Forfeit';
-      case 'expire': return 'Credits Expired';
-      default: return type;
-    }
-  };
+  // Use the backend's precise description ("3% show-up bonus", "Cancellation refund",
+  // "Review bonus: 5 credits", …) as the title; fall back to a generic type label.
+  const title = transaction.description?.trim() || creditTypeLabel(transaction.type);
 
   return (
     <View style={[styles.transactionItem, { backgroundColor: colors.card }]}>
@@ -53,7 +59,7 @@ function TransactionItem({ transaction, colors }: { transaction: Transaction; co
         <Icon size={16} color={isPositive ? colors.success : colors.error} />
       </View>
       <View style={styles.transactionContent}>
-        <Text style={[styles.transactionTitle, { color: colors.text }]}>{getTypeLabel(transaction.type)}</Text>
+        <Text style={[styles.transactionTitle, { color: colors.text }]} numberOfLines={2}>{title}</Text>
         <Text style={[styles.transactionDate, { color: colors.textMuted }]}>
           {format(new Date(transaction.createdAt), 'MMM d, yyyy')}
         </Text>
@@ -233,25 +239,24 @@ export default function WalletScreen() {
           </View>
         )}
 
-        {/* Credit Info */}
+        {/* Credit Info — accurate to the credit economy (1cr=₦10, +3% show-up,
+            +5/review, keep 60% on no-show, gifts, 90-day expiry). */}
         <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.infoTitle, { color: colors.text }]}>How credits work</Text>
-          <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>1 credit = {formatMoney(CREDIT_VALUE_NGN)} value</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Use credits to book reservations</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Get credits back + 3% bonus when you show up</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Credits expire 90 days after purchase</Text>
-          </View>
+          {[
+            `1 credit = ${formatMoney(CREDIT_VALUE_NGN)} · buy at ${formatMoney(CREDIT_VALUE_NGN * 1.06)}/credit (6% service fee)`,
+            'Use credits as a refundable deposit to confirm a reservation',
+            'Show up → full deposit back + 3% bonus credits',
+            'Leave a review after you dine → earn 5 credits',
+            'No-show → you keep 60% of the deposit (40% is forfeited)',
+            'Receive credits as gifts from friends',
+            'Credits expire 90 days after purchase',
+          ].map((line, i) => (
+            <View key={i} style={styles.infoItem}>
+              <Text style={[styles.infoBullet, { color: colors.tertiary }]}>•</Text>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>{line}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Pending Gifts to Claim */}

@@ -8,18 +8,17 @@ import { creditsApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatDate, cn } from '@/lib/utils';
 
+// Fallback labels keyed by the real CreditTransactionType enum
+// (purchase | refund | bonus | forfeit | redeem | expire | adjustment).
+// Prefer the backend's precise `description` over these generic labels.
 const LABELS: Record<string, string> = {
   purchase: 'Credit purchase',
-  reservation_deposit: 'Reservation deposit',
-  reservation_refund: 'Deposit returned',
-  show_up_bonus: 'Show-up bonus',
-  no_show_forfeit: 'No-show forfeit',
-  cancellation_refund: 'Cancellation refund',
-  gift_sent: 'Gift sent',
-  gift_received: 'Gift received',
-  gift_fee: 'Gift fee',
-  expiry: 'Credits expired',
-  event_ticket: 'Event ticket',
+  redeem: 'Reservation deposit',
+  refund: 'Refund',
+  bonus: 'Bonus credits',
+  forfeit: 'Forfeited credits',
+  expire: 'Credits expired',
+  adjustment: 'Adjustment',
 };
 
 export default function HistoryPage() {
@@ -49,8 +48,8 @@ export default function HistoryPage() {
                   {credit ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-muted" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium text-ink">{LABELS[t.type] || t.type?.replace(/_/g, ' ') || 'Transaction'}</p>
-                  <p className="text-[12px] text-muted">{formatDate(t.createdAt)}</p>
+                  <p className="text-[14px] font-medium text-ink">{t.description?.trim() || LABELS[t.type] || 'Transaction'}</p>
+                  <p className="text-[12px] text-muted">{(LABELS[t.type] || t.type)} · {formatDate(t.createdAt)}</p>
                 </div>
                 <span className={cn('text-[14px] font-semibold', credit ? 'text-emerald-600' : 'text-ink')}>{credit ? '+' : ''}{t.amount} cr</span>
               </div>

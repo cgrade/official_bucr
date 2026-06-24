@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { creditsApi } from '../../src/lib/api';
 import { format } from 'date-fns';
 import { useTheme } from '../../src/contexts/ThemeContext';
+import { creditTypeLabel } from '../(tabs)/wallet';
 
 interface Transaction {
   id: string;
@@ -27,18 +28,8 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
   const { colors } = useTheme();
   const isPositive = transaction.amount > 0;
   const Icon = isPositive ? ArrowDownLeft : ArrowUpRight;
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'purchase': return 'Credit Purchase';
-      case 'refund': return 'Check-in Refund';
-      case 'bonus': return 'Bonus';
-      case 'redeem': return 'Reservation Deposit';
-      case 'forfeit': return 'No-show Forfeit';
-      case 'expire': return 'Credits Expired';
-      default: return type;
-    }
-  };
+  // Precise backend description as the title; generic type label only as fallback.
+  const title = transaction.description?.trim() || creditTypeLabel(transaction.type);
 
   return (
     <View style={[styles.transactionItem, { backgroundColor: colors.card }]}>
@@ -46,13 +37,10 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
         <Icon size={16} color={isPositive ? colors.tertiary : colors.error} />
       </View>
       <View style={styles.transactionContent}>
-        <Text style={[styles.transactionTitle, { color: colors.text }]}>{getTypeLabel(transaction.type)}</Text>
+        <Text style={[styles.transactionTitle, { color: colors.text }]} numberOfLines={2}>{title}</Text>
         <Text style={[styles.transactionDate, { color: colors.textMuted }]}>
-          {format(new Date(transaction.createdAt), 'MMM d, yyyy • h:mm a')}
+          {creditTypeLabel(transaction.type)} · {format(new Date(transaction.createdAt), 'MMM d, yyyy • h:mm a')}
         </Text>
-        {transaction.description && (
-          <Text style={[styles.transactionDesc, { color: colors.textSecondary }]}>{transaction.description}</Text>
-        )}
       </View>
       <Text style={[styles.transactionAmount, { color: isPositive ? colors.tertiary : colors.error }]}>
         {isPositive ? '+' : ''}{transaction.amount}
