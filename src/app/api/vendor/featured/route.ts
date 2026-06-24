@@ -10,9 +10,10 @@ import {
 } from '@/lib/utils/api-response';
 
 const purchaseSpotSchema = z.object({
-  packageId: z.string().uuid('Invalid package ID'),
-  experienceId: z.string().uuid().optional().nullable(),
-  offerId: z.string().uuid().optional().nullable(),
+  // Package IDs may be UUIDs (admin-created) or stable slugs (seeded defaults).
+  packageId: z.string().min(1, 'Invalid package ID'),
+  experienceId: z.string().min(1).optional().nullable(),
+  offerId: z.string().min(1).optional().nullable(),
 });
 
 // GET /api/vendor/featured - Get vendor's featured spots and available packages
@@ -74,10 +75,15 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Hide packages whose TYPE the vendor already has an active spot for — a vendor
+    // can't hold two featured spots of the same type at once.
+    const activeTypes = new Set(activeSpots.map((s: any) => s.type));
+    const purchasablePackages = availablePackages.filter((p: any) => !activeTypes.has(p.type));
+
     return successResponse({
       activeSpots,
       pastSpots,
-      availablePackages,
+      availablePackages: purchasablePackages,
       walletBalance: wallet?.balance || 0,
     });
   } catch (error) {
@@ -119,8 +125,8 @@ export async function POST(request: NextRequest) {
       return errorResponse('Vendor not found', 404);
     }
 
-    // Get the package
-    const featuredPackage = await db.featuredPackage.findUnique({
+    // Get the package (findFirst — isActive isn't part of the unique key)
+    const featuredPackage = await db.featuredPackage.findFirst({
       where: { id: packageId, isActive: true },
     });
 

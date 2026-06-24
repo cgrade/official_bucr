@@ -120,3 +120,61 @@ export async function POST(request: NextRequest) {
     return errorResponse('Failed to create branch', 500);
   }
 }
+
+// Day name (settings form) → dayOfWeek (0=Sunday … 6=Saturday, the storage convention)
+const DAY_TO_INDEX: Record<string, number> = {
+  Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
+};
+
+const updateHoursSchema = z.object({
+  branchId: z.string().uuid().optional(),
+  hours: z.array(z.object({
+    day: z.string(),
+    isOpen: z.boolean(),
+    open: z.string().optional(),
+    close: z.string().optional(),
+  })).min(1),
+});
+
+/**
+ * PATCH /api/vendor/branches — update the operating hours of a branch (defaults to
+ * the main branch). Accepts the settings-form shape and maps it to operatingHours.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const payload = await authenticateRequest(request);
+    if (!payload || payload.role !== 'vendor') return unauthorizedResponse();
+
+    const vendor = await getVendorForUser(payload.sub);
+    if (!vendor) return forbiddenResponse('No vendor account found');
+
+    const validation = updateHoursSchema.safeParse(await request.json());
+    if (!validation.success) {
+      return validationErrorResponse(validation.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`));
+    }
+    const { branchId, hours } = validation.data;
+
+    const branch = branchId
+      ? await db.vendorBranch.findFirst({ where: { id: branchId, vendorId: vendor.id, deletedAt: null } })
+      : await db.vendorBranch.findFirst({ where: { vendorId: vendor.id, deletedAt: null }, orderBy: { isMainBranch: 'desc' } });
+    if (!branch) return errorResponse('Branch not found', 404);
+
+    const operatingHours = hours.map((h) => ({
+      dayOfWeek: DAY_TO_INDEX[h.day] ?? 0,
+      openTime: h.open || '09:00',
+      closeTime: h.close || '22:00',
+      isClosed: !h.isOpen,
+    })).sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+
+    const updated = await db.vendorBranch.update({
+      where: { id: branch.id },
+      data: { operatingHours },
+      select: { id: true, operatingHours: true },
+    });
+
+    return successResponse(updated, 'Operating hours updated');
+  } catch (error) {
+    console.error('Update hours error:', error);
+    return errorResponse('Failed to update operating hours', 500);
+  }
+}

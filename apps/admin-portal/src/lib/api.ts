@@ -109,6 +109,14 @@ export const adminsApi = {
   },
 };
 
+// Broadcast API (admin → vendors)
+export const broadcastApi = {
+  send: async (payload: { subject: string; body: string; audience: 'all' | 'basic' | 'pro' | 'elite' }) => {
+    const { data } = await api.post<ApiResponse<{ recipients: number }>>('/admin/broadcasts', payload);
+    return data;
+  },
+};
+
 // Reviews moderation API
 export const reviewsApi = {
   getReported: async (params?: { page?: number; reported?: boolean }) => {

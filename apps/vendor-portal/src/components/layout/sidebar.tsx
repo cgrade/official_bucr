@@ -17,7 +17,7 @@ import {
   LayoutDashboard, QrCode, CalendarCheck,
   Users, UtensilsCrossed, ImageIcon, Star, BarChart3,
   Settings, LogOut, CreditCard, Sparkles,
-  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock,
+  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock, Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { canAccess, normalizeTier, FEATURE_TIERS, type FeatureId, TIER_LABEL } from '@/lib/features';
@@ -43,6 +43,7 @@ const NAV: Array<{ name: string; href: string; icon: React.ElementType; feature:
 ];
 
 const BOTTOM_NAV = [
+  { name: 'Messages',       href: '/messages',     icon: Bell      },
   { name: 'KYC Documents', href: '/documents',    icon: Shield    },
   { name: 'Team',           href: '/team',         icon: Users     },
   { name: 'Credits',        href: '/credits',      icon: Wallet    },

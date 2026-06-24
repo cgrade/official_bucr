@@ -46,7 +46,6 @@ const settingsSections = [
   { id: 'locations',     label: 'Locations & Map',      icon: MapPin },
   { id: 'hours',         label: 'Business Hours',       icon: Clock },
   { id: 'notifications', label: 'Notifications',        icon: Bell },
-  { id: 'payments',      label: 'Payment Settings',     icon: CreditCard },
   { id: 'security',      label: 'Security',             icon: Shield },
   { id: 'team',          label: 'Team Members',         icon: Users },
 ];
@@ -127,7 +126,6 @@ export default function SettingsPage() {
   const [notificationsForm, setNotificationsForm] = useState({
     newReservations: true,
     cancellations: true,
-    newOrders: true,
     newReviews: true,
     weeklyReports: true,
   });
@@ -717,7 +715,6 @@ export default function SettingsPage() {
                 {[
                   { key: 'newReservations', label: 'New Reservations', desc: 'Get notified when a new booking is made' },
                   { key: 'cancellations', label: 'Cancellations', desc: 'When a guest cancels a reservation' },
-                  { key: 'newOrders', label: 'New Orders', desc: 'Instant notification for takeout/delivery orders' },
                   { key: 'newReviews', label: 'New Reviews', desc: 'When customers leave a review' },
                   { key: 'weeklyReports', label: 'Weekly Reports', desc: 'Summary of your weekly performance' },
                 ].map((item) => (
@@ -744,57 +741,6 @@ export default function SettingsPage() {
                 >
                   {updateNotificationsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Notifications
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {activeSection === 'payments' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-2xl space-y-6"
-            >
-              <div>
-                <h2 className="text-xl font-semibold text-[#f5f0e8] mb-1">Payment Settings</h2>
-                <p className="text-sm text-[#7a8fa6]">Manage your payment information</p>
-              </div>
-
-              <div className="glass-card rounded-2xl p-6 space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Bank Name</label>
-                  <Input 
-                    value={paymentForm.bankName}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, bankName: e.target.value })}
-                    className="mt-1.5 h-11 rounded-xl" 
-                    placeholder="Select your bank" 
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Account Number</label>
-                  <Input 
-                    value={paymentForm.accountNumber}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, accountNumber: e.target.value })}
-                    className="mt-1.5 h-11 rounded-xl" 
-                    placeholder="Enter account number" 
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 text-[rgba(245,240,232,0.7)]">Account Name</label>
-                  <Input 
-                    value={paymentForm.accountName}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, accountName: e.target.value })}
-                    className="mt-1.5 h-11 rounded-xl" 
-                    placeholder="Account holder name" 
-                  />
-                </div>
-                <Button 
-                  className="btn-gradient mt-4" 
-                  onClick={() => updatePaymentMutation.mutate(paymentForm)}
-                  disabled={updatePaymentMutation.isPending}
-                >
-                  {updatePaymentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Payment Info
                 </Button>
               </div>
             </motion.div>

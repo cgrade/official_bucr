@@ -45,6 +45,9 @@ export const ECONOMICS = {
   /** Fraction of deposit returned as bonus on check-in (3%). */
   SHOWUP_BONUS_PCT: numEnv('SHOWUP_BONUS_PCT', 0.03),
 
+  /** Flat credits awarded to a diner for leaving a review (only after they checked in). */
+  REVIEW_REWARD_CREDITS: numEnv('REVIEW_REWARD_CREDITS', 5),
+
   // ── No-show split (resolved model) ────────────────────────────────────────
   // No-show forfeits 40% of the deposit, uniform across all venue types:
   //   guest keeps 60% · vendor gets 30% (marketing credits) · BUCR gets 10%.

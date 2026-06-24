@@ -107,6 +107,24 @@ model VendorStaff {
   @@map("vendor_staff")
 }
 
+// A message to a vendor — currently admin → vendor broadcasts. Shown in the vendor
+// portal message center (dashboard) and also emailed to the vendor.
+model VendorMessage {
+  id        String    @id @default(uuid())
+  vendorId  String    @map("vendor_id")
+  subject   String
+  body      String
+  isRead    Boolean   @default(false) @map("is_read")
+  sentById  String?   @map("sent_by_id") // admin id
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  vendor    Vendor    @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId, isRead])
+  @@index([createdAt])
+  @@map("vendor_messages")
+}
+
 model Vendor {
   id                    String             @id @default(uuid())
   ownerId               String             @map("owner_id")
@@ -182,6 +200,7 @@ model Vendor {
   coverCharges          CoverCharge[]
   platformRevenues      PlatformRevenue[]
   staff                 VendorStaff[]
+  messages              VendorMessage[]
 
   @@index([verificationStatus, deletedAt])
   @@index([slug])

@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Store, CreditCard, BarChart3,
   Settings, LogOut, Bell, FileText, Calendar,
-  ChevronRight, ChevronLeft, Star, X, Map, TrendingUp, ShieldCheck,
+  ChevronRight, ChevronLeft, Star, X, Map, TrendingUp, ShieldCheck, Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BucrWordmark } from '@/components/ui/BucrWordmark';
@@ -31,6 +31,7 @@ const NAV = [
 
 const BOTTOM_NAV = [
   { name: 'Admins',        href: '/admins',        icon: ShieldCheck },
+  { name: 'Broadcast',     href: '/broadcast',     icon: Send },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings',      href: '/settings',      icon: Settings },
 ];

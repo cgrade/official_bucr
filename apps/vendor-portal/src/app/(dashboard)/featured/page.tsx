@@ -321,8 +321,8 @@ function FeaturedPageInner() {
 
       {/* Purchase Modal */}
       {showPurchaseModal && selectedPackage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#0f1a2e] border border-[rgba(201,168,76,0.18)] rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-xl font-semibold text-[#f5f0e8] mb-4">
               Purchase Featured Spot
             </h3>

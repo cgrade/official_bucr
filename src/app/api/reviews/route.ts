@@ -11,7 +11,7 @@ import {
 import { awardBonus } from '@/services/credit.service';
 import { syncVendorAchievements } from '@/services/achievement.service';
 import { notifyVendorNewReview } from '@/services/notification.service';
-import { config } from '@/lib/config';
+import { ECONOMICS } from '@/lib/config/economics';
 
 const createReviewSchema = z.object({
   vendorId: z.string().uuid(),
@@ -93,11 +93,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate bonus credits for review
-    const { reviewBonusMin, reviewBonusMax } = config.credits;
-    const bonusCredits = Math.floor(
-      Math.random() * (reviewBonusMax - reviewBonusMin + 1) + reviewBonusMin
-    );
+    // Flat reward for leaving a review (only reachable after a verified check-in above).
+    const bonusCredits = ECONOMICS.REVIEW_REWARD_CREDITS;
 
     // Create review and award credits
     const review = await db.$transaction(async (tx) => {

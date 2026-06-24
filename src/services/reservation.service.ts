@@ -221,8 +221,10 @@ export async function checkInReservation(reservationId: string, pin: string, ven
       },
     });
 
-    // Accrue per-cover fee — inside the transaction so it rolls back with the check-in
-    if (coverFee > 0) {
+    // Accrue a per-cover charge for EVERY check-in — inside the transaction so it rolls
+    // back with the check-in. Elite vendors accrue ₦0 lines (fee waived) so the invoice
+    // still reflects every diner seated.
+    {
       const now = new Date();
       await (tx as any).coverCharge.create({
         data: {

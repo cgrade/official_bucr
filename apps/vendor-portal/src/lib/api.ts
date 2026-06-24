@@ -127,6 +127,15 @@ export const authApi = {
     const { data } = await api.delete<ApiResponse<null>>(`/vendor/team/${id}`);
     return data;
   },
+  // ── Message center (admin broadcasts) ────────────────────────────────────
+  getMessages: async () => {
+    const { data } = await api.get<ApiResponse<{ messages: any[]; unreadCount: number }>>('/vendor/messages');
+    return data;
+  },
+  markMessageRead: async (id: string) => {
+    const { data } = await api.patch<ApiResponse<any>>(`/vendor/messages/${id}`);
+    return data;
+  },
 };
 
 // Reservations API
@@ -337,12 +346,20 @@ export const settingsApi = {
     return data;
   },
   getHours: async () => {
-    // Hours are part of branch data
+    // Hours live on the main branch's operatingHours; map to the settings-form shape.
     const { data } = await api.get<ApiResponse<any>>('/vendor/branches');
-    return data;
+    const branches: any[] = Array.isArray(data?.data) ? data.data : (data?.data?.branches ?? []);
+    const main = branches.find((b: any) => b.isMainBranch) ?? branches[0];
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const hours = (main?.operatingHours ?? []).map((h: any) => ({
+      day: DAYS[h.dayOfWeek] ?? 'Monday',
+      isOpen: !h.isClosed,
+      open: h.openTime || '09:00',
+      close: h.closeTime || '22:00',
+    }));
+    return { success: true, data: { hours } } as ApiResponse<any>;
   },
   updateHours: async (hours: any[]) => {
-    // Hours are updated as part of branch
     const { data } = await api.patch<ApiResponse<any>>('/vendor/branches', { hours });
     return data;
   },
