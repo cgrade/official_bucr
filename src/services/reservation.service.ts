@@ -359,17 +359,22 @@ export async function cancelReservation(
     }
 
     if (forfeitedAmount > 0) {
-      await tx.creditTransaction.create({
+      // The forfeited deposit already left the guest's balance at booking — writing a
+      // user credit-ledger entry here would double-count and break
+      // (user.creditsBalance == Σ creditTransaction.amount). Recognise it as platform
+      // breakage revenue instead (late cancellations are not split with the vendor).
+      const fm = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+      await (tx as any).platformRevenue.create({
         data: {
+          type: 'breakage',
+          amountNgn: forfeitedAmount * ECONOMICS.CREDIT_VALUE_NGN,
+          amountCredits: forfeitedAmount,
+          sourceType: 'cancellation_forfeit',
+          sourceId: reservationId,
           userId: user.id,
-          type: 'forfeit',
-          amount: -forfeitedAmount,
-          balanceAfter: newBalance,
-          referenceType: 'reservation',
-          referenceId: reservationId,
-          description: 'Late cancellation forfeiture',
+          billingMonth: fm,
         },
-      });
+      }).catch(() => {});
     }
 
     await tx.user.update({ where: { id: user.id }, data: { creditsBalance: newBalance } });
@@ -515,18 +520,11 @@ export async function markNoShow(reservationId: string, vendorId: string) {
   const billingMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   await db.$transaction(async (tx) => {
-    // 1. Record forfeit (already debited at booking — this is just the ledger entry)
-    await tx.creditTransaction.create({
-      data: {
-        userId: reservation.userId,
-        type: 'forfeit',
-        amount: -forfeit,
-        balanceAfter: reservation.user.creditsBalance, // credits were already out of balance at booking
-        referenceType: 'reservation',
-        referenceId: reservationId,
-        description: `No-show: ${Math.round(forfeitPct * 100)}% of deposit forfeited`,
-      },
-    });
+    // 1. The forfeited credits already LEFT the guest's balance at booking (the 'redeem'
+    //    debit). We deliberately do NOT write a user credit-ledger entry for the forfeit
+    //    here — doing so would double-count and break the invariant
+    //    (user.creditsBalance == Σ creditTransaction.amount). The forfeited value is
+    //    recognised as revenue below: 30% → vendor wallet (step 6), 10% → platform (step 7).
 
     // 2. Return guestKeeps as usable credits
     if (guestKeeps > 0) {

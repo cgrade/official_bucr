@@ -72,11 +72,19 @@ export async function POST(request: NextRequest) {
       return errorResponse(`Party size cannot exceed ${maxPartySize} guests`, 400);
     }
 
-    // Ensure date is in the future
+    // Ensure the reservation date+TIME is in the future. data.date is a calendar day
+    // (midnight), so we must fold in the booking time for the check — otherwise every
+    // same-day reservation (the common case for dining) would be rejected. Build a
+    // separate datetime (don't mutate reservationDate, which is stored as the day) the
+    // same way check-in/cancel reconstruct it, so the comparison is consistent.
     const reservationDate = new Date(data.date);
-    const now = new Date();
-    if (reservationDate < now) {
-      return errorResponse('Reservation date must be in the future', 400);
+    const reservationDateTime = new Date(reservationDate);
+    if (data.time) {
+      const [hh, mm] = data.time.split(':').map(Number);
+      reservationDateTime.setHours(hh || 0, mm || 0, 0, 0);
+    }
+    if (reservationDateTime.getTime() < Date.now()) {
+      return errorResponse('Reservation date/time must be in the future', 400);
     }
 
     const reservation = await createReservation({

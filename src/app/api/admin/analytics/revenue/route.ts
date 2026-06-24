@@ -74,13 +74,15 @@ export async function GET(request: NextRequest) {
         },
         _sum: { amountKobo: true },
       }),
-      // Credits forfeited (breakage revenue)
-      db.creditTransaction.aggregate({
+      // Forfeiture/breakage revenue now lives in PlatformRevenue (cancellation breakage +
+      // 10% no-show platform share); the user credit ledger no longer carries
+      // balance-affecting 'forfeit' entries (they would double-count the booking deposit).
+      db.platformRevenue.aggregate({
         where: {
-          type: 'forfeit',
-          createdAt: { gte: startDate },
+          type: { in: ['breakage', 'noshow_platform_share'] },
+          recognizedAt: { gte: startDate },
         },
-        _sum: { amount: true },
+        _sum: { amountCredits: true },
       }),
       // Credits refunded
       db.creditTransaction.aggregate({
@@ -124,8 +126,8 @@ export async function GET(request: NextRequest) {
       ? Math.round(((totalRevenueKobo - previousTotalRevenueKobo) / previousTotalRevenueKobo) * 100)
       : totalRevenueKobo > 0 ? 100 : 0;
 
-    // Calculate breakage revenue (forfeited credits * credit value)
-    const forfeitedCredits = Math.abs(creditsForfeited._sum.amount || 0);
+    // Calculate breakage revenue (forfeited credits * credit value) — from PlatformRevenue
+    const forfeitedCredits = Math.abs(creditsForfeited._sum?.amountCredits || 0);
     const breakageRevenueKobo = forfeitedCredits * config.credits.valueNgn * 100;
     const refundedCredits = Math.abs(creditsRefunded._sum.amount || 0);
 

@@ -54,12 +54,15 @@ export async function GET(request: NextRequest) {
         },
         _sum: { amount: true },
       }),
-      db.creditTransaction.aggregate({
+      // Forfeiture revenue now lives in PlatformRevenue (cancellation breakage +
+      // the 10% no-show platform share) — the user credit ledger no longer carries
+      // balance-affecting 'forfeit' entries (they'd double-count the deposit).
+      db.platformRevenue.aggregate({
         where: {
-          createdAt: { gte: startDate },
-          type: 'forfeit',
+          recognizedAt: { gte: startDate },
+          type: { in: ['breakage', 'noshow_platform_share'] },
         },
-        _sum: { amount: true },
+        _sum: { amountCredits: true },
       }),
       db.creditTransaction.aggregate({
         where: {
@@ -95,8 +98,8 @@ export async function GET(request: NextRequest) {
       statusBreakdown[s.status] = s._count;
     });
 
-    // Calculate breakage (forfeited credits as revenue)
-    const breakageAmount = Math.abs(creditsForfeited._sum.amount || 0);
+    // Calculate breakage (forfeited credits as revenue) — from PlatformRevenue now
+    const breakageAmount = Math.abs(creditsForfeited._sum?.amountCredits || 0);
     const purchasedAmount = creditsPurchased._sum.amount || 0;
     const breakageRate = purchasedAmount > 0
       ? Math.round((breakageAmount / purchasedAmount) * 100 * 10) / 10
