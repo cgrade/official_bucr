@@ -149,7 +149,7 @@ function AuthRequiredView({ onLogin, colors }: { onLogin: () => void; colors: an
 
 export default function BookingsScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, refreshBalance } = useAuthStore();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
@@ -166,6 +166,10 @@ export default function BookingsScreen() {
     mutationFn: (reservationId: string) => reservationsApi.cancel(reservationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      // Refund changes the balance — refresh it everywhere so the wallet/booking
+      // screens never show a stale (pre-refund) number.
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
+      refreshBalance();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
     onError: (err: any) => {

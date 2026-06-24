@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation, ChefHat, ChevronDown } from 'lucide-react';
 import { vendorsApi, reservationsApi, favoritesApi, creditsApi } from '@/lib/api';
@@ -18,6 +18,7 @@ type Tab = 'overview' | 'menu' | 'photos' | 'reviews';
 export default function VenuePage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
+  const qc = useQueryClient();
   const { isAuthenticated } = useAuthStore();
 
   const { data, isLoading } = useQuery({ queryKey: ['vendor', slug], queryFn: () => vendorsApi.getBySlug(slug), enabled: !!slug });
@@ -51,6 +52,9 @@ export default function VenuePage() {
     }),
     onSuccess: (res) => {
       toast.success('Reservation confirmed!');
+      // Deposit just left the wallet — refresh balance views so they're never stale.
+      qc.invalidateQueries({ queryKey: ['credit-balance'] });
+      qc.invalidateQueries({ queryKey: ['credits'] });
       const id = (res.data as any)?.id;
       router.push(id ? `/bookings/${id}` : '/bookings');
     },

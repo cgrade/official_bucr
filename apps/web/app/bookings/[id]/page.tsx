@@ -34,6 +34,10 @@ export default function BookingDetailPage() {
       toast.success('Reservation cancelled — any refund has been credited per policy.');
       qc.invalidateQueries({ queryKey: ['reservation', id] });
       qc.invalidateQueries({ queryKey: ['reservations'] });
+      // Refund changes the balance — refresh the wallet/booking-panel balance views.
+      qc.invalidateQueries({ queryKey: ['credits'] });
+      qc.invalidateQueries({ queryKey: ['credit-balance'] });
+      qc.invalidateQueries({ queryKey: ['credit-tx'] });
       setConfirming(false);
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Could not cancel'),

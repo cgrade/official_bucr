@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Calendar, Clock, Users, X, Sparkles, Tag, ChefHat, ChevronDown, Minus, Plus } from 'lucide-react-native';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vendorsApi, reservationsApi } from '../../../src/lib/api';
 import { useAuthStore } from '../../../src/stores/auth.store';
 import { format, addDays } from 'date-fns';
@@ -37,6 +37,7 @@ export default function BookingScreen() {
   }>();
   const { user, refreshBalance } = useAuthStore();
   const { colors } = useTheme();
+  const queryClient = useQueryClient();
   
   const [selectedDate, setSelectedDate] = useState<Date>(addDays(new Date(), 1));
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -118,6 +119,7 @@ export default function BookingScreen() {
     mutationFn: (data: any) => reservationsApi.create(data),
     onSuccess: (response) => {
       refreshBalance();
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
       router.replace(`/booking/${response.data.id}`);
     },
     onError: (error: any) => {
