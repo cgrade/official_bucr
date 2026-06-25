@@ -17,7 +17,7 @@ import {
   LayoutDashboard, QrCode, CalendarCheck,
   Users, UtensilsCrossed, ImageIcon, Star, BarChart3,
   Settings, LogOut, CreditCard, Sparkles,
-  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock, Bell, Receipt,
+  ChevronRight, ChevronLeft, Wallet, X, Shield, Smartphone, Tag, Award, Lock, Bell, Receipt, ListOrdered,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { canAccess, normalizeTier, FEATURE_TIERS, type FeatureId, TIER_LABEL } from '@/lib/features';
@@ -27,6 +27,7 @@ import { canAccess, normalizeTier, FEATURE_TIERS, type FeatureId, TIER_LABEL } f
 const NAV: Array<{ name: string; href: string; icon: React.ElementType; feature: FeatureId }> = [
   { name: 'Dashboard',       href: '/dashboard',       icon: LayoutDashboard, feature: 'dashboard'        },
   { name: 'Reservations',    href: '/reservations',    icon: CalendarCheck,   feature: 'reservations'     },
+  { name: 'Waitlist',        href: '/waitlist',        icon: ListOrdered,     feature: 'reservations'     },
   { name: 'QR Scanner',      href: '/scanner',         icon: QrCode,          feature: 'scanner'          },
   { name: 'Menu',            href: '/menu',            icon: UtensilsCrossed, feature: 'menu'             },
   { name: 'Gallery',         href: '/gallery',         icon: ImageIcon,       feature: 'gallery'          },

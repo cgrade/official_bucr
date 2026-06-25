@@ -211,6 +211,24 @@ export async function notifyReservationConfirmed(userId: string, params: {
   });
 }
 
+export async function notifyWaitlistReady(userId: string, params: {
+  vendorName: string;
+  partySize: number;
+  holdMinutes: number;
+}) {
+  // A table opened up — this is time-critical, so it goes out on every channel
+  // (push + SMS + email) and is NOT gated by a preference category.
+  return sendNotification({
+    userId,
+    type: 'waitlist_ready',
+    title: `Your table at ${params.vendorName} is ready!`,
+    body: `A table for ${params.partySize} just opened up at ${params.vendorName}. Please head over within ${params.holdMinutes} minutes to claim it.`,
+    data: { screen: 'bookings' },
+    channels: ['push', 'sms', 'email'],
+    sms: `Bucr: your table for ${params.partySize} at ${params.vendorName} is ready! Arrive within ${params.holdMinutes} mins to claim it.`,
+  });
+}
+
 export async function notifyReservationReminder(userId: string, params: {
   vendorName: string;
   time: string;

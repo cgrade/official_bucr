@@ -48,6 +48,9 @@ export const ECONOMICS = {
   /** Flat credits awarded to a diner for leaving a review (only after they checked in). */
   REVIEW_REWARD_CREDITS: numEnv('REVIEW_REWARD_CREDITS', 5),
 
+  /** Minutes a notified waitlist party has to claim/arrive before the hold expires. */
+  WAITLIST_HOLD_MINUTES: numEnv('WAITLIST_HOLD_MINUTES', 15),
+
   // ── No-show split (resolved model) ────────────────────────────────────────
   // No-show forfeits 40% of the deposit, uniform across all venue types:
   //   guest keeps 60% · vendor gets 30% (marketing credits) · BUCR gets 10%.

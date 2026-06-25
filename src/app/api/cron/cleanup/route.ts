@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { cleanupExpiredTokens } from '@/services/token.service';
 import { processFeaturedAutoRenewals } from '@/services/featured.service';
+import { expireStaleWaitlist } from '@/services/waitlist.service';
 import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Renew opted-in featured spots before resetting expired flags below.
     const featuredAutoRenew = await processFeaturedAutoRenewals();
 
-    const [tokensCleared, menuItemsRestored, featuredExpired] = await Promise.all([
+    const [tokensCleared, menuItemsRestored, featuredExpired, waitlistExpired] = await Promise.all([
       cleanupExpiredTokens(),
       // Clear expired "86" windows so items show as available again
       (db.menu as any).updateMany({
@@ -39,6 +40,8 @@ export async function GET(request: NextRequest) {
         where: { isFeatured: true, featuredUntil: { not: null, lte: now } },
         data: { isFeatured: false, featuredUntil: null, featuredAt: null },
       }).then((r) => r.count),
+      // Expire waitlist holds that lapsed without the guest claiming
+      expireStaleWaitlist(),
     ]);
 
     return successResponse({
@@ -47,6 +50,7 @@ export async function GET(request: NextRequest) {
       tokensCleared,
       menuItemsRestored,
       featuredExpired,
+      waitlistExpired,
       featuredAutoRenew,
     });
   } catch (error) {

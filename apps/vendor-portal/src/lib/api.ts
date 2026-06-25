@@ -165,6 +165,14 @@ export const authApi = {
     );
     return data;
   },
+  // ── Waitlist ─────────────────────────────────────────────────────────────
+  getWaitlist: async (date?: string) => {
+    const { data } = await api.get<ApiResponse<{ entries: any[]; waitingCount: number }>>('/vendor/waitlist', { params: date ? { date } : {} });
+    return data;
+  },
+  notifyWaitlist: async (id: string) => (await api.post<ApiResponse<any>>(`/vendor/waitlist/${id}/notify`)).data,
+  seatWaitlist: async (id: string) => (await api.post<ApiResponse<any>>(`/vendor/waitlist/${id}/seat`)).data,
+  removeWaitlist: async (id: string) => (await api.delete<ApiResponse<null>>(`/vendor/waitlist/${id}`)).data,
 };
 
 // Reservations API

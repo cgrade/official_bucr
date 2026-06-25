@@ -8,6 +8,7 @@ import {
   unauthorizedResponse,
   validationErrorResponse,
 } from '@/lib/utils/api-response';
+import { waitlistPosition } from '@/services/waitlist.service';
 
 const joinWaitlistSchema = z.object({
   vendorId: z.string().uuid(),
@@ -49,7 +50,12 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return successResponse(entries);
+    // Attach the guest's live queue position (null once notified/seated).
+    const withPosition = await Promise.all(
+      entries.map(async (e) => ({ ...e, position: await waitlistPosition(e) }))
+    );
+
+    return successResponse(withPosition);
   } catch (error) {
     console.error('Get waitlist error:', error);
     return errorResponse('Failed to get waitlist entries', 500);
