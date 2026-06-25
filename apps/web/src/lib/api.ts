@@ -138,7 +138,7 @@ export const featuredApi = {
 
 // ── Reservations ──────────────────────────────────────────────────────────────
 export const reservationsApi = {
-  create: async (data: { vendorId: string; branchId?: string; date: string; time: string; partySize: number; specialRequests?: string; occasion?: string; preorderItems?: Array<{ menuItemId: string; name: string; quantity: number }> }) => {
+  create: async (data: { vendorId: string; branchId?: string; date: string; time: string; partySize: number; specialRequests?: string; occasion?: string; experienceId?: string; offerId?: string; preorderItems?: Array<{ menuItemId: string; name: string; quantity: number }> }) => {
     const idempotencyKey = `res_${data.vendorId}_${data.date}_${data.time}_${data.partySize}_${Date.now()}`;
     const res = await api.post<ApiResponse<any>>('/reservations', data, { headers: { 'Idempotency-Key': idempotencyKey } });
     return res.data;

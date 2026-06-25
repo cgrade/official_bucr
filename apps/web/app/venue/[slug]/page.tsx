@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation, ChefHat, ChevronDown } from 'lucide-react';
+import { Star, MapPin, Phone, Clock, ShieldCheck, Users, ArrowLeft, Heart, Navigation, ChefHat, ChevronDown, Sparkles, Tag, X } from 'lucide-react';
 import { vendorsApi, reservationsApi, favoritesApi, creditsApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/auth.store';
@@ -35,6 +35,9 @@ export default function VenuePage() {
   // Optional pre-order: itemId -> { name, price, quantity }
   const [preorder, setPreorder] = useState<Record<string, { name: string; price: number | null; quantity: number }>>({});
   const [showPreorder, setShowPreorder] = useState(false);
+  // Booking an experience (own deposit/capacity) or "with" a special offer (informational note).
+  const [selectedExp, setSelectedExp] = useState<any>(null);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
   useEffect(() => { if (vendor?.isFavorited != null) setFavorited(!!vendor.isFavorited); }, [vendor?.isFavorited]);
 
   const preorderCount = Object.values(preorder).reduce((s, i) => s + i.quantity, 0);
@@ -48,7 +51,9 @@ export default function VenuePage() {
   const book = useMutation({
     mutationFn: () => reservationsApi.create({
       vendorId: vendor.id, date, time, partySize,
-      preorderItems: Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
+      ...(selectedExp ? { experienceId: selectedExp.id } : {}),
+      ...(selectedOffer ? { specialRequests: `Booking with offer: ${selectedOffer.title}` } : {}),
+      preorderItems: selectedExp || selectedOffer ? [] : Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
     }),
     onSuccess: (res) => {
       toast.success('Reservation confirmed!');
@@ -79,15 +84,23 @@ export default function VenuePage() {
 
   const img = getImageUrl(vendor.coverImage || vendor.gallery?.[0]?.url || vendor.logo);
   const branch = vendor.branches?.[0];
-  const deposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
+  const baseDeposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
+  // An experience carries its own deposit + capacity; offers don't change the deposit.
+  const deposit = selectedExp ? (selectedExp.creditsRequired ?? baseDeposit) : baseDeposit;
+  const maxParty = selectedExp?.capacity ?? 20;
   const insufficient = isAuthenticated && balance < deposit;
   const onReserve = () => {
     if (!isAuthenticated) { router.push(`/login?redirect=/venue/${slug}`); return; }
     if (insufficient) { toast.error(`You need ${deposit.toLocaleString()} credits (${formatNaira(creditsToNaira(deposit))}) for the deposit. Top up to continue.`); router.push('/wallet'); return; }
     book.mutate();
   };
+  const selectExperience = (exp: any) => { setSelectedExp(exp); setSelectedOffer(null); setPartySize((p) => Math.min(p, exp?.capacity ?? 20)); if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const selectOffer = (offer: any) => { setSelectedOffer(offer); setSelectedExp(null); if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const clearSelection = () => { setSelectedExp(null); setSelectedOffer(null); };
   const menu: any[] = (vendor.menu ?? []).filter((c: any) => (c.items?.length ?? 0) > 0);
   const popularDishes: any[] = vendor.popularDishes ?? [];
+  const experiences: any[] = vendor.experiences ?? [];
+  const specialOffers: any[] = vendor.specialOffers ?? [];
   const gallery: any[] = vendor.gallery ?? [];
   const reviews: any[] = vendor.reviews ?? [];
   const hours: any[] = Array.isArray(branch?.operatingHours) ? branch.operatingHours : [];
@@ -209,6 +222,66 @@ export default function VenuePage() {
                   </div>
                 </section>
               )}
+
+              {/* Experiences — book with their own deposit/capacity */}
+              {experiences.length > 0 && (
+                <section className="card p-6">
+                  <h2 className="font-display text-2xl font-semibold text-ink mb-4 flex items-center gap-2"><Sparkles className="h-5 w-5 text-[#c9a84c]" /> Experiences</h2>
+                  <div className="space-y-4">
+                    {experiences.map((exp: any) => (
+                      <div key={exp.id} className="rounded-xl border border-line overflow-hidden">
+                        {getImageUrl(exp.images?.[0]) && <img src={getImageUrl(exp.images[0])!} alt={exp.title} className="w-full h-40 object-cover" />}
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-semibold text-ink">{exp.title}</p>
+                            <span className="text-[13px] font-semibold text-[#c9a84c] whitespace-nowrap">{formatNaira(creditsToNaira(exp.creditsRequired))}</span>
+                          </div>
+                          {exp.description && <p className="mt-1 text-[13px] text-muted">{exp.description}</p>}
+                          <div className="mt-2 flex items-center gap-4 text-[12px] text-muted">
+                            {exp.duration ? <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {exp.duration} mins</span> : null}
+                            {exp.capacity ? <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> Up to {exp.capacity}</span> : null}
+                          </div>
+                          <Button size="sm" variant={selectedExp?.id === exp.id ? 'navy' : 'outline'} className="mt-3" onClick={() => selectExperience(exp)}>
+                            {selectedExp?.id === exp.id ? 'Selected ✓' : 'Book experience'}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Special offers — informational; books a normal reservation with a note */}
+              {specialOffers.length > 0 && (
+                <section className="card p-6">
+                  <h2 className="font-display text-2xl font-semibold text-ink mb-4 flex items-center gap-2"><Tag className="h-5 w-5 text-[#c9a84c]" /> Special offers</h2>
+                  <div className="space-y-4">
+                    {specialOffers.map((offer: any) => (
+                      <div key={offer.id} className="rounded-xl border border-line overflow-hidden">
+                        {getImageUrl(offer.image) && <img src={getImageUrl(offer.image)!} alt={offer.title} className="w-full h-40 object-cover" />}
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-semibold text-ink">{offer.title}</p>
+                            {offer.discountType && offer.discountValue != null && (
+                              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[12px] font-semibold text-emerald-600 whitespace-nowrap">
+                                {offer.discountType === 'percentage' ? `${offer.discountValue}% OFF` : offer.discountType === 'fixed' ? `${formatNaira(offer.discountValue)} OFF` : offer.discountType === 'bogo' ? 'Buy 1 Get 1' : ''}
+                              </span>
+                            )}
+                          </div>
+                          {offer.description && <p className="mt-1 text-[13px] text-muted">{offer.description}</p>}
+                          {offer.validFrom && offer.validUntil && (
+                            <p className="mt-2 flex items-center gap-1 text-[12px] text-muted"><Clock className="h-3.5 w-3.5" /> {formatDate(offer.validFrom)} – {formatDate(offer.validUntil)}</p>
+                          )}
+                          {offer.terms && <p className="mt-1 text-[12px] text-muted italic">{offer.terms}</p>}
+                          <Button size="sm" variant={selectedOffer?.id === offer.id ? 'navy' : 'outline'} className="mt-3" onClick={() => selectOffer(offer)}>
+                            {selectedOffer?.id === offer.id ? 'Selected ✓' : 'Book with this offer'}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           )}
 
@@ -287,7 +360,21 @@ export default function VenuePage() {
         {/* Reserve panel */}
         <div className="lg:sticky lg:top-20 h-fit">
           <div className="card p-6">
-            <h2 className="font-display text-xl font-semibold text-ink">Reserve a table</h2>
+            <h2 className="font-display text-xl font-semibold text-ink">
+              {selectedExp ? 'Book experience' : selectedOffer ? 'Book with offer' : 'Reserve a table'}
+            </h2>
+            {(selectedExp || selectedOffer) && (
+              <div className="mt-3 flex items-start justify-between gap-2 rounded-xl bg-[rgba(201,168,76,0.1)] px-3 py-2">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-[12px] font-semibold text-[#c9a84c]">
+                    {selectedExp ? <Sparkles className="h-3.5 w-3.5" /> : <Tag className="h-3.5 w-3.5" />}
+                    {selectedExp ? 'Experience' : 'Special offer'}
+                  </p>
+                  <p className="text-[13px] font-medium text-ink truncate">{(selectedExp || selectedOffer).title}</p>
+                </div>
+                <button onClick={clearSelection} aria-label="Clear" className="flex-shrink-0 text-muted hover:text-ink"><X className="h-4 w-4" /></button>
+              </div>
+            )}
             <div className="mt-4 space-y-3">
               <div>
                 <label className="block text-[12px] font-medium text-muted mb-1">Date</label>
@@ -309,13 +396,14 @@ export default function VenuePage() {
                 <div className="flex items-center gap-3">
                   <button onClick={() => setPartySize(Math.max(1, partySize - 1))} className="h-9 w-9 rounded-lg border border-line text-ink text-lg">−</button>
                   <span className="flex items-center gap-1.5 text-ink font-semibold"><Users className="h-4 w-4 text-[#c9a84c]" /> {partySize}</span>
-                  <button onClick={() => setPartySize(Math.min(20, partySize + 1))} className="h-9 w-9 rounded-lg border border-line text-ink text-lg">+</button>
+                  <button onClick={() => setPartySize(Math.min(maxParty, partySize + 1))} className="h-9 w-9 rounded-lg border border-line text-ink text-lg">+</button>
                 </div>
+                {selectedExp?.capacity ? <p className="mt-1 text-[11px] text-muted">Up to {selectedExp.capacity} for this experience</p> : null}
               </div>
             </div>
 
-            {/* Optional pre-order */}
-            {menu.length > 0 && (
+            {/* Optional pre-order — table reservations only */}
+            {menu.length > 0 && !selectedExp && !selectedOffer && (
               <div className="mt-4 border-t border-line pt-4">
                 <button onClick={() => setShowPreorder((s) => !s)} className="flex w-full items-center justify-between text-[13px] font-semibold text-ink">
                   <span className="flex items-center gap-1.5"><ChefHat className="h-4 w-4 text-[#c9a84c]" /> Pre-order dishes (optional){preorderCount > 0 ? ` · ${preorderCount}` : ''}</span>
@@ -352,7 +440,7 @@ export default function VenuePage() {
                 <span className="text-muted">Refundable deposit</span>
                 <span className="font-bold text-ink">{formatNaira(creditsToNaira(deposit))}</span>
               </div>
-              <p className="mt-1 text-[11px] text-muted">{deposit.toLocaleString()} credits · flat, any party size. Returned +3% when you check in.</p>
+              <p className="mt-1 text-[11px] text-muted">{deposit.toLocaleString()} credits · {selectedExp ? 'experience deposit' : 'flat, any party size'}. Returned +3% when you check in.</p>
               {isAuthenticated && (
                 <div className="mt-2 flex items-center justify-between border-t border-[rgba(201,168,76,0.18)] pt-2">
                   <span className="text-muted">Your balance</span>
