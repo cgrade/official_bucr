@@ -179,6 +179,15 @@ export async function DELETE(
       return errorResponse('Cannot delete main branch', 400);
     }
 
+    // Block deletion while upcoming reservations are tied to this branch, so they're
+    // never orphaned. The vendor must reassign/clear them first.
+    const upcoming = await db.reservation.count({
+      where: { branchId: branch.id, status: { in: ['pending', 'confirmed'] } },
+    });
+    if (upcoming > 0) {
+      return errorResponse(`This branch has ${upcoming} upcoming reservation${upcoming === 1 ? '' : 's'}. Resolve them before deleting.`, 409);
+    }
+
     // Soft delete
     await db.vendorBranch.update({
       where: { id: branch.id },

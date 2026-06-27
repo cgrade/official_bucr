@@ -38,6 +38,8 @@ export default function VenuePage() {
   // Booking an experience (own deposit/capacity) or "with" a special offer (informational note).
   const [selectedExp, setSelectedExp] = useState<any>(null);
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  // Chosen branch for the booking (null → main branch). Only matters when >1 branch.
+  const [branchId, setBranchId] = useState<string | null>(null);
   useEffect(() => { if (vendor?.isFavorited != null) setFavorited(!!vendor.isFavorited); }, [vendor?.isFavorited]);
 
   const preorderCount = Object.values(preorder).reduce((s, i) => s + i.quantity, 0);
@@ -51,6 +53,7 @@ export default function VenuePage() {
   const book = useMutation({
     mutationFn: () => reservationsApi.create({
       vendorId: vendor.id, date, time, partySize,
+      ...(branchId ? { branchId } : {}),
       ...(selectedExp ? { experienceId: selectedExp.id } : {}),
       ...(selectedOffer ? { specialRequests: `Booking with offer: ${selectedOffer.title}` } : {}),
       preorderItems: selectedExp || selectedOffer ? [] : Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
@@ -83,7 +86,8 @@ export default function VenuePage() {
   );
 
   const img = getImageUrl(vendor.coverImage || vendor.gallery?.[0]?.url || vendor.logo);
-  const branch = vendor.branches?.[0];
+  const branches: any[] = vendor.branches ?? [];
+  const branch = branches.find((b: any) => b.id === branchId) ?? branches[0];
   const baseDeposit = getReservationDeposit(vendor.venueType, vendor.customDepositCredits);
   // An experience carries its own deposit + capacity; offers don't change the deposit.
   const deposit = selectedExp ? (selectedExp.creditsRequired ?? baseDeposit) : baseDeposit;
@@ -376,6 +380,17 @@ export default function VenuePage() {
               </div>
             )}
             <div className="mt-4 space-y-3">
+              {branches.length > 1 && (
+                <div>
+                  <label className="block text-[12px] font-medium text-muted mb-1">Location</label>
+                  <select value={branch?.id ?? ''} onChange={(e) => setBranchId(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-line bg-surface px-3 text-ink focus:outline-none focus:border-[#c9a84c]">
+                    {branches.map((b: any) => (
+                      <option key={b.id} value={b.id}>{b.name}{b.city ? ` — ${b.city}` : ''}{b.isMainBranch ? ' (main)' : ''}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-[12px] font-medium text-muted mb-1">Date</label>
                 <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={(e) => setDate(e.target.value)}

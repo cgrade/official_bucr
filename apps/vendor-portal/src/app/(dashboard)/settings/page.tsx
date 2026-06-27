@@ -927,6 +927,16 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update branch'),
   });
 
+  const deleteBranchMutation = useMutation({
+    mutationFn: (id: string) => branchApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      setSelectedBranchId(null);
+      toast.success('Branch deleted');
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to delete branch'),
+  });
+
   const selected = branches.find((b) => b.id === selectedBranchId);
 
   return (
@@ -1013,6 +1023,20 @@ function LocationsSection({ queryClient }: { queryClient: any }) {
           <p className="text-xs text-[#7a8fa6]">
             Dragging the pin or clicking Find updates the branch coordinates immediately.
           </p>
+          {!selected.isMainBranch && (
+            <div className="pt-2 border-t border-[rgba(255,255,255,0.08)]">
+              <Button
+                variant="outline"
+                className="gap-2 text-red-400 border-red-500/30 hover:bg-red-500/10"
+                disabled={deleteBranchMutation.isPending}
+                onClick={() => { if (confirm(`Delete "${selected.name}"? This cannot be undone.`)) deleteBranchMutation.mutate(selected.id); }}
+              >
+                {deleteBranchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Delete this branch
+              </Button>
+              <p className="mt-1.5 text-xs text-[#7a8fa6]">The main branch can't be deleted.</p>
+            </div>
+          )}
         </div>
       )}
 

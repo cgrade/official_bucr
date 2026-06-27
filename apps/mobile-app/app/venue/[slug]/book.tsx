@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Users, X, Sparkles, Tag, ChefHat, ChevronDown, Minus, Plus } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Users, X, Sparkles, Tag, ChefHat, ChevronDown, Minus, Plus, MapPin } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vendorsApi, reservationsApi } from '../../../src/lib/api';
 import { useAuthStore } from '../../../src/stores/auth.store';
@@ -43,6 +43,8 @@ export default function BookingScreen() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [partySize, setPartySize] = useState(2);
   const [specialRequests, setSpecialRequests] = useState('');
+  // Chosen branch (null → main). Only surfaced when the vendor has >1 branch.
+  const [branchId, setBranchId] = useState<string | null>(null);
   // Optional pre-order: menuItemId -> { name, quantity } — helps the kitchen prep ahead.
   const [preorder, setPreorder] = useState<Record<string, { name: string; quantity: number }>>({});
   const [showPreorder, setShowPreorder] = useState(false);
@@ -56,6 +58,7 @@ export default function BookingScreen() {
   });
 
   const vendor = vendorData?.data;
+  const branches: any[] = vendor?.branches || [];
   const getImageUrl = (url: string | null | undefined): string | undefined => {
     if (!url) return undefined;
     if (url.startsWith('http')) return url;
@@ -150,6 +153,7 @@ export default function BookingScreen() {
       time: selectedTime,
       partySize,
       specialRequests: specialRequests.trim() || undefined,
+      ...(branchId ? { branchId } : {}),
       preorderItems: Object.entries(preorder).map(([menuItemId, v]) => ({ menuItemId, name: v.name, quantity: v.quantity })),
     };
 
@@ -248,6 +252,34 @@ export default function BookingScreen() {
                 <Text style={styles.offerTermsText}>{selectedOffer.terms}</Text>
               )}
             </View>
+          </View>
+        )}
+
+        {/* Branch selection — only when the vendor has more than one location */}
+        {branches.length > 1 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MapPin size={20} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Location</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.partySizeList}>
+                {branches.map((b: any) => {
+                  const selected = (branchId ?? branches[0]?.id) === b.id;
+                  return (
+                    <TouchableOpacity
+                      key={b.id}
+                      style={[styles.timeSlot, { backgroundColor: colors.inputBackground }, selected && { backgroundColor: colors.primary }]}
+                      onPress={() => setBranchId(b.id)}
+                    >
+                      <Text style={[styles.timeText, { color: colors.text }, selected && styles.timeTextSelected]}>
+                        {b.name}{b.city ? ` · ${b.city}` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
           </View>
         )}
 
