@@ -304,6 +304,10 @@ export const analyticsApi = {
     const { data } = await api.get<ApiResponse<any>>('/vendor/analytics/reservations', { params: { period } });
     return data;
   },
+  getRoi: async (period = 30) => {
+    const { data } = await api.get<ApiResponse<any>>('/vendor/analytics/roi', { params: { period } });
+    return data;
+  },
 };
 
 // Guest Profiles API

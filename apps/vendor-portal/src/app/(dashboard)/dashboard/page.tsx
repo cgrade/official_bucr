@@ -45,6 +45,12 @@ export default function DashboardPage() {
     queryFn: () => analyticsApi.getDashboard(),
   });
 
+  const { data: roiData } = useQuery({
+    queryKey: ['analytics', 'roi'],
+    queryFn: () => analyticsApi.getRoi(30),
+  });
+  const roi = roiData?.data;
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -190,6 +196,42 @@ export default function DashboardPage() {
             </div>
           </motion.div>
         </div>
+
+        {/* Your BUCR impact — the value the deposit system creates (the ROI story) */}
+        {roi && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.06)] p-6"
+          >
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-lg font-bold text-[#f5f0e8]">Your BUCR impact</h2>
+              <span className="text-xs font-medium text-[#7a8fa6]">last {roi.periodDays} days</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div>
+                <p className="text-[12px] text-[#7a8fa6]">Show-up rate</p>
+                <p className="mt-0.5 text-2xl font-bold text-[#f5f0e8]">{roi.showRatePct != null ? `${roi.showRatePct}%` : '—'}</p>
+                <p className="text-[11px] text-[#7a8fa6]">{roi.showed} showed · {roi.noShow} no-show</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#7a8fa6]">Deposit value protected</p>
+                <p className="mt-0.5 text-2xl font-bold text-[#c9a84c]">₦{(roi.depositsProtected?.ngn ?? 0).toLocaleString()}</p>
+                <p className="text-[11px] text-[#7a8fa6]">guests' money at stake to show up</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#7a8fa6]">No-show compensation</p>
+                <p className="mt-0.5 text-2xl font-bold text-[#f5f0e8]">₦{(roi.noShowCompensation?.ngn ?? 0).toLocaleString()}</p>
+                <p className="text-[11px] text-[#7a8fa6]">marketing credits you earned</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#7a8fa6]">Covers seated</p>
+                <p className="mt-0.5 text-2xl font-bold text-[#f5f0e8]">{(roi.coversSeated ?? 0).toLocaleString()}</p>
+                <p className="text-[11px] text-[#7a8fa6]">guests who showed up</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Today's Reservations */}
         <motion.div
