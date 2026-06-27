@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth.store';
 import { subscriptionApi } from '@/lib/api';
@@ -98,8 +98,32 @@ const benefits = [
 
 export default function SubscriptionPage() {
   const { vendor } = useAuthStore();
+  const qc = useQueryClient();
   // Normalise: 'premium' (legacy) → 'elite'
   const currentTier = (vendor?.subscriptionTier?.toLowerCase() ?? 'basic').replace('premium', 'elite');
+
+  const { data: subData } = useQuery({ queryKey: ['subscription'], queryFn: () => subscriptionApi.getCurrent() });
+  const sub = subData?.data?.subscription ?? subData?.data;
+  const scheduledTier: string | null = sub?.scheduledTier ?? null;
+  const expiresAt: string | undefined = sub?.expiresAt;
+
+  const downgradeMutation = useMutation({
+    mutationFn: (tier: 'basic' | 'pro') => subscriptionApi.downgrade(tier),
+    onSuccess: (d: any) => { toast.success(d?.message || 'Downgrade scheduled'); qc.invalidateQueries({ queryKey: ['subscription'] }); },
+    onError: (e: any) => toast.error(e?.response?.data?.error || e?.response?.data?.message || 'Could not schedule downgrade'),
+  });
+  const cancelDowngradeMutation = useMutation({
+    mutationFn: () => subscriptionApi.cancelDowngrade(),
+    onSuccess: () => { toast.success('Scheduled downgrade cancelled'); qc.invalidateQueries({ queryKey: ['subscription'] }); },
+    onError: (e: any) => toast.error(e?.response?.data?.error || 'Could not cancel downgrade'),
+  });
+
+  const onDowngrade = (tier: 'basic' | 'pro') => {
+    const label = tier === 'basic' ? 'Basic (free)' : 'Pro';
+    if (confirm(`Schedule a downgrade to ${label}? You keep your current plan until it ends, then move to ${label}.`)) {
+      downgradeMutation.mutate(tier);
+    }
+  };
 
   const upgradeMutation = useMutation({
     // Return the vendor to this page after Paystack checkout.
@@ -151,6 +175,39 @@ export default function SubscriptionPage() {
       </header>
 
       <div className="flex-1 p-8 space-y-8">
+        {/* Scheduled-downgrade banner */}
+        {scheduledTier && (
+          <div className="glass-card rounded-2xl p-4 border border-[rgba(201,168,76,0.35)] bg-[rgba(201,168,76,0.06)] flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-[14px] text-[#f5f0e8]">
+              Scheduled downgrade to <span className="font-semibold capitalize text-[#c9a84c]">{scheduledTier}</span>
+              {expiresAt ? <> on <span className="font-semibold">{new Date(expiresAt).toLocaleDateString()}</span></> : ''}. You keep your current plan until then.
+            </p>
+            <button onClick={() => cancelDowngradeMutation.mutate()} disabled={cancelDowngradeMutation.isPending}
+              className="rounded-lg border border-[#c9a84c] px-3 h-9 text-[13px] font-semibold text-[#c9a84c] hover:bg-[rgba(201,168,76,0.1)] disabled:opacity-50">
+              Keep my current plan
+            </button>
+          </div>
+        )}
+
+        {/* Downgrade options — only for paid tiers, when no downgrade is already scheduled */}
+        {currentTier !== 'basic' && !scheduledTier && (
+          <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-[13px] text-[#7a8fa6]">Need to spend less? Schedule a downgrade — it takes effect when your current paid period ends (no refund).</p>
+            <div className="flex gap-2">
+              {currentTier === 'elite' && (
+                <button onClick={() => onDowngrade('pro')} disabled={downgradeMutation.isPending}
+                  className="rounded-lg border border-[rgba(255,255,255,0.15)] px-3 h-9 text-[13px] font-medium text-[#f5f0e8] hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-50">
+                  Downgrade to Pro
+                </button>
+              )}
+              <button onClick={() => onDowngrade('basic')} disabled={downgradeMutation.isPending}
+                className="rounded-lg border border-[rgba(255,255,255,0.15)] px-3 h-9 text-[13px] font-medium text-[#f5f0e8] hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-50">
+                Downgrade to Basic (free)
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Current Plan Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

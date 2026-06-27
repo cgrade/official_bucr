@@ -524,6 +524,14 @@ export const subscriptionApi = {
     const { data } = await api.get<ApiResponse<any[]>>('/vendor/subscription/billing');
     return data;
   },
+  downgrade: async (tier: 'basic' | 'pro') => {
+    const { data } = await api.post<ApiResponse<{ scheduledTier: string; effectiveAt: string }>>('/vendor/subscription/downgrade', { tier });
+    return data;
+  },
+  cancelDowngrade: async () => {
+    const { data } = await api.delete<ApiResponse<null>>('/vendor/subscription/downgrade');
+    return data;
+  },
 };
 
 // Achievements API

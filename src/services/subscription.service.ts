@@ -30,7 +30,12 @@ export interface SubscriptionDetails {
   daysRemaining: number;
   features: string[];
   price: number;
+  /** A lower tier scheduled to apply when the current paid period ends (or null). */
+  scheduledTier?: SubscriptionTierInput | null;
 }
+
+/** Tier ranking for comparing upgrade vs downgrade. */
+export const TIER_RANK: Record<SubscriptionTierInput, number> = { basic: 0, pro: 1, elite: 2 };
 
 // ============================================================================
 // SUBSCRIPTION MANAGEMENT
@@ -115,6 +120,7 @@ export async function getVendorSubscription(vendorId: string): Promise<Subscript
     daysRemaining: tierKey === 'basic' ? Infinity : daysRemaining,
     features: [...tierConfig.features],
     price: tierConfig.priceNgn,
+    scheduledTier: (latestSubscription?.scheduledTier as SubscriptionTierInput | undefined) ?? null,
   };
 }
 
@@ -151,6 +157,48 @@ export async function cancelSubscription(vendorId: string): Promise<void> {
     data: { status: 'cancelled', autoRenew: false, cancelledAt: new Date() },
   });
   // Access continues until expiry; downgrade cron handles the rest
+}
+
+/**
+ * Schedule a downgrade to a LOWER tier that takes effect at the end of the current paid
+ * period — the vendor keeps (and keeps the full value of) their current tier until then.
+ * No refund/proration: closed-loop, money only flows TO Bucr. The downgrade is applied by
+ * checkExpiredSubscriptions at expiry. (A lower *paid* tier can't be auto-charged here, so
+ * at expiry the vendor lands on Basic and is prompted to subscribe to the chosen tier.)
+ */
+export async function scheduleDowngrade(vendorId: string, targetTier: SubscriptionTierInput): Promise<{ effectiveAt: Date }> {
+  const vendor = await db.vendor.findUnique({
+    where: { id: vendorId },
+    select: { subscriptionTier: true, subscriptionExpiresAt: true },
+  });
+  if (!vendor) throw new Error('Vendor not found');
+
+  const currentTier = (vendor.subscriptionTier as string).replace('premium', 'elite') as SubscriptionTierInput;
+  if (currentTier === 'basic') throw new Error('You are on the free Basic plan — nothing to downgrade.');
+  if (TIER_RANK[targetTier] >= TIER_RANK[currentTier]) {
+    throw new Error('Choose a lower tier to downgrade. Use upgrade to move up.');
+  }
+
+  const subscription = await db.vendorSubscription.findFirst({
+    where: { vendorId, status: 'active' },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!subscription) throw new Error('No active subscription found');
+
+  await db.vendorSubscription.update({
+    where: { id: subscription.id },
+    data: { scheduledTier: targetTier as any, autoRenew: false },
+  });
+
+  return { effectiveAt: vendor.subscriptionExpiresAt ?? subscription.expiresAt };
+}
+
+/** Cancel a pending scheduled downgrade (vendor changed their mind). */
+export async function clearScheduledDowngrade(vendorId: string): Promise<void> {
+  await db.vendorSubscription.updateMany({
+    where: { vendorId, status: 'active', scheduledTier: { not: null } },
+    data: { scheduledTier: null },
+  });
 }
 
 export async function toggleAutoRenew(vendorId: string, autoRenew: boolean): Promise<void> {
@@ -272,6 +320,15 @@ export async function checkExpiredSubscriptions(): Promise<number> {
   });
 
   for (const vendor of expiredVendors) {
+    // A paid period that ended reverts to Basic. If the vendor had scheduled a downgrade
+    // to a lower PAID tier, we can't auto-charge it here (no saved card) — so we still drop
+    // to Basic and prompt them to subscribe to the chosen tier.
+    const activeSub = await db.vendorSubscription.findFirst({
+      where: { vendorId: vendor.id, status: 'active' },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, scheduledTier: true },
+    });
+
     await db.$transaction([
       db.vendor.update({
         where: { id: vendor.id },
@@ -282,6 +339,19 @@ export async function checkExpiredSubscriptions(): Promise<number> {
         data: { status: 'expired' },
       }),
     ]);
+
+    const scheduled = activeSub?.scheduledTier as SubscriptionTierInput | null | undefined;
+    if (scheduled && scheduled !== 'basic') {
+      const { notifyVendor } = await import('./vendor-message.service');
+      notifyVendor({
+        vendorId: vendor.id,
+        category: 'system',
+        subject: `Your plan ended — subscribe to ${scheduled.charAt(0).toUpperCase() + scheduled.slice(1)} to complete your downgrade`,
+        body: `Your previous plan has ended and your account is now on Basic. To activate your scheduled downgrade to ${scheduled}, subscribe to it from your Subscription page.`,
+        link: '/subscription',
+        email: true,
+      }).catch(() => {});
+    }
   }
 
   return expiredVendors.length;
