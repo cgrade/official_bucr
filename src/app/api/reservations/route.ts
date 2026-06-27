@@ -10,6 +10,7 @@ import {
 import { createReservation } from '@/services/reservation.service';
 import { getOperationalSettings } from '@/lib/config/system-settings';
 import { ECONOMICS } from '@/lib/config/economics';
+import { combineDateAndTime } from '@/lib/utils/datetime';
 import { db } from '@/lib/db';
 
 const createReservationSchema = z.object({
@@ -86,16 +87,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure the reservation date+TIME is in the future. data.date is a calendar day
-    // (midnight), so we must fold in the booking time for the check — otherwise every
-    // same-day reservation (the common case for dining) would be rejected. Build a
-    // separate datetime (don't mutate reservationDate, which is stored as the day) the
-    // same way check-in/cancel reconstruct it, so the comparison is consistent.
+    // (midnight); fold in the booking time in the business timezone (not the server's) so
+    // same-day bookings work and the check is identical across deploy environments.
     const reservationDate = new Date(data.date);
-    const reservationDateTime = new Date(reservationDate);
-    if (data.time) {
-      const [hh, mm] = data.time.split(':').map(Number);
-      reservationDateTime.setHours(hh || 0, mm || 0, 0, 0);
-    }
+    const reservationDateTime = combineDateAndTime(data.date, data.time);
     if (reservationDateTime.getTime() < Date.now()) {
       return errorResponse('Reservation date/time must be in the future', 400);
     }

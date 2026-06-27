@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { ECONOMICS } from '@/lib/config/economics';
 import { generateBookingReference, generatePin, getHoursUntil } from '@/lib/utils/helpers';
+import { combineDateAndTime } from '@/lib/utils/datetime';
 import { generateQRCode } from './qrcode.service';
 import {
   calculateReservationDeposit,
@@ -292,9 +293,7 @@ export async function cancelReservation(
   });
   if (!reservation) throw new Error('Reservation not found or already processed');
 
-  const reservationDateTime = new Date(reservation.date);
-  const [hours, minutes] = reservation.time.split(':').map(Number);
-  reservationDateTime.setHours(hours, minutes);
+  const reservationDateTime = combineDateAndTime(reservation.date, reservation.time);
   const hoursUntil = getHoursUntil(reservationDateTime);
 
   let refundAmount: number;
@@ -455,9 +454,7 @@ export async function modifyReservation(
   });
   if (!reservation) throw new Error('Reservation not found or cannot be modified');
 
-  const reservationDateTime = new Date(reservation.date);
-  const [hours, minutes] = reservation.time.split(':').map(Number);
-  reservationDateTime.setHours(hours, minutes);
+  const reservationDateTime = combineDateAndTime(reservation.date, reservation.time);
   const hoursUntil = getHoursUntil(reservationDateTime);
 
   const MODIFICATION_WINDOW_HOURS = 12;
