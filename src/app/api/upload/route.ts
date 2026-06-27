@@ -49,6 +49,23 @@ export async function POST(request: NextRequest) {
 
     const { file, folder } = validation.data;
 
+    // Size + type guard. `file` is base64, optionally a data URI. Cap the decoded size and,
+    // when the MIME is declared, restrict to images (+ PDF for KYC documents). This stops
+    // oversized/abusive uploads and disallows script-carrying types (e.g. SVG).
+    const MAX_BYTES = folder === 'documents' ? 15 * 1024 * 1024 : 8 * 1024 * 1024;
+    const dataUri = file.match(/^data:([\w.+-]+\/[\w.+-]+);base64,/);
+    const mime = dataUri?.[1];
+    const base64Body = dataUri ? file.slice(dataUri[0].length) : file;
+    const approxBytes = Math.floor((base64Body.length * 3) / 4);
+    if (approxBytes > MAX_BYTES) {
+      return errorResponse(`File too large. Maximum ${Math.round(MAX_BYTES / (1024 * 1024))}MB.`, 413);
+    }
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    const allowedTypes = folder === 'documents' ? [...imageTypes, 'application/pdf'] : imageTypes;
+    if (mime && !allowedTypes.includes(mime)) {
+      return errorResponse(`Unsupported file type (${mime}). Allowed: ${allowedTypes.join(', ')}.`, 415);
+    }
+
     // Validate folder access based on user role
     if (folder === 'documents' && payload.role !== 'vendor') {
       return errorResponse('Only vendors can upload documents', 403);

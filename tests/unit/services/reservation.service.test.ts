@@ -49,11 +49,16 @@ vi.mock('@/lib/db', () => {
   const mockVendorCreditTransaction = {
     create: vi.fn().mockResolvedValue({ id: 'vtx-1' }),
   };
+  // null branch → operating-hours check is skipped (treated as "hours not configured")
+  const mockVendorBranch = {
+    findFirst: vi.fn().mockResolvedValue(null),
+  };
   return {
     db: {
       reservation: mockReservation,
       user: mockUser,
       vendor: mockVendor,
+      vendorBranch: mockVendorBranch,
       creditTransaction: mockCreditTransaction,
       guestProfile: mockGuestProfile,
       vendorCreditTransaction: mockVendorCreditTransaction,

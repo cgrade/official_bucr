@@ -11,6 +11,7 @@ import { createReservation } from '@/services/reservation.service';
 import { getOperationalSettings } from '@/lib/config/system-settings';
 import { ECONOMICS } from '@/lib/config/economics';
 import { combineDateAndTime } from '@/lib/utils/datetime';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { db } from '@/lib/db';
 
 const createReservationSchema = z.object({
@@ -32,6 +33,9 @@ const createReservationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = applyRateLimit(request, 'payment');
+    if (limited) return limited;
+
     const payload = await authenticateRequest(request);
 
     if (!payload || payload.role !== 'user') {
@@ -142,6 +146,10 @@ export async function POST(request: NextRequest) {
       }
       if (error.message.includes('not found')) {
         return errorResponse(error.message, 404);
+      }
+      // Booking-validation messages (e.g. closed hours) are safe to surface verbatim.
+      if (error.message.includes('closed') || error.message.includes('opening hours')) {
+        return errorResponse(error.message, 400);
       }
     }
     return errorResponse('Failed to create reservation', 500);

@@ -36,3 +36,35 @@ export function combineDateAndTime(date: Date | string, time: string): Date {
     `${datePart(date)}T${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00${offsetSuffix(BUSINESS_UTC_OFFSET_MINUTES)}`,
   );
 }
+
+interface OperatingHour {
+  dayOfWeek: number; // 0 = Sunday … 6 = Saturday
+  openTime: string;  // "HH:MM"
+  closeTime: string; // "HH:MM"
+  isClosed?: boolean;
+}
+
+const toMinutes = (t: string): number => {
+  const [h, m] = t.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
+/**
+ * Is the venue open for a booking on this calendar date + wall-clock time, given its
+ * weekly operating hours? Returns true when hours aren't configured (don't block vendors
+ * who haven't set them). Handles a window that spans midnight (close <= open).
+ */
+export function isVenueOpen(operatingHours: unknown, date: Date | string, time: string): boolean {
+  if (!Array.isArray(operatingHours) || operatingHours.length === 0) return true;
+  const hours = operatingHours as OperatingHour[];
+  // Day of week of the reservation's calendar date (stored at UTC midnight).
+  const dow = new Date(`${datePart(date)}T00:00:00Z`).getUTCDay();
+  const today = hours.find((h) => h.dayOfWeek === dow);
+  if (!today || today.isClosed) return false;
+
+  const t = toMinutes(time);
+  const open = toMinutes(today.openTime);
+  const close = toMinutes(today.closeTime);
+  // Normal same-day window vs one that crosses midnight (e.g. 18:00 → 02:00).
+  return close > open ? t >= open && t <= close : t >= open || t <= close;
+}

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { createGift } from '@/services/gift.service';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/utils/api-response';
 import { z } from 'zod';
@@ -15,6 +16,9 @@ const createGiftSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = applyRateLimit(request, 'payment');
+    if (limited) return limited;
+
     const user = await authenticateRequest(request);
     if (!user || user.role !== 'user') return unauthorizedResponse();
 

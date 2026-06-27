@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { ECONOMICS } from '@/lib/config/economics';
 import { generateBookingReference, generatePin, getHoursUntil } from '@/lib/utils/helpers';
-import { combineDateAndTime } from '@/lib/utils/datetime';
+import { combineDateAndTime, isVenueOpen } from '@/lib/utils/datetime';
 import { generateQRCode } from './qrcode.service';
 import {
   calculateReservationDeposit,
@@ -49,6 +49,18 @@ export async function createReservation(params: CreateReservationParams) {
     });
     if (!experience) throw new Error('Experience not found');
     creditsRequired = experience.creditsRequired;
+  }
+
+  // Don't allow booking a table when the venue is closed at that day/time. Experiences run
+  // on their own schedule, so they're exempt. If hours aren't configured, this is a no-op.
+  if (!experienceId) {
+    const branch = await db.vendorBranch.findFirst({
+      where: branchId ? { id: branchId, vendorId, deletedAt: null } : { vendorId, deletedAt: null, isMainBranch: true },
+      select: { operatingHours: true },
+    });
+    if (branch && !isVenueOpen(branch.operatingHours, date, time)) {
+      throw new Error('The restaurant is closed at the selected day and time. Please pick a time within its opening hours.');
+    }
   }
 
   const user = await db.user.findUnique({

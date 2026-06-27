@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticateRequest } from '@/lib/auth/middleware';
+import { applyRateLimit } from '@/lib/middleware/rate-limit';
 import { db } from '@/lib/db';
 import {
   successResponse,
@@ -35,6 +36,9 @@ const legacyPurchaseSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = applyRateLimit(request, 'payment');
+    if (limited) return limited;
+
     const payload = await authenticateRequest(request);
 
     if (!payload || payload.role !== 'user') {
