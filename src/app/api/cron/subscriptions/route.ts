@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { captureException } from '@/lib/monitoring/capture';
 import { checkExpiredSubscriptions } from '@/services/subscription.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       result,
     });
   } catch (error) {
-    console.error('Subscription cron job error:', error);
+    captureException(error, { scope: 'cron:subscriptions' });
     return errorResponse(
       error instanceof Error ? error.message : 'Cron job failed',
       500

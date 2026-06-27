@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { captureException } from '@/lib/monitoring/capture';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 import { sendReservationReminderEmail } from '@/services/email.service';
 import { notifyReservationReminder } from '@/services/notification.service';
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
       skippedByPreference: skipped,
     });
   } catch (error) {
-    console.error('Reminder cron job error:', error);
+    captureException(error, { scope: 'cron:reminders' });
     return errorResponse(
       error instanceof Error ? error.message : 'Cron job failed',
       500

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { captureException } from '@/lib/monitoring/capture';
 import { processExpiredCredits, sendExpiryReminders } from '@/services/credit.service';
 import { processExpiredGifts } from '@/services/gift.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('Credit cron job error:', error);
+    captureException(error, { scope: 'cron:credits' });
     return errorResponse(
       error instanceof Error ? error.message : 'Cron job failed',
       500

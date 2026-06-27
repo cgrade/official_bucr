@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { config } from '@/lib/config';
 import { handlePaystackWebhook } from '@/services/payment.service';
+import { captureException } from '@/lib/monitoring/capture';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
 
     return new Response('OK', { status: 200 });
   } catch (error) {
-    console.error('Paystack webhook error:', error);
+    // A failed payment webhook = money received but not reconciled — alert, don't bury.
+    captureException(error, { scope: 'webhook:paystack' });
     return new Response('Webhook processing failed', { status: 500 });
   }
 }

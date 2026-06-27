@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { captureException } from '@/lib/monitoring/capture';
 import { ECONOMICS } from '@/lib/config/economics';
 import { notifyVendor } from '@/services/vendor-message.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({ message: 'Per-cover invoicing pass complete', issued, totalNgn, reminded, overdue });
   } catch (error) {
-    console.error('Cover-fee invoice cron error:', error);
+    captureException(error, { scope: 'cron:cover-fee-invoice' });
     return errorResponse(error instanceof Error ? error.message : 'Cron failed', 500);
   }
 }

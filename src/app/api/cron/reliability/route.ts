@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { captureException } from '@/lib/monitoring/capture';
 import { computeReliabilityScores } from '@/services/reliability.service';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       ...result,
     });
   } catch (error) {
-    console.error('Reliability cron error:', error);
+    captureException(error, { scope: 'cron:reliability' });
     return errorResponse(error instanceof Error ? error.message : 'Cron failed', 500);
   }
 }

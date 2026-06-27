@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { cleanupExpiredTokens } from '@/services/token.service';
 import { processFeaturedAutoRenewals } from '@/services/featured.service';
 import { expireStaleWaitlist } from '@/services/waitlist.service';
+import { captureException } from '@/lib/monitoring/capture';
 import { db } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       featuredAutoRenew,
     });
   } catch (error) {
-    console.error('Cleanup cron job error:', error);
+    captureException(error, { scope: 'cron:cleanup' });
     return errorResponse(
       error instanceof Error ? error.message : 'Cron job failed',
       500

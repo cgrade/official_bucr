@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { captureException } from '@/lib/monitoring/capture';
 import { successResponse, errorResponse } from '@/lib/utils/api-response';
 import { sendVendorWeeklyReport } from '@/services/email.service';
 import { resolveVendorPreferences } from '@/lib/notifications/preferences';
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       skipped,
     });
   } catch (error) {
-    console.error('Weekly report cron error:', error);
+    captureException(error, { scope: 'cron:weekly-reports' });
     return errorResponse(error instanceof Error ? error.message : 'Cron job failed', 500);
   }
 }
