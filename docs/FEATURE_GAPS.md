@@ -43,37 +43,39 @@ standalone takeout is parked.
 
 ---
 
-## C. Partially-built lifecycle
+## C. Lifecycle gaps — ✅ CLOSED (this pass)
 
-### C1. Multi-branch — 🟡 partial — P1
-Vendors can **create** branches (`POST /vendor/branches`) and set operating hours
-(`PATCH`). Missing:
-- **Per-branch edit / delete** endpoint + UI (no `DELETE`, no `/vendor/branches/[id]`).
-- **Branch-scoped operations** — reservations, deposits, capacity, and the QR/check-in
-  flow are effectively single-branch; a diner can't pick a branch and a vendor can't run
-  per-branch availability.
-- **Effort:** medium. Needs branch selection in the booking flow + branch filters across
-  vendor dashboards.
+### C1. Multi-branch — ✅ done (core) — P1
+- Branch CRUD: GET/PATCH/**DELETE** on `/vendor/branches/[branchId]` (this already
+  existed; delete now blocks branches with upcoming reservations, main branch protected).
+- **Diner branch selection** at booking on web + mobile (Location picker when >1 branch),
+  `branchId` persisted on the reservation.
+- Vendor **delete** button wired in Settings → Locations.
+- _Remaining (P2):_ per-branch **operating-hours** editing UI (the `[branchId]` PATCH
+  already accepts `operatingHours`; the Business Hours tab still edits the main branch) and
+  branch-filtered vendor dashboards / per-branch capacity.
 
-### C2. Waitlist — 🟡 join-only — P1
-Guests can **join** a waitlist (`POST /waitlist`, states `waiting` / `notified`), but
-there is **no vendor action to notify / seat the next party** and no auto-promotion when a
-table frees up. The loop is open-ended.
-- **Gap:** vendor "notify next" / "seat" endpoint + UI; optional push/SMS on promotion;
-  position display for the guest.
-- **Effort:** small–medium.
+### C2. Waitlist — ✅ done — P1
+Full vendor seating loop: `GET /vendor/waitlist` (queue + position, lazy-expires lapsed
+holds), `POST .../[id]/notify` (15-min hold + push/SMS/email), `POST .../[id]/seat`,
+`DELETE .../[id]`; guest `GET /waitlist` returns live position; cleanup cron expires stale
+holds. Vendor portal **Waitlist** page. No credits (walk-in list).
+- _Remaining (P3):_ in-app guest waitlist-status screen (guest is already notified by
+  push/SMS/email; position API exists).
 
-### C3. Subscription downgrade — 🟡 partial — P2
-`upgrade` and `cancel` exist; a true **downgrade** path (Elite→Pro, with proration /
-credit handling) is not clearly implemented.
-- **Gap:** downgrade endpoint with proration policy; confirm `cron/subscriptions` handles
-  tier step-downs at period end.
+### C3. Subscription downgrade — ✅ done — P2
+Scheduled downgrade (`VendorSubscription.scheduledTier`): keep the current paid tier until
+period end (no refund — closed loop), then the cron applies it. `POST/DELETE
+/vendor/subscription/downgrade` + vendor portal banner/controls.
+- _Remaining (P2):_ a seamless landing straight onto a lower **paid** tier needs a saved
+  payment method (architecture is pay-per-period via Paystack); for now a paid landing
+  drops to Basic and prompts a re-subscribe.
 
-### C4. Email verification not enforced — 🟡 — P1
-`/auth/verify-email` exists and sends, but login and booking are **not gated** on a
-verified email — accounts work fully unverified.
-- **Decision:** enforce verification (block booking until verified) or keep soft. If soft,
-  document it; if enforced, add the gate in `withAuth`/booking + a resend flow.
+### C4. Booking verification gate — ✅ done — P1
+Booking now requires a verified **email OR phone** (`ECONOMICS.REQUIRE_VERIFICATION_TO_BOOK`,
+default on). Register auto-sends the email OTP; `/reservations` returns
+`VERIFICATION_REQUIRED`; web + mobile have a verify screen (resend + skip); `/auth/me` +
+`/users/profile` expose `isVerified`. Browsing/login stay open.
 
 ---
 
@@ -115,10 +117,11 @@ credentials** — they silently no-op until configured.
 ---
 
 ## Suggested sequencing
-1. **P0 / launch:** provision SMS + push keys (E1); decide email-verification policy (C4).
-2. **P1 / immediately after:** waitlist seating (C2), multi-branch completion (C1),
-   Flutterwave failover (D).
-3. **P2 / growth:** event ticketing decision (B1), live queue, loyalty, subscription
-   downgrade (C3), BUCR+.
+1. **P0 / launch:** provision SMS + push keys (E1). _(C4 verification gate is now built +
+   on by default.)_
+2. **P1 / immediately after:** Flutterwave failover (D). _(C1 multi-branch core, C2 waitlist
+   seating, C4 verification — done.)_
+3. **P2 / growth:** event ticketing decision (B1), live queue, loyalty, BUCR+; finish C1
+   (per-branch hours UI + branch-filtered dashboards); seamless paid downgrade for C3.
 4. **P3 / later:** bill commission (needs licensed partner), night-out planner, web
-   discovery polish (A remaining nicety).
+   discovery polish (A remaining nicety), guest waitlist-status screen (C2 remaining).
