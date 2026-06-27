@@ -143,7 +143,11 @@ describe('E2E Workflow Tests', () => {
 
     it('Step 5: User creates reservation', async () => {
       const { POST: createReservation } = await import('@/app/api/reservations/route');
-      
+
+      // Booking requires a verified email/phone (REQUIRE_VERIFICATION_TO_BOOK). Mark the
+      // journey user verified the same way the email-OTP flow would.
+      await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
 
