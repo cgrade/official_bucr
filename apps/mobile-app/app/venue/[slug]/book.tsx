@@ -126,7 +126,14 @@ export default function BookingScreen() {
       router.replace(`/booking/${response.data.id}`);
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.message || 'Failed to create reservation');
+      if (error?.response?.data?.code === 'VERIFICATION_REQUIRED' || error?.response?.status === 403) {
+        Alert.alert('Verify your email', 'Please verify your email to book.', [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Verify', onPress: () => router.push(`/verify?redirect=/venue/${slug}/book` as any) },
+        ]);
+        return;
+      }
+      Alert.alert('Error', error?.response?.data?.error || error.message || 'Failed to create reservation');
     },
   });
 

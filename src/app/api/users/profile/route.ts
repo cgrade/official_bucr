@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
         seatingPreferences: true,
         specialOccasions: true,
         referralCode: true,
+        emailVerifiedAt: true,
+        phoneVerifiedAt: true,
         createdAt: true,
       },
     });
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
       return errorResponse('User not found', 404);
     }
 
-    return successResponse(user);
+    return successResponse({ ...user, isVerified: !!(user.emailVerifiedAt || user.phoneVerifiedAt) });
   } catch (error) {
     console.error('Get profile error:', error);
     return errorResponse('Failed to get profile', 500);

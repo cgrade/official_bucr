@@ -148,6 +148,16 @@ export const authApi = {
     return response.data;
   },
 
+  sendEmailVerification: async () => {
+    const response = await api.post<ApiResponse<{ message: string }>>('/auth/verify-email', { action: 'send' });
+    return response.data;
+  },
+
+  verifyEmail: async (otp: string) => {
+    const response = await api.post<ApiResponse<any>>('/auth/verify-email', { action: 'verify', otp });
+    return response.data;
+  },
+
   changePassword: async (data: { currentPassword: string; newPassword: string }) => {
     const response = await api.post<ApiResponse<null>>('/users/change-password', data);
     return response.data;

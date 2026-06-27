@@ -211,6 +211,14 @@ export const ECONOMICS = {
    * has signed off. Flipping to true is the ONLY gate for cash withdrawal.
    */
   VENDOR_WITHDRAWAL_ENABLED: boolEnv('VENDOR_WITHDRAWAL_ENABLED', false),
+
+  // ── Trust & safety ────────────────────────────────────────────────────────
+  /**
+   * Require a verified email OR phone before a diner can book (deposits are real
+   * money on no-show, so we want a reachable, real contact). Set false to disable
+   * the gate (e.g. during early testing) without removing the flow.
+   */
+  REQUIRE_VERIFICATION_TO_BOOK: boolEnv('REQUIRE_VERIFICATION_TO_BOOK', true),
 };
 
 // ── Helper resolvers ─────────────────────────────────────────────────────────

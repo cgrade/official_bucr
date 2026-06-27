@@ -9,7 +9,7 @@ import {
   validationErrorResponse,
 } from '@/lib/utils/api-response';
 import { createToken, verifyOtp } from '@/services/token.service';
-import { sendEmail } from '@/services/email.service';
+import { sendVerificationEmail } from '@/services/email.service';
 
 const sendVerificationSchema = z.object({
   action: z.literal('send'),
@@ -98,50 +98,4 @@ export async function POST(request: NextRequest) {
     console.error('Email verification error:', error);
     return errorResponse('Failed to process request', 500);
   }
-}
-
-async function sendVerificationEmail(params: {
-  to: string;
-  userName: string;
-  otp: string;
-}) {
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background: #f9fafb; }
-        .code { font-size: 32px; font-weight: bold; color: #2563eb; text-align: center; letter-spacing: 8px; padding: 20px; background: white; border-radius: 8px; margin: 20px 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Verify Your Email</h1>
-        </div>
-        <div class="content">
-          <p>Hi ${params.userName},</p>
-          <p>Thanks for signing up! Please verify your email using the code below:</p>
-          
-          <div class="code">${params.otp}</div>
-          
-          <p>This code will expire in <strong>30 minutes</strong>.</p>
-        </div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} Bucr. All rights reserved.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return sendEmail({
-    to: params.to,
-    subject: 'Verify Your Bucr Email',
-    html,
-  });
 }

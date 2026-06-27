@@ -106,6 +106,20 @@ export async function sendWelcomeEmail(params: { to: string; userName: string })
   return sendEmail({ to: params.to, subject: 'Welcome to Bucr 🎉', html });
 }
 
+/** Email a 6-digit verification code to a diner. */
+export async function sendVerificationEmail(params: { to: string; userName: string; otp: string }) {
+  const html = baseEmailLayout({
+    heading: 'Verify your email',
+    preheader: 'Your Bucr verification code',
+    bodyHtml: `
+      <p>Hi ${params.userName},</p>
+      <p>Enter this code in the app to verify your email and start booking:</p>
+      <p style="font-size:32px;font-weight:bold;letter-spacing:8px;text-align:center;color:${BRAND.navy};background:#f5f0e8;border-radius:8px;padding:18px;margin:18px 0">${params.otp}</p>
+      <p style="color:#7a8fa6;font-size:13px">This code expires in 30 minutes. If you didn't create a Bucr account, you can ignore this email.</p>`,
+  });
+  return sendEmail({ to: params.to, subject: 'Verify your Bucr email', html });
+}
+
 /** Welcome email for a new vendor. */
 export async function sendVendorWelcomeEmail(params: {
   to: string;

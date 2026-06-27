@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/api-response';
 import { createReservation } from '@/services/reservation.service';
 import { getOperationalSettings } from '@/lib/config/system-settings';
+import { ECONOMICS } from '@/lib/config/economics';
 import { db } from '@/lib/db';
 
 const createReservationSchema = z.object({
@@ -34,6 +35,18 @@ export async function POST(request: NextRequest) {
 
     if (!payload || payload.role !== 'user') {
       return unauthorizedResponse();
+    }
+
+    // Trust gate: a deposit is real money on a no-show, so require a verified email or
+    // phone before booking. Returns a machine-readable code so clients can route to verify.
+    if (ECONOMICS.REQUIRE_VERIFICATION_TO_BOOK) {
+      const u = await db.user.findUnique({
+        where: { id: payload.sub },
+        select: { emailVerifiedAt: true, phoneVerifiedAt: true },
+      });
+      if (!u?.emailVerifiedAt && !u?.phoneVerifiedAt) {
+        return errorResponse('Please verify your email or phone before booking.', 403, 'VERIFICATION_REQUIRED');
+      }
     }
 
     // Idempotency: if client sends Idempotency-Key header, return existing reservation

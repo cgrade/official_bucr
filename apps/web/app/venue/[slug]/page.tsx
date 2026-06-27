@@ -66,7 +66,14 @@ export default function VenuePage() {
       const id = (res.data as any)?.id;
       router.push(id ? `/bookings/${id}` : '/bookings');
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || err.response?.data?.message || 'Could not complete reservation'),
+    onError: (err: any) => {
+      if (err.response?.data?.code === 'VERIFICATION_REQUIRED' || err.response?.status === 403) {
+        toast.error('Verify your email to book');
+        router.push(`/verify?redirect=/venue/${slug}`);
+        return;
+      }
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Could not complete reservation');
+    },
   });
 
   const toggleFavorite = useMutation({

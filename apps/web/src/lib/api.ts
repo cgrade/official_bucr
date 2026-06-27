@@ -93,6 +93,9 @@ export const authApi = {
   changePassword: async (currentPassword: string, newPassword: string) =>
     (await api.post<ApiResponse<null>>('/users/change-password', { currentPassword, newPassword })).data,
   deleteAccount: async () => (await api.delete<ApiResponse<null>>('/users/me')).data,
+  // Email verification (6-digit OTP)
+  sendEmailVerification: async () => (await api.post<ApiResponse<{ message: string }>>('/auth/verify-email', { action: 'send' })).data,
+  verifyEmail: async (otp: string) => (await api.post<ApiResponse<any>>('/auth/verify-email', { action: 'verify', otp })).data,
 };
 
 // ── Config ────────────────────────────────────────────────────────────────────

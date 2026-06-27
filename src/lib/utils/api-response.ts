@@ -32,12 +32,14 @@ export function successResponse<T>(
 
 export function errorResponse(
   error: string,
-  status: number = 400
+  status: number = 400,
+  code?: string
 ): NextResponse<ApiResponse<null>> {
   return NextResponse.json(
     {
       success: false,
       error,
+      ...(code ? { code } : {}),
     },
     { status }
   );

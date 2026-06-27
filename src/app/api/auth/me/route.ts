@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
         seatingPreferences: true,
         specialOccasions: true,
         referralCode: true,
+        emailVerifiedAt: true,
+        phoneVerifiedAt: true,
         createdAt: true,
       },
     });
@@ -57,6 +59,10 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return notFoundResponse('User');
     }
+
+    // Derived verification flag — a diner is "verified" with either a verified email or phone.
+    const isVerified = !!(user.emailVerifiedAt || user.phoneVerifiedAt);
+    (user as any).isVerified = isVerified;
 
     if (payload.role === 'vendor') {
       const vendor = await db.vendor.findFirst({

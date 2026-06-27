@@ -148,6 +148,14 @@ export async function POST(request: NextRequest) {
       .then(({ sendWelcomeEmail }) => sendWelcomeEmail({ to: user.email, userName: user.name }))
       .catch(() => {});
 
+    // Email verification code (fire-and-forget) — so the diner can verify and book.
+    (async () => {
+      const { createToken } = await import('@/services/token.service');
+      const { sendVerificationEmail } = await import('@/services/email.service');
+      const { otp } = await createToken({ userId: user.id, type: 'email_verification', expiryMinutes: 30 });
+      await sendVerificationEmail({ to: user.email, userName: user.name, otp });
+    })().catch((err) => console.error('Verification email error:', err));
+
     return successResponse(
       {
         user,
