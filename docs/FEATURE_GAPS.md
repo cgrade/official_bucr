@@ -9,7 +9,26 @@ below are the deltas.
 **Status key:** ✅ done · 🟡 partial · ⛔ not built · 🅿️ built-but-parked (hidden by choice)
 **Priority:** P0 launch-blocking · P1 soon after launch · P2 growth · P3 later
 
-_Last updated: 2026-06-25. Keep this in sync as gaps are closed; remove items when shipped._
+_Last updated: 2026-06-28. Keep this in sync as gaps are closed; remove items when shipped._
+
+---
+
+## QA hardening from the professional audit — status
+
+**P0 (all ✅ done):**
+1. **Timezone** — reservation times now interpreted in the business TZ (`combineDateAndTime`), not the server's; fixes cancellation-tier + future-check drift on UTC infra.
+2. **Verification rollout** — grandfather migration so the booking gate doesn't lock out existing diners; E2E updated.
+3. **CI** — GitHub Actions (typecheck all 5 codebases + 342 vitest tests) green on every push (`rm lockfile && npm install --legacy-peer-deps` to dodge npm cross-version + rollup optional-dep issues).
+4. **Economic unit tests** — runner repaired (vitest, not the dead jest config); added TZ helper + per-cover×partySize + no-show-split tests.
+5. **Error capture** — `src/lib/monitoring/capture.ts` (structured, alertable) wired into the webhook + all 7 crons. (Sentry SDK deferred — `@sentry/node`'s otel tree broke the lockfile; add via `@sentry/nextjs` later, one-place change.)
+
+**P1 (done ✅ except ops):**
+6. **Booking availability** — `isVenueOpen` rejects bookings when the venue is closed at that day/time (midnight-spanning aware; experiences exempt; no-op if hours unset).
+7. **Rate-limiting** — booking/credit-purchase/gifts (payment 10/min) + reviews/waitlist (api 60/min).
+8. **Upload validation** — size cap + MIME allowlist on `/api/upload`.
+9. **Vendor ROI dashboard** — "Your BUCR impact" (show-rate, deposit value protected, no-show compensation, covers seated).
+   - _Remaining P1 (ops, not code):_ provision **SMS (Termii) + push (Expo) keys** — both built, dormant until keyed.
+   - _Remaining P1 (smaller):_ per-slot **capacity/table availability** at booking (hours are validated; true capacity needs a slot/table model — P2), and the day-boundary "today/tomorrow" filters still use server-local `setHours` (P1 follow-up to the TZ fix).
 
 ---
 
