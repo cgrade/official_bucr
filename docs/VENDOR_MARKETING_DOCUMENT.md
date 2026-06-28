@@ -56,11 +56,17 @@ Result: stronger attendance intent and fewer speculative bookings.
 
 BUCR gives venues tools to:
 
-- Manage reservations and check-ins in real time.
+- Manage reservations and check-ins in real time (QR / PIN).
 - Handle no-show marking and booking states clearly.
 - Manage menus, gallery, and profile presentation.
 - Track guest profiles and preferences for better hospitality.
 - Manage reviews and customer feedback responses.
+- Run a **waitlist** — when you're full, guests join and you notify the next party when a
+  table frees (recover would-be-lost covers).
+- See **transparent billing** — the per-cover fee is invoiced every two weeks and paid by
+  card; you only ever pay for guests who actually showed up.
+- Manage **multiple branches** (each with its own hours and map pin).
+- Get all alerts + announcements in one **Message Center** (also emailed).
 
 ---
 
@@ -89,6 +95,13 @@ BUCR is designed around vendor partnership and predictable operating value, with
 ## E) Better brand presence and discovery
 
 Your venue profile, menu, gallery, and experiences are discoverable in the BUCR ecosystem, helping you attract new guests while keeping operational control.
+
+## F) Proof of value you can see ("Your BUCR impact")
+
+Your dashboard shows, for the last 30 days: your **show-up rate**, the **deposit value
+protected** (your guests' money at stake to actually turn up), the **no-show compensation**
+you earned, and **covers seated**. You don't have to take "fewer no-shows" on faith — the
+numbers are in front of you, which makes the per-cover fee easy to justify.
 
 ---
 

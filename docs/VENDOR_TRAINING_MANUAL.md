@@ -100,6 +100,17 @@ Don’t teach everything. Teach the **five things that make it work**, then hand
 4. **Make the page sell.** Upload **great photos** (cover image first), finish the description, add the **menu** with prices, and set the **Price Level** honestly (₦–₦₦₦₦ = spend per person). The price level isn't cosmetic — diners **filter and sort by it**, so a wrong tier hides the venue from the right diners. Match it to the typical bill per guest.
 5. **Respond to reviews.** “A calm reply to a bad review wins more bookings than ten good ones.”
 
+**Also point out (a 2‑minute tour, don't drill):**
+- **Dashboard → "Your BUCR impact"** — show‑up rate, deposit value protected, no‑show
+  compensation, covers seated. *This is their proof BUCR works — revisit it weekly with them.*
+- **Waitlist** — "When you're full, guests still join here; tap **Notify** when a table frees
+  and we text them. Turn 'we're full' into another cover."
+- **Billing** — "The per‑cover fee is invoiced every 2 weeks; pay it here by card via
+  Paystack. 1‑week grace, reminders every 48h. You only ever pay for guests who showed up."
+- **Messages** — "Your inbox: new bookings, cancellations, invoices and notes from us —
+  also emailed. Watch the badge."
+- **Locations** — multi‑branch venues: add each branch (address, map, hours) so diners pick one.
+
 Then mention the growth levers (don’t hard‑sell day one): **Pro** (analytics, CRM, offers, 50% off cover fees), **Elite** (experiences, featured ads, zero cover fees), and the **Book‑with‑Confidence badge**.
 
 ---

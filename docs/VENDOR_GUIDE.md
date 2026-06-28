@@ -26,7 +26,8 @@
 17. [Settings](#17-settings)
 18. [Your reliability & the Book‑with‑Confidence badge](#18-reliability--book-with-confidence)
 19. [Money — fees, deposits & payouts (plain English)](#19-money)
-20. [FAQ](#20-faq)
+20. [Waitlist, Billing, Message Center, Impact, Branches & more](#20-newer-features)
+21. [FAQ](#21-faq)
 
 ---
 
@@ -266,7 +267,60 @@ In plain English, here’s every way money moves:
 
 ---
 
-## 20. FAQ
+## 20. Newer features
+
+These shipped after the first version of this guide — they're live in your portal now.
+
+### Waitlist (turn "we're full" into a sale)
+When you're fully booked, guests can join a **no‑deposit waitlist**. On the **Waitlist** page
+you see the queue (guest, party size, the time they want, their position). When a table frees:
+- **Notify** the next party — they get a push/SMS/email and a **15‑minute hold** to claim it.
+- **Seat** them when they arrive, or **Remove** them.
+A held spot that isn't claimed in 15 minutes expires automatically.
+*Tip:* when someone cancels or no‑shows, glance at the waitlist and notify the next party.
+
+### Billing — your per‑cover invoices
+BUCR's per‑cover success fee is invoiced **every two weeks** (the 1st & 16th). On the
+**Billing** page you see each invoice (amount, covers, due date, status) and your outstanding
+balance, and you **pay securely via Paystack**. You get **1 week** to pay; reminders go out
+every 48 hours; unpaid invoices are flagged overdue. Revenue is only the fee — BUCR never
+touches your guests' bills.
+
+### Message Center — your inbox
+The **Messages** page is one place for everything BUCR sends you: new‑reservation alerts,
+cancellations, invoices + reminders, and **announcements from the BUCR team**. Unread items
+show a badge in the sidebar; important ones are also emailed. Tap a message to read it and
+follow its link (e.g. straight to Billing).
+
+### "Your BUCR impact" (on your Dashboard)
+A card that shows the value BUCR creates for you over the last 30 days:
+- **Show‑up rate** (how many booked guests actually came),
+- **Deposit value protected** (your guests' money at stake to show up),
+- **No‑show compensation** you earned, and
+- **Covers seated**.
+Use these numbers — they're your proof that BUCR reduces no‑shows.
+
+### Locations & branches
+Under **Settings → Locations** you can add, edit, and delete branches — each with its own
+address, map pin, and opening hours. When you have more than one branch, diners pick the
+location when booking. (You can't delete your main branch, or a branch with upcoming
+reservations.)
+
+### Booking opening‑hours gate
+Diners can't book a table when your venue is **closed** at that day/time — set accurate
+opening hours per branch so guests only book bookable slots.
+
+### Subscription downgrade
+You can **schedule a downgrade** to a lower plan; you keep your current plan (and its full
+value) until the period ends, then it drops automatically. No refunds — it's a closed loop.
+
+### Booking verification (why your guests are real)
+Diners must verify an **email or phone** before they can book, which cuts fake bookings and
+means you can always reach the guest.
+
+---
+
+## 21. FAQ
 
 **Do I pay anything to join?** No. Basic is free forever. You only pay per‑cover fees when guests actually show up (and Pro/Elite if you choose to upgrade).
 
